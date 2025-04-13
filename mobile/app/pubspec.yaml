@@ -39,6 +39,10 @@ dependencies:
   intl: ^0.20.2
   google_fonts: ^6.2.1
   fluentui_system_icons: ^1.1.273
+  google_nav_bar: ^5.0.7
+  timeago: ^3.2.2
+  firebase_messaging: ^15.2.5
+  firebase_core: ^3.13.0
 
 dev_dependencies:
   flutter_test:
@@ -63,7 +67,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
+  assets:
+      - lib/image/connectmytask_logo.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 
