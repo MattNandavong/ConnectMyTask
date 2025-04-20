@@ -1,6 +1,8 @@
 import 'package:app/model/bid.dart';
 import 'package:app/model/task.dart';
 import 'package:app/utils/task_service.dart';
+import 'package:app/widget/my_task/task_detail.dart';
+import 'package:app/widget/mytask_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:timeago/timeago.dart' as timeago;
@@ -13,11 +15,8 @@ class BidsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text('All Bids'),
-      ),
+      appBar: AppBar(title: Text('All Bids')),
       body: ListView.builder(
         itemCount: bids.length,
         itemBuilder: (context, index) {
@@ -41,28 +40,35 @@ class BidsScreen extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () {
-                        // Implement navigation to provider profile screen
-                      },
-                      child: Text('View Profile'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // Implement accept offer functionality
-                        TaskService().acceptBid(taskId, bid.id).then((_) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Bid accepted successfully!'),
-                            ),
-                          );
-                        }).catchError((error) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Failed to accept bid: $error'),
-                            ),
-                          );
-                        });
-                      },
+                        TaskService()
+                            .acceptBid(taskId, bid.id)
+                            .then((updatedTask) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Bid accepted successfully!'),
+                                ),
+                              );
 
+                              // Navigate to the updated MyTaskDetails screen
+                              Future.delayed(Duration(seconds: 1), () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) =>
+                                           MyTaskScreen(),
+                                  ),
+                                );
+                              });
+                            })
+                            .catchError((error) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to accept bid: $error'),
+                                ),
+                              );
+                            });
+                      },
                       child: Text('Accept Offer'),
                     ),
                   ],
