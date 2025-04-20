@@ -1,46 +1,22 @@
+import 'package:app/utils/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:app/model/user.dart';
 import 'package:app/widget/login.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DrawerMenu extends StatelessWidget {
-  const DrawerMenu({super.key, required this.user});
-  final User user;
+  const DrawerMenu({super.key});
 
   Future<Map<String, dynamic>> _fetchUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
+    final user = jsonDecode(prefs.getString('user')!);
 
     if (token == null) {
       throw Exception('No token found');
     }
-
-    final url = 'http://localhost:3300/api/user/${user.id}';
-    final response = await http.get(
-      Uri.parse(url),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to load user data');
-    }
-  }
-
-  Future<void> _signOut(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('user');
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
+    return user;
   }
 
   @override
@@ -68,7 +44,7 @@ class DrawerMenu extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      "${data['firstName']} ${data['lastName']}",
+                      "${data['name']}",
                       style: GoogleFonts.oswald(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -91,7 +67,7 @@ class DrawerMenu extends StatelessWidget {
                             size: 12,
                           ),
                           Text(
-                            data['rating'] == 0
+                            data['rating'] == null
                                 ? 'No reviews'
                                 : data['rating'].toString(),
                             style: GoogleFonts.figtree(
@@ -139,7 +115,12 @@ class DrawerMenu extends StatelessWidget {
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop();
-                              _signOut(context);
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) => LoginScreen(),
+                                ),
+                              );
+                              AuthService().logout();
                             },
                             child: Text('YES'),
                           ),
