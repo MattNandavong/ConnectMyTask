@@ -2,7 +2,7 @@ import 'package:app/model/user.dart';
 import 'package:app/widget/login.dart';
 import 'package:flutter/material.dart';
 import 'package:app/utils/auth_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -19,42 +19,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   var _isLogin = false;
 
-  Future<void> _registerWithApi() async {
-    final isValid = _formKey.currentState!.validate();
-    if (!isValid) {
-      return;
-    }
-    _formKey.currentState!.save();
+  // Future<void> _registerWithApi() async {
+  //   final isValid = _formKey.currentState!.validate();
+  //   if (!isValid) {
+  //     return;
+  //   }
+  //   _formKey.currentState!.save();
 
-    try {
-      final responseData;
-      if (_isLogin) {
-        responseData = await _authService.login(
-          _emailController.text,
-          _passwordController.text,
-        );
-      } else {
-        responseData = await _authService.register(
-          _nameController.text,
-          _emailController.text,
-          _passwordController.text,
-          _roleController.text,
-        );
-      }
+  //   try {
+  //     final responseData;
+  //     if (_isLogin) {
+  //       responseData = await _authService.login(
+  //         _emailController.text,
+  //         _passwordController.text,
+  //       );
+  //     } else {
+  //       responseData = await _authService.register(
+  //         _nameController.text,
+  //         _emailController.text,
+  //         _passwordController.text,
+  //         _roleController.text,
+  //       );
+  //     }
 
-      final user = User.fromJson(responseData);
-      print(user.toString());
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    } catch (error) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
-    }
-  }
+  //     final user = User.fromJson(responseData);
+  //     print(user.toString());
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => LoginScreen()),
+  //     );
+  //   } catch (error) {
+  //     ScaffoldMessenger.of(context).clearSnackBars();
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(error.toString())),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -119,10 +119,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         _passwordController.text,
                         _roleController.text,
                       );
-                      if (user != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration successful')));
-                      }
-                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration successful')));
+                                        } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Registration failed')));
                     }
                   }
