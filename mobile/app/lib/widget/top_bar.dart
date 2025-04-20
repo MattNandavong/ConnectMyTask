@@ -32,7 +32,7 @@ class _TopBarState extends State<TopBar> {
                 onPressed: () {},
                 icon: Icon(FluentIcons.map_20_regular, size: 20),
               ),
-              SizedBox(height: 48, width: 48,),
+              // SizedBox(height: 48, width: 48,),
             ],
           ),
           
