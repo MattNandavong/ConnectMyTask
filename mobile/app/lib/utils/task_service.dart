@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:app/model/task.dart';
+import 'package:app/model/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -80,6 +81,7 @@ class TaskService {
   }
 
   Future<void> updateTaskStatus(String id, String status) async {
+  try {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
 
@@ -89,14 +91,37 @@ class TaskService {
 
     final response = await http.put(
       Uri.parse('$baseUrl/$id/status'),
-      headers: {'Content-Type': 'application/json', 'Authorization': token},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      },
       body: jsonEncode({'status': status}),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to update task status');
+      final responseBody = response.body;
+
+      // Try parsing error message
+      try {
+        final errorData = jsonDecode(responseBody);
+        final message = errorData['msg'] ?? 'Unknown error occurred';
+        throw Exception('Failed to update status: $message');
+      } catch (e) {
+        // If response body is not JSON, show fallback
+        throw Exception(
+          'Failed to update status: ${response.reasonPhrase} (code: ${response.statusCode})',
+        );
+      }
     }
+
+    // Optional: Log success
+    print('Task status updated to "$status"');
+  } catch (e) {
+    // Log & rethrow the actual error
+    print('Error in updateTaskStatus: $e');
+    throw e;
   }
+}
 
   Future<void> deleteTask(String id) async {
     final prefs = await SharedPreferences.getInstance();
@@ -146,7 +171,7 @@ class TaskService {
     }
 
     final response = await http.put(
-      Uri.parse('$baseUrl/$id/complete'),
+      Uri.parse('$baseUrl/$id/completeTask'),
       headers: {'Content-Type': 'application/json', 'Authorization': token},
       body: jsonEncode({'rating': rating, 'comment': comment}),
     );
@@ -164,7 +189,7 @@ class TaskService {
       return [];
     }
     final user = jsonDecode(userString);
-    final userId = user['id'];
+    final userId = user['_id'];
     final tasks = await getAllTasks();
     final userTasks = tasks.where((task) => task.user.id == userId).toList();
     // print('User tasks: $userTasks');
@@ -175,25 +200,26 @@ class TaskService {
  Future<List<Task>> getProviderTask() async {
   final prefs = await SharedPreferences.getInstance();
   final userString = prefs.getString('user');
+
   if (userString == null) {
     print('No user found in SharedPreferences');
     return [];
   }
 
-  final user = jsonDecode(userString);
-  final userId = user['id'];
+  final user = User.fromJson(jsonDecode(userString));
+  final userId = user.id;
+
   final tasks = await getAllTasks();
 
   final List<Task> providerTasks = tasks.where((task) {
     final isAssigned = task.assignedProvider == userId;
-
     final hasBid = task.bids.any((bid) => bid.provider == userId);
-
     return isAssigned || hasBid;
   }).toList();
 
   return providerTasks;
 }
+
 
   Future<void> acceptBid(String taskId, String bidId) async {
     final token = await _getToken();
@@ -214,5 +240,7 @@ class TaskService {
   if (token == null) throw Exception('No token found');
   return token;
 }
+
+
 
 }
