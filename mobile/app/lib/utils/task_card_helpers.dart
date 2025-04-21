@@ -25,22 +25,22 @@ class TaskCardHelpers {
     }
   }
 
-  static Widget getTaskDetail(context, Task task) {
+  static Widget getTaskDetail(context, Task task, bool minimise) {
     final priceFont = GoogleFonts.oswald(
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: FontWeight.w900,
       color: const Color.fromARGB(255, 0, 127, 97),
     );
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 320,
-              // height: 70,
+              height: 70,
               // padding: EdgeInsets.only(left: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,42 +64,78 @@ class TaskCardHelpers {
               ),
             ),
             SizedBox(height: 10,),
+            //make offer and budget
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.location_on, size: 14, color: Colors.teal),
-                SizedBox(width: 4),
-                Text(
-                  task.location ?? 'Unknown',
-                  style: GoogleFonts.figtree(fontSize: 12),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Colors.teal),
+                    SizedBox(width: 4),
+                    Text(
+                      task.location ?? 'Unknown',
+                      style: GoogleFonts.figtree(fontSize: 12),
+                    ),
+                    SizedBox(width: 10),
+                    Icon(Icons.calendar_today, size: 14, color: Colors.black87),
+                    SizedBox(width: 4),
+                    Text(
+                      DateFormat.yMMMd().format(task.deadline),
+                      style: GoogleFonts.figtree(
+                        fontSize: 12,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 10),
-                Icon(Icons.calendar_today, size: 14, color: Colors.black87),
-                SizedBox(width: 4),
-                Text(
-                  DateFormat.yMMMd().format(task.deadline),
-                  style: GoogleFonts.figtree(
-                    fontSize: 12,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                SizedBox(
+                width: 120,
+                // height: 50,
+                child: Center(child: Text('AUD ${task.budget}', style: priceFont)),
+              ),
+                
               ],
             ),
           ],
         ),
+        if (minimise == false)
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+              Row(
+                        children: [
+                          Row(
+                            // crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Icon(Icons.account_circle, size: 20),
+                              Text(task.user!.name),
+                              SizedBox(width: 5,),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.star,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      255,
+                                      183,
+                                      0,
+                                    ),
+                                    size: 14,
+                                  ),
+                                  
+                                  Text(task.user.averageRating.toString(), style: TextStyle(fontSize: 11)),
+                                ],
+                              ),
+                            ],
+                          ),
+                          
+                        ],
+                      ),
             
-              SizedBox(
-                width: 70,
-                height: 50,
-                child: Center(child: Text('AUD${task.budget}', style: priceFont)),
-              ),
-           
             SizedBox(
-              child: TextButton(onPressed: (){ }, child: Text('Make offer')),
+              child: FilledButton(onPressed: (){ }, child: Text('Make offer')),
             )
           ],
         ),

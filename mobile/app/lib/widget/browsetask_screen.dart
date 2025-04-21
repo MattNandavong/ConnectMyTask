@@ -34,12 +34,15 @@ class _BrowseTaskState extends State<BrowseTask> {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text('No tasks found'));
           }
-          return ListView.builder(
-            itemCount: snapshot.data!.length,
-            itemBuilder: (context, index) {
-              final task = snapshot.data![index];
-              return TaskCard(context: context,task: task, profile: true,);
-            },
+          return Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                final task = snapshot.data![index];
+                return TaskCard(context: context,task: task,);
+              },
+            ),
           );
         },
       ),

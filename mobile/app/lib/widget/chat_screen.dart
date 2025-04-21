@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -19,8 +18,28 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void initState() {
-    super.initState();
-    _connectToSocket();
+    // Simulated delay for loading fake messages
+    Future.delayed(Duration(milliseconds: 500), () {
+      setState(() {
+        messages.addAll([
+          {
+            'sender': 'user123',
+            'text': 'Hi, is this task still available?',
+            'timestamp':
+                DateTime.now().subtract(Duration(minutes: 5)).toIso8601String(),
+          },
+          {
+            'sender': widget.userId,
+            'text': 'Yes! Feel free to make an offer.',
+            'timestamp':
+                DateTime.now().subtract(Duration(minutes: 3)).toIso8601String(),
+          },
+        ]);
+      });
+    });
+
+    // Comment this out until backend is live
+    // _connectToSocket();
   }
 
   void _connectToSocket() {
@@ -56,14 +75,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    final message = {
-      'taskId': widget.taskId,
-      'sender': widget.userId,
-      'text': text,
-    };
-
-    socket.emit('sendMessage', message);
-
     setState(() {
       messages.add({
         'sender': widget.userId,
@@ -72,6 +83,18 @@ class _ChatScreenState extends State<ChatScreen> {
       });
       _controller.clear();
     });
+
+    // Comment this out until backend is live
+    // socket.emit('sendMessage', message);
+  }
+
+  String _formatTime(String isoTime) {
+    final time = DateTime.parse(isoTime);
+    final now = DateTime.now();
+    final diff = now.difference(time);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 
   @override
@@ -97,14 +120,27 @@ class _ChatScreenState extends State<ChatScreen> {
                 return Align(
                   alignment:
                       isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    margin: EdgeInsets.symmetric(vertical: 4),
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isMe ? Colors.green[100] : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(msg['text']),
+                  child: Column(
+                    crossAxisAlignment:
+                        isMe
+                            ? CrossAxisAlignment.end
+                            : CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isMe ? Colors.green[100] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(msg['text']),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        _formatTime(msg['timestamp']),
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -128,10 +164,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 ElevatedButton(
                   onPressed: _sendMessage,
                   child: Icon(Icons.send),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );

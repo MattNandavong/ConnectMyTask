@@ -306,7 +306,8 @@ void _submitTask() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Post Task')),
+      backgroundColor: Colors.white,
+      // appBar: AppBar(title: Text('Post Task')),
       body: Column(
         children: [
           LinearProgressIndicator(
