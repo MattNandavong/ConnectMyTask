@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "374694172725",
+    "project_id": "connectmytask",
+    "storage_bucket": "connectmytask.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374694172725:android:3f604635b7383a1094397c",
+        "android_client_info": {
+          "package_name": "com.connectmytask.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnwZ5broma0YZoawxLIF_VDY_HP16jS-I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
