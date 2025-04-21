@@ -54,43 +54,7 @@ class _TopBarState extends State<TopBar> {
           ),
         ],
       ),
-      //  bottom: PreferredSize(
-      //   preferredSize: const Size.fromHeight(40),
-      //    child: AppBar(
-      //     title: Row(
-      //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //       children: [
-      //         SizedBox(
-      //           // height: 15,
-      //           child: TextButton.icon(
-      //             onPressed: () {},
-      //             icon: Icon(FluentIcons.filter_12_filled, size: 15),
-      //             label: Text(
-      //               'Filter',
-      //               style: GoogleFonts.figtree(fontSize: 15),
-      //             ),
-      //           ),
-      //         ),
-      //         SizedBox(
-      //           // height: 15,
-      //           child: TextButton.icon(
-      //             onPressed: () {},
-      //             style: ButtonStyle(
-      //               foregroundColor: WidgetStateProperty.all<Color>(
-      //                 const Color.fromARGB(255, 42, 44, 43),
-      //               ),
-      //             ),
-      //             icon: Icon(
-      //               FluentIcons.arrow_curve_down_left_16_filled,
-      //               size: 15,
-      //             ),
-      //             label: Text('Sort', style: GoogleFonts.figtree(fontSize: 15)),
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      //            ),
-      //  ),
+
     );
   }
 }
