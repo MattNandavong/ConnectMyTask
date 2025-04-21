@@ -5,6 +5,7 @@ import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:app/widget/chat_screen.dart';
+import 'package:app/widget/chat_test.dart';
 import 'package:app/widget/make_offer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -334,6 +335,7 @@ class ProviderTaskDetail extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
+                // builder: (_) => ChatTestScreen(taskId: taskId),
                 builder: (_) => ChatScreen(
                   taskId: task.id,
                   userId: currentUserId!,
