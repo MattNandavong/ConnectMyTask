@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:app/model/user.dart';
+import 'package:app/utils/firebase_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,14 +21,17 @@ class AuthService {
     String? location,
     List<String>? skills,
     File? profilePhoto,
+    required fcmToken,
   }) async {
     final uri = Uri.parse('$baseUrl/register');
     final request = http.MultipartRequest('POST', uri);
+    final fcmToken = await getFcmToken(); 
 
     request.fields['name'] = name;
     request.fields['email'] = email;
     request.fields['password'] = password;
     request.fields['role'] = role;
+    if (fcmToken != null) request.fields['fcmToken'] = fcmToken;
 
     if (location != null) request.fields['location'] = location;
     if (skills != null && skills.isNotEmpty) {
@@ -61,12 +65,13 @@ class AuthService {
   }
 
   /// Login with email/password
-  Future<User> login(String email, String password) async {
+  Future<User> login(String email, String password, String fcmToken) async {
+    final fcmToken = await getFcmToken();
     final url = '$baseUrl/login';
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'email': email, 'password': password, if (fcmToken != null) 'fcmToken': fcmToken,}),
     );
 
     final data = jsonDecode(response.body);
