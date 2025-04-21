@@ -219,7 +219,7 @@ class MyTaskDetails extends StatelessWidget {
                                     children: [
                                       Icon(Icons.star, size: 16, color: Color(0xFFFFB700)),
                                       SizedBox(width: 4),
-                                      Text(user.rating?.toStringAsFixed(1) ?? 'No reviews yet',
+                                      Text(user.averageRating?.toStringAsFixed(1) ?? 'No reviews yet',
                                           style: TextStyle(fontSize: 12)),
                                     ],
                                   ),
@@ -234,6 +234,39 @@ class MyTaskDetails extends StatelessWidget {
                     ),
 
                     SizedBox(height: 24),
+                    if (isPoster && task.bids.isNotEmpty && task.assignedProvider == null) ...[
+  SizedBox(height: 16),
+  Text(
+    'Offers',
+    style: GoogleFonts.figtree(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  SizedBox(height: 8),
+  Text('Total offers: ${task.bids.length}'),
+  TextButton.icon(
+    icon: Icon(Icons.visibility),
+    label: Text('View All Bids'),
+    onPressed: () {
+      showBidsModal(
+        context: context,
+        bids: task.bids,
+        taskId: task.id,
+        onBidAccepted: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MyTaskDetails(taskId: task.id),
+            ),
+          );
+        },
+      );
+    },
+  ),
+]
+,
+                    
 
                     // ✅ Assigned Provider Section + Chat Button
                     if (task.assignedProvider != null) ...[
@@ -306,6 +339,7 @@ class MyTaskDetails extends StatelessWidget {
                       ),
                     ]
                   ],
+                  
                 ),
               );
             },

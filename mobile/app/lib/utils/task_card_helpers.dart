@@ -1,5 +1,8 @@
+import 'package:app/model/task.dart';
+import 'package:app/widget/make_offer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class TaskCardHelpers {
   static const Color urgentColor = Color.fromRGBO(255, 146, 75, 1);
@@ -22,45 +25,83 @@ class TaskCardHelpers {
     }
   }
 
-  static Widget getTaskDetail(String title, String description, double budget) {
+  static Widget getTaskDetail(context, Task task) {
     final priceFont = GoogleFonts.oswald(
       fontSize: 14,
       fontWeight: FontWeight.w900,
       color: const Color.fromARGB(255, 0, 127, 97),
     );
 
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 250,
-          height: 70,
-          // padding: EdgeInsets.only(left: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.figtree(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 320,
+              // height: 70,
+              // padding: EdgeInsets.only(left: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.figtree(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    task.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.figtree(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10,),
+            Row(
+              children: [
+                Icon(Icons.location_on, size: 14, color: Colors.teal),
+                SizedBox(width: 4),
+                Text(
+                  task.location ?? 'Unknown',
+                  style: GoogleFonts.figtree(fontSize: 12),
                 ),
-              ),
-              Text(
-                description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.figtree(fontSize: 12),
-              ),
-            ],
-          ),
+                SizedBox(width: 10),
+                Icon(Icons.calendar_today, size: 14, color: Colors.black87),
+                SizedBox(width: 4),
+                Text(
+                  DateFormat.yMMMd().format(task.deadline),
+                  style: GoogleFonts.figtree(
+                    fontSize: 12,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        SizedBox(
-          width: 70,
-          height: 50,
-          child: Center(child: Text('AUD$budget', style: priceFont)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            
+              SizedBox(
+                width: 70,
+                height: 50,
+                child: Center(child: Text('AUD${task.budget}', style: priceFont)),
+              ),
+           
+            SizedBox(
+              child: TextButton(onPressed: (){ }, child: Text('Make offer')),
+            )
+          ],
         ),
       ],
     );

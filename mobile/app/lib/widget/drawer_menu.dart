@@ -1,4 +1,6 @@
+import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
+import 'package:app/widget/login/profile_setup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:app/widget/login.dart';
@@ -8,21 +10,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DrawerMenu extends StatelessWidget {
   const DrawerMenu({super.key});
 
-  Future<Map<String, dynamic>> _fetchUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    final user = jsonDecode(prefs.getString('user')!);
+  Future<User> _fetchUserData() async {
+    
+    final user = await AuthService().getCurrentUser();
 
-    if (token == null) {
-      throw Exception('No token found');
-    }
-    return user;
+    return user!;
   }
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: FutureBuilder<Map<String, dynamic>>(
+      child: FutureBuilder<User>(
         future: _fetchUserData(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -34,7 +32,7 @@ class DrawerMenu extends StatelessWidget {
           if (!snapshot.hasData) {
             return Center(child: Text('No data found'));
           }
-          Map<String, dynamic> data = snapshot.data!;
+          User user = snapshot.data!;
           return ListView(
             children: [
               DrawerHeader(
@@ -44,7 +42,7 @@ class DrawerMenu extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      "${data['name']}",
+                      "${user.name}",
                       style: GoogleFonts.oswald(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -67,9 +65,9 @@ class DrawerMenu extends StatelessWidget {
                             size: 12,
                           ),
                           Text(
-                            data['rating'] == null
+                            user.averageRating == null
                                 ? 'No reviews'
-                                : data['rating'].toString(),
+                                : user.averageRating.toString(),
                             style: GoogleFonts.figtree(
                               fontSize: 11,
                               color: Colors.white,
@@ -83,7 +81,14 @@ class DrawerMenu extends StatelessWidget {
                 ),
               ),
               ListTile(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfileSetupScreen(user: user),
+                    ),
+                  );
+                },
                 title: Text('Edit profile'),
                 leading: Icon(Icons.edit),
               ),
@@ -117,7 +122,7 @@ class DrawerMenu extends StatelessWidget {
                               Navigator.of(context).pop();
                               Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(
-                                  builder: (context) => LoginScreen(),
+                                  builder: (context) => AuthScreen(),
                                 ),
                               );
                               AuthService().logout();

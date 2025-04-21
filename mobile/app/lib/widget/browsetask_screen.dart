@@ -38,7 +38,7 @@ class _BrowseTaskState extends State<BrowseTask> {
             itemCount: snapshot.data!.length,
             itemBuilder: (context, index) {
               final task = snapshot.data![index];
-              return TaskCard(task: task, profile: true,);
+              return TaskCard(context: context,task: task, profile: true,);
             },
           );
         },

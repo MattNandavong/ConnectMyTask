@@ -11,10 +11,11 @@ import 'package:app/utils/task_card_helpers.dart';
 
 
 class TaskCard extends StatelessWidget {
-  const TaskCard({super.key, required this.task, required this.profile});
+  const TaskCard({super.key, required this.context, required this.task, required this.profile});
 
   final Task task;
   final bool profile;
+  final context;
 
   void navigateToTaskDetailByRole(BuildContext context, String taskId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -93,7 +94,7 @@ class TaskCard extends StatelessWidget {
                       : SizedBox(),
                 ],
               ),
-              Row(children: [TaskCardHelpers.getTaskDetail(task.title, task.description, task.budget)
+              Row(children: [TaskCardHelpers.getTaskDetail(context, task)
 ]),
             ],
           ),

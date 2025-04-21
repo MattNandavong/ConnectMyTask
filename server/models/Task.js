@@ -22,7 +22,7 @@ const TaskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "In Progress", "Completed", "Cancelled"], 
+      enum: ["Active", "In Progress", "Completed", "Cancelled"],
       default: "Active",
     },
     user: {
@@ -44,11 +44,33 @@ const TaskSchema = new mongoose.Schema(
         },
       },
     ],
-    assignedProvider: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    location: { type: String },
+    assignedProvider: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     review: {
-        rating: { type: Number, min: 1, max: 5 },
-        comment: { type: String }
-      }
+      rating: { type: Number, min: 1, max: 5 },
+      comment: { type: String },
+    },
+    images: [{ type: String }],
+    category: {
+      type: String,
+      enum: [
+        "Cleaning",
+        "Plumbing",
+        "Electrical",
+        "Handyman",
+        "Moving",
+        "Delivery",
+        "Gardening",
+        "Tutoring",
+        "Tech Support",
+        "Other",
+      ],
+      required: true,
+    },
   },
   { timestamps: true }
 );
