@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChatScreen extends StatefulWidget {
@@ -18,47 +21,66 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void initState() {
-    // Simulated delay for loading fake messages
-    Future.delayed(Duration(milliseconds: 500), () {
-      setState(() {
-        messages.addAll([
-          {
-            'sender': 'user123',
-            'text': 'Hi, is this task still available?',
-            'timestamp':
-                DateTime.now().subtract(Duration(minutes: 5)).toIso8601String(),
-          },
-          {
-            'sender': widget.userId,
-            'text': 'Yes! Feel free to make an offer.',
-            'timestamp':
-                DateTime.now().subtract(Duration(minutes: 3)).toIso8601String(),
-          },
-        ]);
-      });
-    });
+    super.initState();
+    _loadChatHistory();
+    _connectToSocket(); // joins the room via socket.emit('joinTask')
+  }
 
-    // Comment this out until backend is live
-    // _connectToSocket();
+  final ScrollController _scrollController = ScrollController();
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  Future<void> _loadChatHistory() async {
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:3300/api/chat/${widget.taskId}'),
+    );
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      setState(() {
+        messages.addAll(
+          data.map(
+            (msg) => {
+              'sender': msg['sender'],
+              'text': msg['text'],
+              'timestamp': msg['timestamp'],
+            },
+          ),
+        );
+      });
+    }
   }
 
   void _connectToSocket() {
+    print("🔌 Connecting to socket...");
+    print("TaskId: ${widget.taskId}");
+
     socket = IO.io(
-      'http://localhost:3300',
+      'http://10.0.2.2:3300',
       IO.OptionBuilder()
           .setTransports(['websocket'])
-          .disableAutoConnect()
+          .disableAutoConnect() // <- this means we call connect() manually
           .build(),
     );
 
-    socket.connect();
-
+    // Set up listeners first!
     socket.onConnect((_) {
-      print("🔌 Connected to socket.io");
+      print("✅ Connected to socket.io");
       socket.emit('joinTask', {'taskId': widget.taskId});
     });
 
+    socket.onConnectError((data) => print("❌ Connect error: $data"));
+    socket.onError((data) => print("❌ Socket error: $data"));
+    socket.onDisconnect((_) => print("⚠️ Disconnected from socket"));
+
     socket.on('receiveMessage', (data) {
+      
+      print("📨 Received message: $data");
       setState(() {
         messages.add({
           'sender': data['sender'],
@@ -66,27 +88,25 @@ class _ChatScreenState extends State<ChatScreen> {
           'timestamp': data['timestamp'],
         });
       });
+      _scrollToBottom();
     });
 
-    socket.onDisconnect((_) => print('❌ Disconnected from socket'));
+    socket.connect(); //Must come after listeners!
   }
 
   void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+  final text = _controller.text.trim();
+  if (text.isEmpty) return;
 
-    setState(() {
-      messages.add({
-        'sender': widget.userId,
-        'text': text,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-      _controller.clear();
-    });
+  final message = {
+    'taskId': widget.taskId,
+    'sender': widget.userId,
+    'text': text,
+  };
 
-    // Comment this out until backend is live
-    // socket.emit('sendMessage', message);
-  }
+  socket.emit('sendMessage', message);
+  _controller.clear(); // Only clear input
+}
 
   String _formatTime(String isoTime) {
     final time = DateTime.parse(isoTime);
@@ -106,6 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("📱 ChatScreen rendering...");
     return Scaffold(
       appBar: AppBar(title: Text('Chat')),
       body: Column(
@@ -116,7 +137,8 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
-                final isMe = msg['sender'] == widget.userId;
+                final isMe = msg['sender']['_id'].toString() == widget.userId.toString();
+
                 return Align(
                   alignment:
                       isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -130,10 +152,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         margin: EdgeInsets.symmetric(vertical: 4),
                         padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.green[100] : Colors.grey[200],
+                          color: isMe ? Colors.green[100] : Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(msg['text']),
+                        child: Text(msg['text'], style: TextStyle(color: isMe ? Colors.black: Colors.white),),
                       ),
                       SizedBox(height: 2),
                       Text(
