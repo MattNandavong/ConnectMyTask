@@ -113,12 +113,18 @@ const deleteTask = async (req, res) => {
 // Bid on a task
 const bidOnTask = async (req, res) => {
   const { price, estimatedTime } = req.body;
+  const sendNotification = require('../utils/sendnotification.js');
+// Get user's FCM token from DB or request
+
 
   try {
-    const task = await Task.findById(req.params.id).populate("user", "email");
+    const task = await Task.findById(req.params.id).populate("user", "email fcmToken");
     if (!task) {
       return res.status(404).json({ msg: "Task not found" });
     }
+    // Find provider's name
+    const provider = await User.findById(req.user.id).select("name");
+    if (!provider) return res.status(404).json({ msg: "Provider not found" });
 
     // Add the bid to the task's bids array
     task.bids.push({
@@ -128,6 +134,17 @@ const bidOnTask = async (req, res) => {
     });
 
     await task.save();
+    //push notification to task poster
+    if (task.user.fcmToken) {
+      await sendNotification(
+        task.user.fcmToken,
+        'New Offer Received',
+        `${provider.name} has offered $${price} for your task.`,
+        { taskId: task._id.toString() }
+      );
+    } else {
+      console.warn("No FCM token found for user.");
+    }
     // sendBidNotificationEmail(task.user.email, task.title, req.user.name); // Send email notification to the task poster
     res.json(task);
   } catch (error) {

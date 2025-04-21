@@ -31,7 +31,7 @@ router.post(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
 
-    const { name, email, password, role, location, skills } = 
+    const { name, email, password, role, location, skills, fcmToken} = 
     req.body;
 
     try {
@@ -48,7 +48,9 @@ router.post(
         profilePhoto,
         location,
         skills: role === "provider"&& skills? skills.split(",") : [],
+        fcmToken, // save FCM token
       });
+      console.log(user);
       await user.save();
 
       const token = jwt.sign(
@@ -165,7 +167,7 @@ router.post(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
 
-    const { email, password } = req.body;
+    const { email, password, fcmToken } = req.body; // get fcm token
 
     try {
       const user = await User.findOne({ email });
@@ -173,6 +175,13 @@ router.post(
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+      // Update token if sent
+      console.log(user.fcmToken)
+      if (!user.fcmToken || user.fcmToken !== fcmToken) {
+        user.fcmToken = fcmToken;
+        await user.save();
+      }
+      
 
       const token = jwt.sign(
         { id: user._id, role: user.role },
@@ -181,7 +190,7 @@ router.post(
       );
       res.json({
         token,
-        user: { id: user._id, name: user.name, email, role: user.role },
+        user: { id: user._id, name: user.name, email, role: user.role, fcmToken: user.fcmToken},
       });
     } catch (err) {
       console.error(err.message);
