@@ -1,8 +1,8 @@
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
-// import 'package:google_fonts/google_fonts.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
-// import 'package:mobile/screen/account.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:app/widget/messages.dart';
 import 'package:app/widget/browsetask_screen.dart';
 import 'package:app/widget/mytask_screen.dart';
@@ -13,19 +13,10 @@ class BottomBar extends StatefulWidget {
     super.key,
     required this.changeScreenTo,
     required this.activeScreen,
-    // required this.user,
   });
-  // final User user;
+
   final void Function(String) changeScreenTo;
   final String activeScreen;
-
-  static final List<Widget> _widgetOptions = <Widget>[
-    PostTask(),
-    BrowseTask(),
-    MyTaskScreen(),
-    MessageScreen(),
-    // AccountScreen(user: user),
-  ];
 
   @override
   State<BottomBar> createState() => _BottomBarState();
@@ -33,59 +24,77 @@ class BottomBar extends StatefulWidget {
 
 class _BottomBarState extends State<BottomBar> {
   int _selectedIndex = 0;
+  String? role;
+  List<GButton> tabs = [];
+  List<Widget> screens = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRoleAndTabs();
+  }
+
+  Future<void> _loadRoleAndTabs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userString = prefs.getString('user');
+
+    if (userString != null) {
+      final user = jsonDecode(userString);
+      setState(() {
+        role = user['role'];
+        _configureTabs();
+      });
+    }
+  }
+
+  void _configureTabs() {
+    // Define shared tabs
+    tabs = [
+      if (role == 'user')
+        GButton(icon: Icons.add_task, text: 'Post Task', padding: EdgeInsets.all(5)),
+      GButton(icon: Icons.search, text: 'Browse Task', padding: EdgeInsets.all(5)),
+      GButton(icon: Icons.edit_document, text: 'My Task', padding: EdgeInsets.all(5)),
+      GButton(icon: Icons.message_outlined, text: 'Messages', padding: EdgeInsets.all(5)),
+      GButton(icon: Icons.notifications, text: 'Notification', padding: EdgeInsets.all(5)),
+    ];
+
+    screens = [
+      if (role == 'user') PostTask(),
+      BrowseTask(),
+      MyTaskScreen(),
+      MessageScreen(),
+      // You can add Notification screen later
+      Center(child: Text("Notifications")),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    if (role == null) {
+      return Center(child: CircularProgressIndicator()); // Wait until role loads
+    }
+
+    return Scaffold(
+      body: screens[_selectedIndex],
+      bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 20,
-              color: Colors.black.withOpacity(.1),
-            )
-          ],
+          boxShadow: [BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1))],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical:8),
+            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8),
             child: GNav(
-              rippleColor: const Color.fromARGB(255, 230, 248, 241)!,
+              rippleColor: Color.fromARGB(255, 230, 248, 241)!,
               hoverColor: Colors.grey[100]!,
               gap: 8,
-              activeColor: const Color.fromARGB(255, 6, 123, 51),
+              activeColor: Color.fromARGB(255, 6, 123, 51),
               iconSize: 24,
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: Duration(milliseconds: 400),
               tabBackgroundColor: Colors.grey[100]!,
-              color: const Color.fromARGB(255, 96, 101, 97),
-              tabs: [
-                GButton(
-                  padding: EdgeInsets.all(5),
-                  icon: Icons.add_task,
-                  text: 'Post Task',
-                ),
-                GButton(
-                  padding: EdgeInsets.all(5),
-                  icon: Icons.search,
-                  text: 'Browse Task',
-                ),
-                GButton(
-                  padding: EdgeInsets.all(5),
-                  icon: Icons.edit_document,
-                  text: 'My task',
-                ),
-                GButton(
-                  padding: EdgeInsets.all(5),
-                  icon: Icons.message_outlined,
-                  text: 'Messages',
-                ),
-                GButton(
-                  padding: EdgeInsets.all(5),
-                  icon: Icons.notifications,
-                  text: 'Notification',
-                ),
-              ],
+              color: Color.fromARGB(255, 96, 101, 97),
+              tabs: tabs,
               selectedIndex: _selectedIndex,
               onTabChange: (index) {
                 setState(() {
@@ -95,6 +104,7 @@ class _BottomBarState extends State<BottomBar> {
             ),
           ),
         ),
-      );
+      ),
+    );
   }
 }

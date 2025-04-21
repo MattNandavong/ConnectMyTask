@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:app/widget/my_task/task_detail.dart';
+import 'package:app/widget/my_task/myTask_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:app/widget/my_task/provider_task_detail.dart';

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:app/model/task.dart';
 import 'package:app/utils/auth_helper.dart';
 import 'package:app/widget/my_task/provider_task_detail.dart';
-import 'package:app/widget/my_task/task_detail.dart';
+import 'package:app/widget/my_task/myTask_details.dart';
 import 'package:app/widget/task_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -59,13 +59,11 @@ class MyTaskCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [TaskCardHelpers.getStatusText(task.status, 12)],
               ),
-              Row(
-                children: [
+              
                   TaskCardHelpers.getTaskDetail(
-                    context, task
+                    context, task, true
                   ),
-                ],
-              ),
+                
             ],
           ),
         ),

@@ -12,9 +12,9 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class ProviderTaskDetail extends StatelessWidget {
+class MyTaskDetails extends StatelessWidget {
   final String taskId;
-  ProviderTaskDetail({required this.taskId});
+  MyTaskDetails({required this.taskId});
 
   final formatter = DateFormat.yMMMMd();
 
@@ -26,7 +26,99 @@ class ProviderTaskDetail extends StatelessWidget {
     return user['_id'] ?? user['id'];
   }
 
+  void showBidsModal({
+    required BuildContext context,
+    required List<Bid> bids,
+    required String taskId,
+    required VoidCallback onBidAccepted,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final height = MediaQuery.of(context).size.height * 0.9;
+        return Container(
+          height: height,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'All Bids',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Divider(thickness: 1),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: bids.length,
+                  itemBuilder: (context, index) {
+                    final bid = bids[index];
+                    return _buildBidCard(context, bid, taskId, onBidAccepted);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
+  Widget _buildBidCard(
+    BuildContext context,
+    Bid bid,
+    String taskId,
+    VoidCallback onBidAccepted,
+  ) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 5),
+      padding: EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Bid by: ${bid.provider}'),
+          Text('Price: \$${bid.price}'),
+          Text('Estimated Time: ${bid.estimatedTime}'),
+          Text('Bid made: ${timeago.format(bid.date)}'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(onPressed: () {}, child: Text('View Profile')),
+              TextButton(
+                onPressed: () {
+                  TaskService()
+                      .acceptBid(taskId, bid.id)
+                      .then((_) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Bid accepted successfully!')),
+                        );
+                        Navigator.pop(context);
+                        onBidAccepted();
+                      })
+                      .catchError((error) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Failed to accept bid: $error'),
+                          ),
+                        );
+                      });
+                },
+                child: Text('Accept Offer'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +173,60 @@ class ProviderTaskDetail extends StatelessWidget {
                                   color: _getStatusColor(task.status),
                                 ),
                               ),
-                              
+                              if (isPoster &&
+                                  task.bids.isNotEmpty &&
+                                  task.assignedProvider == null) ...[
+                                // Divider(),
+                                // Text(
+                                //   'Offers',
+                                //   style: GoogleFonts.figtree(
+                                //     fontSize: 14,
+                                //     fontWeight: FontWeight.bold,
+                                //   ),
+                                // ),
+                                // SizedBox(height: 8),
+                                // Text('Total offers: ${task.bids.length}'),
+                                FilledButton.icon(
+                                  style: ElevatedButton.styleFrom(
+                                    // padding: EdgeInsets.symmetric(
+                                    //   horizontal: 8,
+                                    //   vertical: 4,
+                                    // ),
+                                    minimumSize: Size(
+                                      0,
+                                      24,
+                                    ), // Optional: sets a smaller height baseline
+                                  ),
+                                  icon: Icon(
+                                    Icons.visibility,
+                                    size: 12,
+                                  ), // Smaller icon
+                                  label: Text(
+                                    'View Offers',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                    ), // Smaller text
+                                  ),
+                                  onPressed: () {
+                                    showBidsModal(
+                                      context: context,
+                                      bids: task.bids,
+                                      taskId: task.id,
+                                      onBidAccepted: () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => MyTaskDetails(
+                                                  taskId: task.id,
+                                                ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
                             ],
                           ),
                           // SizedBox(height: 6),
@@ -289,7 +434,34 @@ class ProviderTaskDetail extends StatelessWidget {
                                                   ],
                                                 ),
                                               ),
-                                              
+                                              SizedBox(height: 12),
+                                              ElevatedButton.icon(
+                                                icon: Icon(
+                                                  Icons.chat_bubble_outline,
+                                                ),
+                                                label: Text("Open Chat"),
+                                                style: ElevatedButton.styleFrom(
+                                                  // backgroundColor: Colors.blueAccent,
+                                                  // foregroundColor: Colors.white,
+                                                  padding: EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 5,
+                                                  ),
+                                                ),
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (_) => ChatScreen(
+                                                            taskId: task.id,
+                                                            userId:
+                                                                currentUserId!,
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -305,44 +477,17 @@ class ProviderTaskDetail extends StatelessWidget {
                     ),
                   ),
                 ],
-                
               );
-              
             },
-            
           );
         },
       ),
-      bottomNavigationBar: FutureBuilder(
-  future: Future.wait([
-    TaskService().getTask(taskId),
-    _getCurrentUserId(),
-  ]),
-  builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-    if (!snapshot.hasData) return SizedBox.shrink();
-
-    final task = snapshot.data![0] as Task;
-    final currentUserId = snapshot.data![1] as String?;
-
-    if (task.user.id == currentUserId) return SizedBox.shrink();
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(40.0),
         child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ChatScreen(
-                  taskId: task.id,
-                  userId: currentUserId!,
-                ),
-              ),
-            );
-          },
-          icon: Icon(Icons.chat_rounded),
-          label: Text('Chat to Poster'),
+          onPressed: () => showMakeOfferModal(context, taskId),
+          icon: Icon(Icons.local_offer_outlined),
+          label: Text('Make an Offer'),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
@@ -351,10 +496,6 @@ class ProviderTaskDetail extends StatelessWidget {
           ),
         ),
       ),
-    );
-  },
-),
-
     );
   }
 

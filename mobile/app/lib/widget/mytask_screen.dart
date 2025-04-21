@@ -60,12 +60,15 @@ Future<void> _loadTasksBasedOnUser() async {
                   return Center(child: Text('No tasks found'));
                 }
 
-                return ListView.builder(
-                  itemCount: snapshot.data!.length,
-                  itemBuilder: (context, index) {
-                    final task = snapshot.data![index];
-                    return MyTaskCard(task: task);
-                  },
+                return Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      final task = snapshot.data![index];
+                      return MyTaskCard(task: task);
+                    },
+                  ),
                 );
               },
             ),
