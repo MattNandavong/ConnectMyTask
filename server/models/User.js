@@ -18,7 +18,9 @@ const UserSchema = new mongoose.Schema(
     // For Google login
     googleId: { type: String },
     averageRating: { type: Number, default: 0 }, // Average rating for providers
-    totalReviews: { type: Number, default: 0 } // Number of received reviews
+    totalReviews: { type: Number, default: 0 }, // Number of received reviews
+    fcmToken: { type: String, required: true},
+
   },
   { timestamps: true }
 );
