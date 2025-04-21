@@ -161,7 +161,7 @@ class MyTaskDetails extends StatelessWidget {
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            
+
                             children: [
                               Text(
                                 task.status == 'Active'
@@ -176,22 +176,8 @@ class MyTaskDetails extends StatelessWidget {
                               if (isPoster &&
                                   task.bids.isNotEmpty &&
                                   task.assignedProvider == null) ...[
-                                // Divider(),
-                                // Text(
-                                //   'Offers',
-                                //   style: GoogleFonts.figtree(
-                                //     fontSize: 14,
-                                //     fontWeight: FontWeight.bold,
-                                //   ),
-                                // ),
-                                // SizedBox(height: 8),
-                                // Text('Total offers: ${task.bids.length}'),
                                 FilledButton.icon(
                                   style: ElevatedButton.styleFrom(
-                                    // padding: EdgeInsets.symmetric(
-                                    //   horizontal: 8,
-                                    //   vertical: 4,
-                                    // ),
                                     minimumSize: Size(
                                       0,
                                       24,
@@ -242,7 +228,7 @@ class MyTaskDetails extends StatelessWidget {
                     ),
                   ),
 
-                  // ✅ MAIN CONTENT
+                  //  MAIN CONTENT
                   Positioned.fill(
                     top: 80, // Leaves room for the status section
                     child: Container(
@@ -470,6 +456,112 @@ class MyTaskDetails extends StatelessWidget {
                                   },
                                 ),
                               ],
+                              if (task.status.toLowerCase() == 'in progress')
+                                Container(
+                                  padding: const EdgeInsets.all(40.0),
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      //TODO: Implement simulated payment
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          double rating = 5.0;
+                                          TextEditingController
+                                          commentController =
+                                              TextEditingController();
+
+                                          return AlertDialog(
+                                            title: Text(
+                                              'How was your experience?',
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text('Rate the provider'),
+                                                SizedBox(height: 8),
+                                                StatefulBuilder(
+                                                  builder:
+                                                      (
+                                                        context,
+                                                        setState,
+                                                      ) => Slider(
+                                                        min: 1,
+                                                        max: 5,
+                                                        divisions: 4,
+                                                        label:
+                                                            rating.toString(),
+                                                        value: rating,
+                                                        onChanged:
+                                                            (val) => setState(
+                                                              () =>
+                                                                  rating = val,
+                                                            ),
+                                                      ),
+                                                ),
+                                                TextField(
+                                                  controller: commentController,
+                                                  decoration: InputDecoration(
+                                                    hintText:
+                                                        'Leave a comment...',
+                                                  ),
+                                                  maxLines: 3,
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                child: Text('Cancel'),
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.pop(context),
+                                              ),
+                                              ElevatedButton(
+                                                child: Text('Submit'),
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                                                  await TaskService()
+                                                      .completeTask(
+                                                        task.id,
+                                                        rating,
+                                                        commentController.text
+                                                            .trim(),
+                                                      );
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Task marked as completed!',
+                                                      ),
+                                                    ),
+                                                  );
+                                                  Navigator.pop(
+                                                    context,
+                                                  ); // or refresh screen
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                    icon: Icon(Icons.done_all),
+                                    label: Text('Mark as Completed'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 14,
+                                      ),
+                                      textStyle: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -481,20 +573,6 @@ class MyTaskDetails extends StatelessWidget {
             },
           );
         },
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: ElevatedButton.icon(
-          onPressed: () => showMakeOfferModal(context, taskId),
-          icon: Icon(Icons.local_offer_outlined),
-          label: Text('Make an Offer'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14),
-            textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
       ),
     );
   }
