@@ -7,7 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
 
 class TaskService {
-  final String baseUrl = 'http://localhost:3300/api/tasks';
+  //ios simulator
+  // final String baseUrl = 'http://localhost:3300/api/auth';
+  // //Android simulator
+  final String baseUrl = 'http://10.0.2.2:3300/api/tasks';
 
   Future<List<Task>> getAllTasks() async {
     final token = await _getToken();
@@ -61,11 +64,13 @@ class TaskService {
 
     if (images != null && images.isNotEmpty) {
       for (var image in images) {
-        request.files.add(await http.MultipartFile.fromPath(
-          'images',
-          image.path,
-          contentType: MediaType('image', 'jpeg'), // Or use mime package
-        ));
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'images',
+            image.path,
+            contentType: MediaType('image', 'jpeg'), // Or use mime package
+          ),
+        );
       }
     }
 
@@ -140,7 +145,7 @@ class TaskService {
     if (response.statusCode != 200) {
       throw Exception('Failed to accept bid');
     }
-  } 
+  }
 
   Future<List<Task>> getUserTasks() async {
     final prefs = await SharedPreferences.getInstance();
@@ -155,10 +160,13 @@ class TaskService {
     final user = jsonDecode(prefs.getString('user') ?? '{}');
     final userId = user['id'];
     final tasks = await getAllTasks();
-    return tasks.where((task) =>
-      task.assignedProvider == userId ||
-      task.bids.any((bid) => bid.provider == userId)
-    ).toList();
+    return tasks
+        .where(
+          (task) =>
+              task.assignedProvider == userId ||
+              task.bids.any((bid) => bid.provider == userId),
+        )
+        .toList();
   }
 
   Future<String> _getToken() async {

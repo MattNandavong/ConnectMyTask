@@ -5,7 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  final String baseUrl = 'http://localhost:3300/api/auth';
+  //ios simulator
+  // final String baseUrl = 'http://localhost:3300/api/auth';
+  // //Android simulator
+  final String baseUrl = 'http://10.0.2.2:3300/api/auth';
+
 
   /// Register user (with optional profile photo & skills)
   Future<User> register({
