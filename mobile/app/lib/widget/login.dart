@@ -1,3 +1,4 @@
+import 'package:app/utils/firebase_service.dart';
 import 'package:app/widget/login/profile_setup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/model/user.dart';
@@ -19,42 +20,50 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  // final _fcmToken = getFcmToken();
   String _userType = 'user';
   bool _isLogin = true;
 
   Future<void> submit() async {
-    final isValid = _form.currentState!.validate();
-    if (!isValid) return;
+  final isValid = _form.currentState!.validate();
+  final token = await getFcmToken(); // Await actual token string
+  if (!isValid) return;
 
-    try {
-      User user;
-      if (_isLogin) {
-        user = await _authService.login(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SplashScreen()),
-        );
-      } else {
-        user = await _authService.register(
-          name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-          role: _userType,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => ProfileSetupScreen(user: user)),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${e.toString()}')),
+  try {
+    
+    print('Tokem FCM: $token');
+
+    User user;
+    if (_isLogin) {
+      user = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+        token!, //  Correct token here
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SplashScreen()),
+      );
+    } else {
+      user = await _authService.register(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        role: _userType,
+        fcmToken: token, 
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ProfileSetupScreen(user: user)),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${e.toString()}')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

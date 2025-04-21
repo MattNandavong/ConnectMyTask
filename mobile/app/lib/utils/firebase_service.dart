@@ -84,3 +84,7 @@ Future<void> setupFCM() async {
     // TODO: Navigate to specific screen if needed
   });
 }
+
+Future<String?> getFcmToken() async {
+  return await FirebaseMessaging.instance.getToken();
+}
