@@ -104,24 +104,26 @@ class _SplashScreenState extends State<SplashScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8),
-            child: GNav(
-              rippleColor: const Color.fromARGB(255, 230, 248, 241),
-              hoverColor: Colors.grey[100]!,
-              gap: 8,
-              activeColor: const Color.fromARGB(255, 6, 123, 51),
-              iconSize: 24,
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              duration: Duration(milliseconds: 400),
-              tabBackgroundColor: Colors.grey[100]!,
-              color: const Color.fromARGB(255, 96, 101, 97),
-              tabs: _tabs!,
-              selectedIndex: _selectedIndex,
-              onTabChange: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                  _topBar = TopBar(screen: getTabName(index));
-                });
-              },
+            child: FittedBox(
+              child: GNav(
+                rippleColor: const Color.fromARGB(255, 230, 248, 241),
+                hoverColor: Colors.grey[100]!,
+                gap: 8,
+                activeColor: const Color.fromARGB(255, 6, 123, 51),
+                iconSize: 24,
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                duration: Duration(milliseconds: 400),
+                tabBackgroundColor: Colors.grey[100]!,
+                color: const Color.fromARGB(255, 96, 101, 97),
+                tabs: _tabs!,
+                selectedIndex: _selectedIndex,
+                onTabChange: (index) {
+                  setState(() {
+                    _selectedIndex = index;
+                    _topBar = TopBar(screen: getTabName(index));
+                  });
+                },
+              ),
             ),
           ),
         ),
