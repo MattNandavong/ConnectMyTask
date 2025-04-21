@@ -62,9 +62,7 @@ class MyTaskCard extends StatelessWidget {
               Row(
                 children: [
                   TaskCardHelpers.getTaskDetail(
-                    task.title,
-                    task.description,
-                    task.budget,
+                    context, task
                   ),
                 ],
               ),

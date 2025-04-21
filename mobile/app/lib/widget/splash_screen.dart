@@ -50,9 +50,9 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       // Navigate to login page if no token
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => LoginScreen()),
+        MaterialPageRoute(builder: (context) => AuthScreen()),
       );
-      return LoginScreen();
+      return AuthScreen();
     }
   }
 

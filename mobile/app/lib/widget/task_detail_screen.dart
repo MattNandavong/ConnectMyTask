@@ -3,11 +3,14 @@ import 'package:app/widget/make_offer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final String taskId;
 
   TaskDetailScreen({required this.taskId});
+
+  final formatter = DateFormat.yMMMMd();
 
   @override
   Widget build(BuildContext context) {
@@ -25,28 +28,31 @@ class TaskDetailScreen extends StatelessWidget {
           if (!snapshot.hasData) {
             return Center(child: Text('Task not found'));
           }
+
           final task = snapshot.data!;
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Title: ${task.title}', style: TextStyle(fontSize: 20)),
+                Text('Title: ${task.title}', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 SizedBox(height: 10),
                 Text('Description: ${task.description}'),
                 SizedBox(height: 10),
-                Text('Budget: \$${task.budget}'),
+                Text('Budget: \$${task.budget.toStringAsFixed(2)}'),
                 SizedBox(height: 10),
-                Text('Deadline: ${task.deadline}'),
+                Text('Deadline: ${formatter.format(task.deadline)}'),
+                SizedBox(height: 20),
+                Divider(),
+                Text('Posted by:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    task.user.buildAvatar(radius: 14),
-                    SizedBox(width: 5),
+                    task.user.buildAvatar(radius: 16),
+                    SizedBox(width: 8),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           task.user.name,
@@ -58,11 +64,11 @@ class TaskDetailScreen extends StatelessWidget {
                         SizedBox(height: 2),
                         Row(
                           children: [
-                            Icon(Icons.star, size: 8, color: Color(0xFFFFB700)),
+                            Icon(Icons.star, size: 12, color: Color(0xFFFFB700)),
                             SizedBox(width: 4),
                             Text(
-                              task.user.rating != null
-                                  ? task.user.rating!.toStringAsFixed(1)
+                              task.user.averageRating != null
+                                  ? task.user.averageRating!.toStringAsFixed(1)
                                   : 'No reviews yet',
                               style: TextStyle(fontSize: 12),
                             ),
@@ -72,11 +78,25 @@ class TaskDetailScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-
+                SizedBox(height: 80),
               ],
             ),
           );
         },
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ElevatedButton.icon(
+          onPressed: () => showMakeOfferModal(context, taskId),
+          icon: Icon(Icons.local_offer_outlined),
+          label: Text('Make an Offer'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(vertical: 14),
+            textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ),
       ),
     );
   }

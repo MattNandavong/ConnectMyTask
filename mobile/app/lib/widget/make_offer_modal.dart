@@ -74,7 +74,7 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => LoginScreen(),
+                                    builder: (context) => AuthScreen(),
                                   ),
                                 );
                                 // FirebaseAuth.instance.signOut();

@@ -1,310 +1,340 @@
-import 'dart:convert';
+import 'dart:io';
 import 'package:app/utils/task_service.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
 class PostTask extends StatefulWidget {
   const PostTask({super.key});
-
   @override
   State<PostTask> createState() => _PostTaskState();
 }
 
 class _PostTaskState extends State<PostTask> {
+  final _formKeys = List.generate(3, (_) => GlobalKey<FormState>());
   final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _descController = TextEditingController();
   final _budgetController = TextEditingController();
+  final _locationController = TextEditingController();
+  final DateFormat _formatter = DateFormat.yMMMMd();
 
-  String _workType = 'Remote';
+  String _category = 'Cleaning';
+  double _budget = 0.0;
+  bool _isRemote = true;
+  String _selectedState = 'VIC';
+  String? _city;
   DateTime? _deadline;
+  TimeOfDay? _deadlineTime;
   int _currentStep = 0;
-  final int _totalSteps = 5;
-  final formatter = DateFormat.yMMMd();
 
-  final List<GlobalKey<FormState>> _formKeys = List.generate(
-    5,
-    (_) => GlobalKey<FormState>(),
-  );
+  List<Map<String, dynamic>> _imagesWithCaptions = [];
 
-  void _nextStep() {
-    final isValid = _formKeys[_currentStep].currentState?.validate() ?? true;
+  final _categories = [
+    'Cleaning',
+    'Plumbing',
+    'Electrical',
+    'Handyman',
+    'Moving',
+    'Delivery',
+    'Gardening',
+    'Tutoring',
+    'Tech Support',
+    'Other'
+  ];
 
-    if (isValid && _currentStep < _totalSteps - 1) {
-      setState(() {
-        _currentStep++;
-      });
-    }
-  }
+  final _states = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
 
-  void _prevStep() {
-    if (_currentStep > 0) {
-      setState(() {
-        _currentStep--;
-      });
-    }
-  }
-
-  Future<void> _presentDataPicker() async {
-    final pickedDateTime = await showDatePicker(
+  Future<void> _pickDeadline() async {
+    final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(Duration(days: 365)),
+      initialDate: _deadline ?? DateTime.now(),
     );
-    if (pickedDateTime != null) {
+    if (date != null) {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
       setState(() {
-        _deadline = pickedDateTime;
+        _deadline = date;
+        _deadlineTime = time ?? TimeOfDay(hour: 23, minute: 59);
       });
     }
   }
 
-  Future<void> _postTask() async {
-    for (final key in _formKeys.take(4)) {
-      if (key.currentState != null && !key.currentState!.validate()) {
-        return;
-      }
-    }
-
-    if (_deadline == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please select a deadline')));
-      return;
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    if (token == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Please log in to post a task.')));
-      return;
-    }
-
-    try {
-      final result = await TaskService().createTask(
-        _titleController.text.trim(),
-        _descriptionController.text.trim(),
-        double.parse(_budgetController.text),
-        _deadline!.toIso8601String(),
-      );
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Task posted successfully!')));
-
-      // Reset form
+  Future<void> _pickImages() async {
+    final picker = ImagePicker();
+    final files = await picker.pickMultiImage(imageQuality: 75);
+    if (files != null) {
       setState(() {
-        _currentStep = 0;
-        _titleController.clear();
-        _descriptionController.clear();
-        _budgetController.clear();
-        _deadline = null;
+        _imagesWithCaptions.addAll(
+          files.map((e) => {'file': File(e.path), 'caption': ''}),
+        );
       });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to post task: ${e.toString()}')),
-      );
     }
   }
 
-  Widget _buildProgressBar() {
-    return Column(
+void _submitTask() async {
+  showDialog(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text('Confirm Submit'),
+      content: Text('Do you want to post this task?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            Navigator.pop(context); // close dialog
+
+            try {
+              final deadlineDateTime = DateTime(
+                _deadline!.year,
+                _deadline!.month,
+                _deadline!.day,
+                _deadlineTime?.hour ?? 23,
+                _deadlineTime?.minute ?? 59,
+              );
+
+              await TaskService().createTask(
+                title: _titleController.text.trim(),
+                description: _descController.text.trim(),
+                budget: double.tryParse(_budgetController.text.trim()) ?? 0,
+                deadline: deadlineDateTime.toIso8601String(),
+                category: _category,
+                location: _isRemote
+                    ? "Remote"
+                    : '$_selectedState${_locationController.text.isNotEmpty ? ', ${_locationController.text.trim()}' : ''}',
+                images: _imagesWithCaptions
+                    .map((img) => img['file'] as File)
+                    .toList(),
+              );
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Task Submitted')),
+              );
+
+              setState(() {
+                _currentStep = 0;
+                _titleController.clear();
+                _descController.clear();
+                _budgetController.clear();
+                _locationController.clear();
+                _imagesWithCaptions.clear();
+                _deadline = null;
+                _deadlineTime = null;
+                _isRemote = true;
+              });
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to submit task: $e')),
+              );
+            }
+          },
+          child: Text('Submit'),
+        )
+      ],
+    ),
+  );
+}
+
+
+  Widget _buildPreview() {
+    return ListView(
+      padding: EdgeInsets.all(16),
       children: [
-        LinearProgressIndicator(
-          value: (_currentStep + 1) / _totalSteps,
-          backgroundColor: Colors.grey.shade300,
-          color: Colors.teal,
-          minHeight: 6,
+        Text("📌 Title: ${_titleController.text}", style: TextStyle(fontSize: 16)),
+        Text("📂 Category: $_category"),
+        Text("📝 Description:\n${_descController.text}"),
+        SizedBox(height: 12),
+        Text("💰 Budget: \$${_budgetController.text}"),
+        if (_deadline != null)
+          Text(
+            "⏳ Deadline: ${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? 'No deadline'}",
+          ),
+        Text("📍 Location: ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'}"),
+        if (!_isRemote) Text("🏙️ City/Suburb: ${_locationController.text}"),
+        SizedBox(height: 20),
+        Text("🖼️ Images:", style: TextStyle(fontWeight: FontWeight.bold)),
+        SizedBox(height: 8),
+        ..._imagesWithCaptions.map(
+          (img) => ListTile(
+            leading: Image.file(img['file'], width: 50, height: 50, fit: BoxFit.cover),
+            // title: Text(img['caption'] ?? ''),
+          ),
         ),
-        SizedBox(height: 10),
-        Text(
-          'Step ${_currentStep + 1} of $_totalSteps',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        SizedBox(height: 20),
+        ElevatedButton.icon(
+          icon: Icon(Icons.send),
+          label: Text('Confirm & Submit'),
+          onPressed: _submitTask,
+          // onPressed: () {
+          //   print('Task Submit: ${_titleController.text} ${_category} ${_descController.text} ${_budgetController.text} ${_formatter.format(_deadline!)} ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'} ${_locationController.text}');
+          // },
+        )
       ],
     );
   }
 
-  Widget _buildStepCard({required Widget child, required String title}) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepContent() {
-    switch (_currentStep) {
+  Widget _buildStepContent(int step) {
+    switch (step) {
       case 0:
         return Form(
           key: _formKeys[0],
-          child: _buildStepCard(
-            title: 'Task Title',
-            child: TextFormField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Enter a short, clear title',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.title),
-              ),
-              validator:
-                  (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'Title is required'
-                          : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _titleController,
+                  decoration: InputDecoration(labelText: 'Title'),
+                  validator: (val) => val!.isEmpty ? 'Required' : null,
+                ),
+                SizedBox(height: 12),
+                DropdownButtonFormField(
+                  value: _category,
+                  decoration: InputDecoration(labelText: 'Category'),
+                  items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  onChanged: (val) => setState(() => _category = val!),
+                ),
+                SizedBox(height: 12),
+                TextFormField(
+                  controller: _descController,
+                  maxLines: 3,
+                  decoration: InputDecoration(labelText: 'Description'),
+                  validator: (val) => val!.isEmpty ? 'Required' : null,
+                ),
+              ],
             ),
           ),
         );
       case 1:
         return Form(
           key: _formKeys[1],
-          child: _buildStepCard(
-            title: 'Description',
-            child: TextFormField(
-              controller: _descriptionController,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: 'Describe the task in detail',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
-              ),
-              validator:
-                  (value) =>
-                      value == null || value.trim().isEmpty
-                          ? 'Description is required'
-                          : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: _budgetController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: 'Budget (AUD)'),
+                  validator: (val) => val!.isEmpty ? 'Required' : null,
+                ),
+                SizedBox(height: 12),
+                ListTile(
+                  title: Text(_deadline != null
+                      ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
+                      : 'Select Deadline'),
+                  trailing: Icon(Icons.calendar_today),
+                  onTap: _pickDeadline,
+                ),
+                SwitchListTile(
+                  title: Text('Remote'),
+                  value: _isRemote,
+                  onChanged: (val) => setState(() => _isRemote = val),
+                ),
+                if (!_isRemote) ...[
+                  DropdownButtonFormField(
+                    value: _selectedState,
+                    decoration: InputDecoration(labelText: 'State'),
+                    items: _states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                    onChanged: (val) => setState(() => _selectedState = val!),
+                  ),
+                  SizedBox(height: 10),
+                  TextFormField(
+                    controller: _locationController,
+                    decoration: InputDecoration(labelText: 'City / Suburb'),
+                  ),
+                ]
+              ],
             ),
           ),
         );
       case 2:
-        return Form(
-          key: _formKeys[2],
-          child: _buildStepCard(
-            title: 'Budget',
-            child: TextFormField(
-              controller: _budgetController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Enter your budget in AUD',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Budget is required';
-                }
-
-                final parsed = double.tryParse(value);
-                if (parsed == null) {
-                  return 'Please enter a valid number';
-                }
-
-                if (parsed <= 0) {
-                  return 'Budget must be greater than 0';
-                }
-
-                return null;
-              },
-            ),
-          ),
-        );
-      case 3:
-        return Form(
-          key: _formKeys[3],
-          child: _buildStepCard(
-            title: 'Work Type',
-            child: DropdownButtonFormField<String>(
-              value: _workType,
-              items:
-                  ['Remote', 'On Location']
-                      .map(
-                        (type) =>
-                            DropdownMenuItem(value: type, child: Text(type)),
-                      )
-                      .toList(),
-              onChanged: (val) => setState(() => _workType = val!),
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.work),
-              ),
-            ),
-          ),
-        );
-      case 4:
-        return _buildStepCard(
-          title: 'Deadline',
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
             children: [
-              Text(
-                _deadline == null
-                    ? 'No deadline selected'
-                    : '${formatter.format(_deadline!)}',
-                style: TextStyle(fontSize: 16),
-              ),
               ElevatedButton.icon(
-                onPressed: _presentDataPicker,
-                icon: Icon(Icons.calendar_today),
-                label: Text('Pick Date'),
+                icon: Icon(Icons.photo_library),
+                label: Text('Upload Images'),
+                onPressed: _pickImages,
+              ),
+              SizedBox(height: 10),
+              Expanded(
+                child: ReorderableListView.builder(
+                  itemCount: _imagesWithCaptions.length,
+                  onReorder: (oldIndex, newIndex) {
+                    setState(() {
+                      if (newIndex > oldIndex) newIndex--;
+                      final item = _imagesWithCaptions.removeAt(oldIndex);
+                      _imagesWithCaptions.insert(newIndex, item);
+                    });
+                  },
+                  itemBuilder: (context, index) {
+                    final image = _imagesWithCaptions[index];
+                    return ListTile(
+                      key: ValueKey(index),
+                      leading: Image.file(image['file'], width: 60, height: 60, fit: BoxFit.cover),
+                      // title: TextFormField(
+                      //   initialValue: image['caption'],
+                      //   onChanged: (val) => image['caption'] = val,
+                      //   decoration: InputDecoration(labelText: 'Caption'),
+                      // ),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => setState(() => _imagesWithCaptions.removeAt(index)),
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
         );
+      case 3:
+        return _buildPreview();
       default:
-        return SizedBox.shrink();
+        return SizedBox();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text('Post a Task')),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            _buildProgressBar(),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
-                child: _buildStepContent(),
-              ),
-            ),
-            Row(
+      appBar: AppBar(title: Text('Post Task')),
+      body: Column(
+        children: [
+          LinearProgressIndicator(
+            value: (_currentStep + 1) / 4,
+            minHeight: 6,
+            backgroundColor: Colors.grey.shade300,
+            color: Colors.teal,
+          ),
+          Expanded(child: _buildStepContent(_currentStep)),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (_currentStep > 0)
-                  OutlinedButton(onPressed: _prevStep, child: Text('Back')),
-                if (_currentStep < _totalSteps - 1)
-                  ElevatedButton(onPressed: _nextStep, child: Text('Next')),
-                if (_currentStep == _totalSteps - 1)
-                  ElevatedButton.icon(
-                    onPressed: _postTask,
-                    icon: Icon(Icons.send),
-                    label: Text('Submit'),
+                  OutlinedButton(onPressed: () => setState(() => _currentStep--), child: Text('Back')),
+                if (_currentStep < 3)
+                  ElevatedButton(
+                    onPressed: () {
+                      final valid = _formKeys[_currentStep].currentState?.validate() ?? true;
+                      if (valid) setState(() => _currentStep++);
+                    },
+                    child: Text('Next'),
                   ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

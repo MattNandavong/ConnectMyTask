@@ -1,5 +1,6 @@
 import 'package:app/model/bid.dart';
-import 'package:app/model/user.dart'; // Make sure to import the updated User model
+import 'package:app/model/user.dart';
+import 'package:app/utils/auth_service.dart'; // Make sure to import the updated User model
 
 class Task {
   final String id;
@@ -7,10 +8,11 @@ class Task {
   final String description;
   final double budget;
   final DateTime deadline;
-  final User user; // ✅ Uses full User model
+  final User user; 
   final List<Bid> bids;
   final String? assignedProvider;
   final String status;
+  final String? location;
 
   Task({
     required this.id,
@@ -22,21 +24,36 @@ class Task {
     required this.bids,
     required this.assignedProvider,
     required this.status,
+    required this.location,
   });
 
-  factory Task.fromJson(Map<String, dynamic> json) {
-    return Task(
-      id: json['_id'],
-      title: json['title'],
-      description: json['description'],
-      budget: (json['budget'] as num).toDouble(),
-      deadline: DateTime.parse(json['deadline']),
-      user: User.fromJson(json['user']), // ✅ Create full User
-      bids: (json['bids'] as List).map((bid) => Bid.fromJson(bid)).toList(),
-      assignedProvider: json['assignedProvider'],
-      status: json['status'],
-    );
+static Future<Task> fromJsonAsync(Map<String, dynamic> json) async {
+  // Handle user being either a String ID or a full user object
+  final userField = json['user'];
+  late User user;
+
+  if (userField is String) {
+    user = await AuthService().getUserProfile(userField);
+  } else if (userField is Map<String, dynamic>) {
+    user = await AuthService().getUserProfile(userField['_id']); 
+  } else {
+    throw Exception('Invalid user field in task JSON');
   }
+
+  return Task(
+    id: json['_id'],
+    title: json['title'],
+    description: json['description'],
+    budget: (json['budget'] as num).toDouble(),
+    deadline: DateTime.parse(json['deadline']),
+    user: user,
+    bids: (json['bids'] as List).map((b) => Bid.fromJson(b)).toList(),
+    assignedProvider: json['assignedProvider'],
+    status: json['status'],
+    location: json['location']
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -45,7 +62,7 @@ class Task {
       'description': description,
       'budget': budget,
       'deadline': deadline.toIso8601String(),
-      'user': user.toJson(), // ✅ Store User
+      'user': user.id, 
       'bids': bids.map((bid) => bid.toJson()).toList(),
       'assignedProvider': assignedProvider,
       'status': status,

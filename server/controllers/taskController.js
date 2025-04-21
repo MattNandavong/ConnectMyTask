@@ -2,11 +2,17 @@
 
 const Task = require("../models/Task");
 const User = require("../models/User");
+const {
+  sendTaskCreationEmail,
+  sendBidNotificationEmail,
+  sendBidAcceptedEmail,
+  sendTaskCompletionEmail,
+} = require("../utils/mail");
 
 // Create a new task
 const createTask = async (req, res) => {
-  const { title, description, budget, deadline } = req.body;
-
+  const { title, description, budget, deadline, location, category } = req.body;
+  const imageUrls = req.files.map((file) => file.path); // Cloudinary returns .path as URL
   try {
     const newTask = new Task({
       title,
@@ -14,9 +20,12 @@ const createTask = async (req, res) => {
       budget,
       deadline,
       user: req.user.id, // Set the logged-in user who is posting the task
+      location,
+      images: imageUrls, // save image urls
+      category,
     });
-
     const savedTask = await newTask.save();
+    // sendTaskCreationEmail(req.user.email, req.user.name, savedTask.title); // Send email notification to the user
     res.status(201).json(savedTask);
   } catch (error) {
     console.error(error.message);
@@ -106,7 +115,7 @@ const bidOnTask = async (req, res) => {
   const { price, estimatedTime } = req.body;
 
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findById(req.params.id).populate("user", "email");
     if (!task) {
       return res.status(404).json({ msg: "Task not found" });
     }
@@ -119,6 +128,7 @@ const bidOnTask = async (req, res) => {
     });
 
     await task.save();
+    // sendBidNotificationEmail(task.user.email, task.title, req.user.name); // Send email notification to the task poster
     res.json(task);
   } catch (error) {
     console.error(error.message);
@@ -132,7 +142,7 @@ const acceptBid = async (req, res) => {
 
   try {
     // Find the task by ID
-    const task = await Task.findById(id);
+    const task = await Task.findById(id).populate("bids.provider", "email");
     if (!task) {
       return res.status(404).json({ msg: "Task not found" });
     }
@@ -155,6 +165,10 @@ const acceptBid = async (req, res) => {
     task.status = "In Progress";
 
     await task.save();
+    // sendBidAcceptedEmail(
+    //   bid.provider.email,
+    //   task.title
+    // ); // Send email notification to the provider
 
     res.json({ msg: "Bid accepted", task });
   } catch (err) {
@@ -177,7 +191,9 @@ const completeTask = async (req, res) => {
 
     // Ensure the user is the one who posted the task
     if (task.user.toString() !== req.user.id) {
-      return res.status(403).json({ msg: "Only the task poster can mark a task as completed" });
+      return res
+        .status(403)
+        .json({ msg: "Only the task poster can mark a task as completed" });
     }
 
     // Check if task is already completed
@@ -201,12 +217,17 @@ const completeTask = async (req, res) => {
     // Update the provider's average rating and total reviews
     provider.totalReviews += 1;
     provider.averageRating = (
-      (provider.averageRating * (provider.totalReviews - 1) + rating) / provider.totalReviews
-    ).toFixed(1);  // Recalculate average rating
+      (provider.averageRating * (provider.totalReviews - 1) + rating) /
+      provider.totalReviews
+    ).toFixed(1); // Recalculate average rating
 
-    await provider.save();  // Save updated provider info
+    await provider.save(); // Save updated provider info
 
-    await task.save();  // Save the task with updated status and review
+    await task.save(); // Save the task with updated status and review
+    // sendTaskCompletionEmail(
+    //   provider.email,
+    //   task.title
+    // ); // Send email notification to the provider
 
     res.json({ msg: "Task marked as completed and review added", task });
   } catch (err) {
