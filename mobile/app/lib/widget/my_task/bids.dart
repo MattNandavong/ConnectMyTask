@@ -1,83 +1,130 @@
-import 'package:app/model/bid.dart';
-import 'package:app/model/task.dart';
-import 'package:app/utils/task_service.dart';
-import 'package:app/widget/my_task/myTask_details.dart';
-import 'package:app/widget/mytask_screen.dart';
 import 'package:flutter/material.dart';
-
+import 'package:app/model/bid.dart';
+import 'package:app/model/user.dart';
+import 'package:app/utils/auth_service.dart';
+import 'package:app/utils/task_service.dart';
+import 'package:app/widget/profile_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class BidsScreen extends StatelessWidget {
-  final List<Bid> bids;
-  final String taskId;
+void showBidsModal({
+  required BuildContext context,
+  required List<Bid> bids,
+  required String taskId,
+  required VoidCallback onBidAccepted,
+}) {
+  showModalBottomSheet(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    isScrollControlled: true,
 
-  BidsScreen({required this.bids, required this.taskId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('All Bids')),
-      body: ListView.builder(
-        itemCount: bids.length,
-        itemBuilder: (context, index) {
-          final bid = bids[index];
-          return Container(
-            margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(5),
+    builder: (context) {
+      final height = MediaQuery.of(context).size.height * 0.9;
+      return Container(
+        height: height,
+        padding: EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "All Bids",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Bid by: ${bid.provider}'),
-                Text('Price: \$${bid.price}'),
-                Text('Estimated Time: ${bid.estimatedTime} days'),
-                Text('Bid made: ${timeago.format(bid.date)}'),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        TaskService()
-                            .acceptBid(taskId, bid.id)
-                            .then((updatedTask) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Bid accepted successfully!'),
-                                ),
-                              );
+            Divider(),
+            ...bids
+                .map(
+                  (bid) => _buildBidCard(context, bid, taskId, onBidAccepted),
+                )
+                .toList(),
+          ],
+        ),
+      );
+    },
+  );
+}
 
-                              // Navigate to the updated MyTaskDetails screen
-                              Future.delayed(Duration(seconds: 1), () {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) =>
-                                           MyTaskScreen(),
-                                  ),
-                                );
-                              });
-                            })
-                            .catchError((error) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to accept bid: $error'),
-                                ),
-                              );
-                            });
-                      },
-                      child: Text('Accept Offer'),
+Widget _buildBidCard(
+  BuildContext context,
+  Bid bid,
+  String taskId,
+  VoidCallback onBidAccepted,
+) {
+  return FutureBuilder<User>(
+    future: AuthService().getUserProfile(bid.provider),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) return CircularProgressIndicator();
+      final provider = snapshot.data!;
+      return Card(
+        margin: EdgeInsets.symmetric(vertical: 8),
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text('${timeago.format(bid.date)}', style: TextStyle(fontSize: 10, color: Colors.grey),),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(provider.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+                  Text('\$${bid.price}', style: GoogleFonts.oswald(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.secondary),),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  
+                  Text('Duration: ${bid.estimatedTime}'),
+                  
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (_) => ProfileScreen(user: provider, editable: false),
+                      ),
                     ),
-                  ],
+                  child: Text("View profile"),
                 ),
+                FilledButton(
+                onPressed: () {
+                  TaskService().acceptBid(taskId, bid.id).then((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Bid accepted successfully!')),
+                    );
+                    Navigator.pop(context);
+                    onBidAccepted();
+                  }).catchError((error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed: $error')),
+                    );
+                  });
+                },
+                child: Text('Accept Offer'),),
+                
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
+            
+            ],
+          
+            
+            
+                
+          ),
+        ),
+      );
+    },
+  );
 }
