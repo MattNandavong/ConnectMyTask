@@ -6,6 +6,8 @@ import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/make_offer_modal.dart';
+import 'package:app/widget/my_task/bids.dart';
+import 'package:app/widget/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -25,100 +27,18 @@ class MyTaskDetails extends StatelessWidget {
     final user = jsonDecode(userJson);
     return user['_id'] ?? user['id'];
   }
-
-  void showBidsModal({
-    required BuildContext context,
-    required List<Bid> bids,
-    required String taskId,
-    required VoidCallback onBidAccepted,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        final height = MediaQuery.of(context).size.height * 0.9;
-        return Container(
-          height: height,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'All Bids',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              Divider(thickness: 1),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: bids.length,
-                  itemBuilder: (context, index) {
-                    final bid = bids[index];
-                    return _buildBidCard(context, bid, taskId, onBidAccepted);
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+  Future<Map<String, User>> fetchProvidersForBids(List<Bid> bids) async {
+  final Map<String, User> providerMap = {};
+  for (var bid in bids) {
+    if (!providerMap.containsKey(bid.provider)) {
+      final user = await AuthService().getUserProfile(bid.provider);
+      providerMap[bid.provider] = user;
+    }
   }
+  return providerMap;
+}
 
-  Widget _buildBidCard(
-    BuildContext context,
-    Bid bid,
-    String taskId,
-    VoidCallback onBidAccepted,
-  ) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 5),
-      padding: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Bid by: ${bid.provider}'),
-          Text('Price: \$${bid.price}'),
-          Text('Estimated Time: ${bid.estimatedTime}'),
-          Text('Bid made: ${timeago.format(bid.date)}'),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(onPressed: () {}, child: Text('View Profile')),
-              TextButton(
-                onPressed: () {
-                  TaskService()
-                      .acceptBid(taskId, bid.id)
-                      .then((_) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Bid accepted successfully!')),
-                        );
-                        Navigator.pop(context);
-                        onBidAccepted();
-                      })
-                      .catchError((error) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Failed to accept bid: $error'),
-                          ),
-                        );
-                      });
-                },
-                child: Text('Accept Offer'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -204,9 +124,11 @@ class MyTaskDetails extends StatelessWidget {
                                                 (_) => MyTaskDetails(
                                                   taskId: task.id,
                                                 ),
+                                                
                                           ),
                                         );
                                       },
+                                      
                                     );
                                   },
                                 ),
