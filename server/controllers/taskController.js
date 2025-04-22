@@ -241,6 +241,7 @@ const completeTask = async (req, res) => {
     task.review = {
       rating,
       comment,
+      reviewer: req.user.id,
     };
 
     // Find the provider of the task
