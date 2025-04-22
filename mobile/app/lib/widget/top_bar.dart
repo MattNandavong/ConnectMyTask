@@ -1,12 +1,17 @@
+import 'package:app/model/user.dart';
+import 'package:app/utils/auth_service.dart';
+import 'package:app/widget/profile_screen.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:mobile/widgets/browsetask/browsetask_list.dart';
 
 class TopBar extends StatefulWidget implements PreferredSizeWidget {
-  const TopBar({super.key, required this.screen});
-
   final String screen;
+  final bool showBack;
+
+  const TopBar({super.key, required this.screen, this.showBack = false});
 
   @override
   State<TopBar> createState() => _TopBarState();
@@ -16,45 +21,76 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TopBarState extends State<TopBar> {
+  User? user;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final currentUser = await AuthService().getCurrentUser();
+    final profile = await AuthService().getUserProfile(currentUser!.id);
+    setState(() {
+      user = profile;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      surfaceTintColor: const Color.fromARGB(255, 255, 255, 255),
+      surfaceTintColor: Colors.white,
       centerTitle: true,
       elevation: 12,
       shadowColor: const Color.fromARGB(30, 0, 0, 0),
+      automaticallyImplyLeading: false, // Disable default back button
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: () {},
-                icon: Icon(FluentIcons.map_20_regular, size: 20),
-              ),
-              // SizedBox(height: 48, width: 48,),
-            ],
-          ),
-          
+          /// Back button if needed
+          widget.showBack
+              ? IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.pop(context),
+                )
+              : IconButton(
+                  icon: Icon(FluentIcons.map_20_regular, size: 20),
+                  onPressed: () {},
+                ),
+
+          ///  Centered title
           Text(widget.screen, style: GoogleFonts.figtree(fontSize: 18)),
+
+          ///  Search + profile
           Row(
             children: [
-              widget.screen == 'Browse Task'? IconButton(
-                onPressed: () {},
-                icon: Icon(FluentIcons.search_12_regular, size: 20),
-                padding: EdgeInsets.all(10),
-              ): SizedBox(height: 49  , width: 48,),
+              widget.screen == 'Browse Task'
+                  ? IconButton(
+                      onPressed: () {},
+                      icon: Icon(FluentIcons.search_12_regular, size: 20),
+                      padding: EdgeInsets.all(10),
+                    )
+                  : const SizedBox(height: 49, width: 48),
               IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.account_circle, size: 24),
-                padding: EdgeInsets.all(10),
+                onPressed: user == null
+                    ? null
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProfileScreen(user: user!),
+                          ),
+                        );
+                      },
+                icon: const Icon(Icons.account_circle, size: 24),
+                padding: const EdgeInsets.all(10),
                 iconSize: 20,
               ),
             ],
           ),
         ],
       ),
-
     );
   }
 }
