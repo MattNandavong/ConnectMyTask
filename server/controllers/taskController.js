@@ -8,6 +8,8 @@ const {
   sendBidAcceptedEmail,
   sendTaskCompletionEmail,
 } = require("../utils/mail");
+//chat model
+const Chat = require("../models/ChatMessage")
 
 // Create a new task
 const createTask = async (req, res) => {
@@ -259,6 +261,9 @@ const completeTask = async (req, res) => {
     //   provider.email,
     //   task.title
     // ); // Send email notification to the provider
+
+    //Delete Chat history for the task id
+    await Chat.deleteMany({ taskId: task._id });
 
     res.json({ msg: "Task marked as completed and review added", task });
   } catch (err) {
