@@ -10,16 +10,17 @@ const cors = require("cors");
 const http = require('http');
 const socketio = require('socket.io');
 
-const admin = require("firebase-admin"); // Required for FCM
+const admin = require('./config/firebaseAdmin');
+// Required for FCM
 const ChatMessage = require("./models/ChatMessage"); // Message Model
 const Task = require("./models/Task"); // Task Model for sender/receiver logic
 const User = require("./models/User"); // Needed 
 
 //initialize Firebase Admin SDK
-const serviceAccount = require("./config/serviceAccountKey.json");
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+// const serviceAccount = require("./config/serviceAccountKey.json");
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+// });
 
 
 const app = express();
@@ -75,11 +76,12 @@ io.on('connection', (socket) => {
       await admin.messaging().send({
         token: recipient.fcmToken,
         notification: {
-          title: 'New Chat Message',
+          title: 'New Message',
           body: data.text,
         },
         data: {
           taskId: data.taskId,
+          type:'chat',
         },
       });
     }
