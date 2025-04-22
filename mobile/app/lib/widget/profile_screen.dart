@@ -1,3 +1,5 @@
+import 'package:app/model/Review.dart';
+import 'package:app/utils/review_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:app/model/user.dart';
@@ -20,16 +22,17 @@ class ProfileScreen extends StatelessWidget {
                 padding: EdgeInsets.only(top: 50, bottom: 20),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
-                  borderRadius:
-                      BorderRadius.vertical(bottom: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(24),
+                  ),
                 ),
                 child: Column(
                   children: [
                     user.profilePhoto != null && user.profilePhoto!.isNotEmpty
                         ? CircleAvatar(
-                            radius: 40,
-                            backgroundImage: NetworkImage(user.profilePhoto!),
-                          )
+                          radius: 40,
+                          backgroundImage: NetworkImage(user.profilePhoto!),
+                        )
                         : user.buildAvatar(radius: 40),
                     SizedBox(height: 10),
                     Row(
@@ -46,8 +49,11 @@ class ProfileScreen extends StatelessWidget {
                         if (user.isVerified)
                           Padding(
                             padding: const EdgeInsets.only(left: 6),
-                            child: Icon(Icons.verified,
-                                color: Colors.white, size: 18),
+                            child: Icon(
+                              Icons.verified,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                       ],
                     ),
@@ -60,8 +66,9 @@ class ProfileScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _buildStat(
-                            '⭐',
-                            '${user.averageRating?.toStringAsFixed(1) ?? '0.0'}'),
+                          '⭐',
+                          '${user.averageRating?.toStringAsFixed(1) ?? '0.0'}',
+                        ),
                         SizedBox(width: 20),
                         _buildStat('💬', '${user.totalReviews} Reviews'),
                       ],
@@ -72,15 +79,15 @@ class ProfileScreen extends StatelessWidget {
                         // Navigate to edit profile
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.surface,
-                        foregroundColor:
-                            Theme.of(context).colorScheme.primary,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        foregroundColor: Theme.of(context).colorScheme.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
                       ),
                       child: Text("Edit Profile"),
                     ),
@@ -96,36 +103,49 @@ class ProfileScreen extends StatelessWidget {
                     children: [
                       if (user.location != null)
                         _buildInfoTile(
-                            Icons.location_on, 'Location', user.location!),
+                          Icons.location_on,
+                          'Location',
+                          user.location!,
+                        ),
 
                       if (user.role == 'provider') ...[
                         Text(
                           "Skills",
                           style: GoogleFonts.figtree(
-                              fontWeight: FontWeight.bold, fontSize: 16),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                         SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: user.skills
-                              .map((skill) => Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.1),
-                                    ),
-                                    child: Text(skill,
+                          children:
+                              user.skills
+                                  .map(
+                                    (skill) => Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.1),
+                                      ),
+                                      child: Text(
+                                        skill,
                                         style: GoogleFonts.figtree(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary)),
-                                  ))
-                              .toList(),
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
                         ),
                         SizedBox(height: 20),
                       ],
@@ -143,57 +163,74 @@ class ProfileScreen extends StatelessWidget {
                       Text(
                         "Latest Reviews",
                         style: GoogleFonts.figtree(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                       SizedBox(height: 10),
-                      SizedBox(
-                        height: 120,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: 5, // Replace with real review count
-                          itemBuilder: (context, index) {
-                            return Container(
-                              width: 200,
-                              padding: EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade200),
-                                boxShadow: [
-                                  BoxShadow(
-                                      blurRadius: 4,
-                                      color: Colors.black12,
-                                      offset: Offset(2, 2))
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "⭐ ${4 + index % 2}.0",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold),
+                      FutureBuilder<List<Review>>(
+                        future: getProviderReviews(user.id),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData)
+                            return CircularProgressIndicator();
+                          final reviews = snapshot.data!;
+                          return SizedBox(
+                            height: 160,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: reviews.length,
+                              itemBuilder: (context, index) {
+                                final r = reviews[index];
+                                return Container(
+                                  width: 240,
+                                  margin: EdgeInsets.only(right: 12),
+                                  padding: EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        blurRadius: 3,
+                                        color: Colors.black12,
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(height: 6),
-                                  Text(
-                                    "Very helpful and quick response!",
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                  Spacer(),
-                                  Align(
-                                    alignment: Alignment.bottomRight,
-                                    child: Text("3d ago",
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "⭐ ${r.rating.toStringAsFixed(1)}",
                                         style: TextStyle(
-                                            color: Colors.grey, fontSize: 10)),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 6),
+                                      Text(r.comment),
+                                      Spacer(),
+                                      Row(
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 12,
+                                            backgroundImage:
+                                                r.photo != null
+                                                    ? NetworkImage(r.photo!)
+                                                    : null,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            r.reviewer,
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                          separatorBuilder: (_, __) => SizedBox(width: 12),
-                        ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
