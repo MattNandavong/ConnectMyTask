@@ -155,19 +155,33 @@ class TaskService {
     return tasks.where((task) => task.user.id == userId).toList();
   }
 
-  Future<List<Task>> getProviderTask() async {
-    final prefs = await SharedPreferences.getInstance();
-    final user = jsonDecode(prefs.getString('user') ?? '{}');
-    final userId = user['id'];
-    final tasks = await getAllTasks();
-    return tasks
-        .where(
-          (task) =>
-              task.assignedProvider == userId ||
-              task.bids.any((bid) => bid.provider == userId),
-        )
-        .toList();
-  }
+ Future<List<Task>> getProviderTask() async {
+  final prefs = await SharedPreferences.getInstance();
+  final user = jsonDecode(prefs.getString('user') ?? '{}');
+  final userId = user['id'] ?? user['_id'];
+  print('Current Provider ID: $userId');
+
+  final tasks = await getAllTasks();
+  print('All tasks fetched: ${tasks.length}');
+
+  final filtered = tasks.where((task) {
+    final assignedProviderId = task.assignedProvider?.toString();
+    final matchesAssigned = assignedProviderId == userId.toString();
+
+    final matchesBid = task.bids.any((bid) {
+      final bidProviderId = bid.provider?.toString();
+      return bidProviderId == userId.toString();
+    });
+
+    print('Task "${task.title}" -> assigned: $matchesAssigned, bidMatch: $matchesBid');
+    return matchesAssigned || matchesBid;
+  }).toList();
+
+  print('Filtered tasks for provider: ${filtered.length}');
+  return filtered;
+}
+
+
 
   Future<String> _getToken() async {
     final prefs = await SharedPreferences.getInstance();

@@ -59,6 +59,7 @@ Future<void> _loadTasksBasedOnUser() async {
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return Center(child: Text('No tasks found'));
                 }
+                print("Tasks from snapshot: ${snapshot.data!.length}");
 
                 return Padding(
                   padding: const EdgeInsets.all(12.0),

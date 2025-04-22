@@ -79,7 +79,6 @@ class _ChatScreenState extends State<ChatScreen> {
     socket.onDisconnect((_) => print("⚠️ Disconnected from socket"));
 
     socket.on('receiveMessage', (data) {
-      
       print("📨 Received message: $data");
       setState(() {
         messages.add({
@@ -95,18 +94,23 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _sendMessage() {
-  final text = _controller.text.trim();
-  if (text.isEmpty) return;
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
 
-  final message = {
-    'taskId': widget.taskId,
-    'sender': widget.userId,
-    'text': text,
-  };
+    final message = {
+      'taskId': widget.taskId,
+      'sender': {
+        '_id': widget.userId,
+        'name': 'You', // Or real name if available
+      },
+      'text': text,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
 
-  socket.emit('sendMessage', message);
-  _controller.clear(); // Only clear input
-}
+    socket.emit('sendMessage', message);
+
+    _controller.clear();
+  }
 
   String _formatTime(String isoTime) {
     final time = DateTime.parse(isoTime);
@@ -137,7 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
-                final isMe = msg['sender']['_id'].toString() == widget.userId.toString();
+                final sender = msg['sender'];
+                final senderId = sender is Map ? sender['_id'] : sender;
+                final isMe = senderId.toString() == widget.userId.toString();
 
                 return Align(
                   alignment:
@@ -152,10 +158,18 @@ class _ChatScreenState extends State<ChatScreen> {
                         margin: EdgeInsets.symmetric(vertical: 4),
                         padding: EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.green[100] : Theme.of(context).colorScheme.primary,
+                          color:
+                              isMe
+                                  ? Colors.green[100]
+                                  : Theme.of(context).colorScheme.primary,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(msg['text'], style: TextStyle(color: isMe ? Colors.black: Colors.white),),
+                        child: Text(
+                          msg['text'],
+                          style: TextStyle(
+                            color: isMe ? Colors.black : Colors.white,
+                          ),
+                        ),
                       ),
                       SizedBox(height: 2),
                       Text(
