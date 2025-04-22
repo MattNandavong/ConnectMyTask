@@ -4,6 +4,7 @@ const connectDB = require("./config/db");
 const taskRoutes = require("./routes/taskRoutes");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require('./routes/chatRoutes');
+const locationRoutes = require("./routes/locationRoutes");
 const { initIO, sendTestMessage } = require('./routes/testChatRoutes');
 
 const cors = require("cors");
@@ -35,6 +36,7 @@ connectDB();
 app.use("/api/auth", authRoutes); // Use auth routes for login, register, etc.
 app.use("/api/tasks", taskRoutes); // Use task routes for task management
 app.use('/api/chat', chatRoutes);// Use chatRoutes for chat
+app.use("/api/locations", locationRoutes);
 
 
 //Create HTTP + Socket Server
