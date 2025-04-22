@@ -71,7 +71,7 @@ class AuthService {
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password, if (fcmToken != null) 'fcmToken': fcmToken,}),
+      body: jsonEncode({'email': email, 'password': password,'fcmToken': fcmToken,}),
     );
 
     final data = jsonDecode(response.body);
