@@ -51,13 +51,16 @@ class _TopBarState extends State<TopBar> {
           /// Back button if needed
           widget.showBack
               ? IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.pop(context),
-                )
-              : IconButton(
-                  icon: Icon(FluentIcons.map_20_regular, size: 20),
-                  onPressed: () {},
-                ),
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              )
+              : Builder(
+                builder:
+                    (context) => IconButton(
+                      icon: Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+              ),
 
           ///  Centered title
           Text(widget.screen, style: GoogleFonts.figtree(fontSize: 18)),
@@ -67,22 +70,27 @@ class _TopBarState extends State<TopBar> {
             children: [
               widget.screen == 'Browse Task'
                   ? IconButton(
-                      onPressed: () {},
-                      icon: Icon(FluentIcons.search_12_regular, size: 20),
-                      padding: EdgeInsets.all(10),
-                    )
+                    onPressed: () {},
+                    icon: Icon(FluentIcons.search_12_regular, size: 20),
+                    padding: EdgeInsets.all(10),
+                  )
                   : const SizedBox(height: 49, width: 48),
               IconButton(
-                onPressed: user == null
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProfileScreen(user: user!),
-                          ),
-                        );
-                      },
+                onPressed:
+                    user == null
+                        ? null
+                        : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => ProfileScreen(
+                                    user: user!,
+                                    editable: true,
+                                  ),
+                            ),
+                          );
+                        },
                 icon: const Icon(Icons.account_circle, size: 24),
                 padding: const EdgeInsets.all(10),
                 iconSize: 20,
