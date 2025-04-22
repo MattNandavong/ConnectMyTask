@@ -1,4 +1,7 @@
 import 'dart:convert';
+// import 'package:app/utils/auth_service.dart';
+// import 'package:app/widget/chat_screen.dart';
+// import 'package:app/widget/my_task/myTask_details.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -87,72 +90,111 @@ class _NotificationScreenState extends State<NotificationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      body: notifications.isEmpty
-    ? Center(child: Text("No notifications yet"))
-    : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  OutlinedButton.icon(
-                    // icon: Icon(Icons.clear_all),
-                    label: Text("clear All"),
-                    onPressed: clearAllNotifications,
-                  ),
-                ],
-              ),
-              ...List.generate(notifications.length, (index) {
-                final n = notifications[index];
-                final isRead = n['read'] == true;
-                final timestamp = DateTime.tryParse(n['timestamp'] ?? '');
-
-                return Dismissible(
-                  key: ValueKey(index),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    color: Colors.redAccent,
-                    alignment: Alignment.centerRight,
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Icon(Icons.delete_forever, color: Colors.white),
-                  ),
-                  onDismissed: (_) => deleteNotification(index),
-                  child: GestureDetector(
-                    onTap: () => markAsRead(index),
-                    child: Card(
-                      color: isRead ? Colors.white : Color(0xFFF1F8E9),
-                      elevation: 2,
-                      margin: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: ListTile(
-                        leading: isRead
-                            ? null
-                            : Icon(Icons.brightness_1,
-                                size: 10, color: Colors.green),
-                        title: Text(
-                          n['title'] ?? 'No Title',
-                          style: TextStyle(
-                            fontWeight:
-                                isRead ? FontWeight.normal : FontWeight.bold,
+      body:
+          notifications.isEmpty
+              ? Center(child: Text("No notifications yet"))
+              : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          OutlinedButton.icon(
+                            // icon: Icon(Icons.clear_all),
+                            label: Text("clear All"),
+                            onPressed: clearAllNotifications,
                           ),
-                        ),
-                        subtitle: Text(n['body'] ?? ''),
-                        trailing: Text(
-                          timestamp != null ? timeago.format(timestamp) : '',
-                          style: TextStyle(fontSize: 11, color: Colors.grey),
-                        ),
+                        ],
                       ),
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-        ),
-      ),
+                      ...notifications.asMap().entries.map((entry) {
+                        final n = entry.value;
+                        final index = entry.key;
+                        final isRead = n['read'] == true;
+                        final timestamp = DateTime.tryParse(
+                          n['timestamp'] ?? '',
+                        );
 
+                        return Dismissible(
+                          key: ValueKey(index),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            color: Colors.redAccent,
+                            alignment: Alignment.centerRight,
+                            padding: EdgeInsets.symmetric(horizontal: 20),
+                            child: Icon(
+                              Icons.delete_forever,
+                              color: Colors.white,
+                            ),
+                          ),
+                          onDismissed: (_) {
+                            setState(() {
+                              notifications.removeAt(
+                                index,
+                              ); // remove from list immediately
+                            });
+                            _saveNotifications(); // save changes to SharedPreferences
+                          },
+                          child: GestureDetector(
+                            onTap: () => markAsRead(index),
+                            child: Card(
+                              color:
+                                  notifications[index]['read'] == true
+                                      ? Colors.white
+                                      : Color(0xFFF1F8E9),
+                              elevation: 2,
+                              margin: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              child: ListTile(
+                                leading:
+                                    notifications[index]['read'] == true
+                                        ? null
+                                        : Icon(
+                                          Icons.brightness_1,
+                                          size: 10,
+                                          color: Colors.green,
+                                        ),
+                                title: Text(
+                                  notifications[index]['title'] ?? 'No Title',
+                                  style: TextStyle(
+                                    fontWeight:
+                                        notifications[index]['read'] == true
+                                            ? FontWeight.normal
+                                            : FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  notifications[index]['body'] ?? '',
+                                ),
+                                trailing: Text(
+                                  DateTime.tryParse(
+                                            notifications[index]['timestamp'] ??
+                                                '',
+                                          ) !=
+                                          null
+                                      ? timeago.format(
+                                        DateTime.parse(
+                                          notifications[index]['timestamp'],
+                                        ),
+                                      )
+                                      : '',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
     );
   }
 }

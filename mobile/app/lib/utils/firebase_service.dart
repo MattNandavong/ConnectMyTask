@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:app/utils/auth_service.dart';
+import 'package:app/widget/chat_screen.dart';
+import 'package:app/widget/my_task/myTask_details.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -7,6 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final FlutterLocalNotificationsPlugin localNotifications =
     FlutterLocalNotificationsPlugin();
+
+// Pass a navigator key from main.dart
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Handle background messages
 @pragma('vm:entry-point') // Required for background execution
@@ -25,7 +31,9 @@ Future<void> createNotificationChannel() async {
   );
 
   await localNotifications
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >()
       ?.createNotificationChannel(channel);
 }
 
@@ -47,7 +55,8 @@ void showLocalNotification(RemoteMessage message) {
         icon: '@mipmap/ic_launcher',
       ),
     ),
-  );}
+  );
+}
 
 /// Save notification to local storage (SharedPreferences)
 Future<void> storeNotificationLocally(RemoteMessage message) async {
@@ -57,16 +66,21 @@ Future<void> storeNotificationLocally(RemoteMessage message) async {
   final now = DateTime.now();
 
   // Keep only notifications within the past 7 days
-  List<Map<String, dynamic>> existingNotifications = existingData.map((jsonStr) {
-    try {
-      final n = jsonDecode(jsonStr) as Map<String, dynamic>;
-      final ts = DateTime.tryParse(n['timestamp'] ?? '');
-      if (ts == null || now.difference(ts).inDays >= 7) return null;
-      return n;
-    } catch (_) {
-      return null;
-    }
-  }).where((n) => n != null).cast<Map<String, dynamic>>().toList();
+  List<Map<String, dynamic>> existingNotifications =
+      existingData
+          .map((jsonStr) {
+            try {
+              final n = jsonDecode(jsonStr) as Map<String, dynamic>;
+              final ts = DateTime.tryParse(n['timestamp'] ?? '');
+              if (ts == null || now.difference(ts).inDays >= 7) return null;
+              return n;
+            } catch (_) {
+              return null;
+            }
+          })
+          .where((n) => n != null)
+          .cast<Map<String, dynamic>>()
+          .toList();
 
   final newNotification = {
     'title': message.notification?.title ?? 'No Title',
@@ -74,6 +88,7 @@ Future<void> storeNotificationLocally(RemoteMessage message) async {
     'timestamp': now.toIso8601String(),
     'read': false,
     'taskId': message.data['taskId'], // Optional, helpful for navigation
+    'type': message.data['type'],
   };
 
   existingNotifications.add(newNotification);
@@ -81,7 +96,9 @@ Future<void> storeNotificationLocally(RemoteMessage message) async {
   final jsonList = existingNotifications.map((n) => jsonEncode(n)).toList();
   await prefs.setStringList('notifications', jsonList);
 
-  print('🔔 Notification saved locally (${existingNotifications.length} total)');
+  print(
+    '🔔 Notification saved locally (${existingNotifications.length} total)',
+  );
 }
 
 ///Set up Firebase Messaging (foreground, background, taps)
@@ -104,7 +121,7 @@ Future<void> setupFCM() async {
 
   // Foreground message: show toast and store locally
   FirebaseMessaging.onMessage.listen((message) async {
-    print('Foreground Message: ${message.notification?.title}');
+    print('Foreground Message: ${jsonEncode(message.toMap())}');
     showLocalNotification(message);
     await storeNotificationLocally(message);
 
@@ -117,9 +134,30 @@ Future<void> setupFCM() async {
 
   // When user taps on a notification (app already open or recently closed)
   FirebaseMessaging.onMessageOpenedApp.listen((message) async {
-    print(' Notification clicked!');
+    print('📲 Notification clicked!');
     await storeNotificationLocally(message);
-    // optionally route to specific screen using taskId from data
+
+    final data = message.data;
+    final taskId = data['taskId'];
+    final type = data['type'];
+
+    if (taskId != null && type != null) {
+      if (type == 'chat') {
+        final user =
+            await AuthService().getCurrentUser(); // Await the Future<User>
+        if (user != null) {
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(taskId: taskId, userId: user.id),
+            ),
+          );
+        }
+      } else if (type == 'task') {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => MyTaskDetails(taskId: taskId)),
+        );
+      }
+    }
   });
 }
 

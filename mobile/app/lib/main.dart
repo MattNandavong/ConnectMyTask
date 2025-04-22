@@ -22,7 +22,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); // 
   await setupFCM();
-  runApp(MyApp());
+  runApp(MyApp(
+    
+  ));
 }
 
 
@@ -70,6 +72,8 @@ class MyApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: kColorScheme.surface,
       ),
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
       home: SplashScreen(),
       
     );
