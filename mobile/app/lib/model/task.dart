@@ -1,6 +1,7 @@
+import 'package:app/model/Location.dart';
 import 'package:app/model/bid.dart';
 import 'package:app/model/user.dart';
-import 'package:app/utils/auth_service.dart'; // Make sure to import the updated User model
+import 'package:app/utils/auth_service.dart';
 
 class Task {
   final String id;
@@ -8,11 +9,15 @@ class Task {
   final String description;
   final double budget;
   final DateTime deadline;
-  final User user; 
-  final List<Bid> bids;
-  final String? assignedProvider;
   final String status;
-  final String? location;
+  final String category;
+  final User user;
+  final List<Bid> bids;
+  final User? assignedProvider;
+  final Location? location;
+  final List<String> images;
+  final int? reviewRating;
+  final String? reviewComment;
 
   Task({
     required this.id,
@@ -20,40 +25,59 @@ class Task {
     required this.description,
     required this.budget,
     required this.deadline,
+    required this.status,
+    required this.category,
     required this.user,
     required this.bids,
     required this.assignedProvider,
-    required this.status,
     required this.location,
+    required this.images,
+    this.reviewRating,
+    this.reviewComment,
   });
 
-static Future<Task> fromJsonAsync(Map<String, dynamic> json) async {
-  // Handle user being either a String ID or a full user object
-  final userField = json['user'];
-  late User user;
+  static Future<Task> fromJsonAsync(Map<String, dynamic> json) async {
+    final userField = json['user']['_id'];
+    final providerField = json['assignedProvider'];
 
-  if (userField is String) {
-    user = await AuthService().getUserProfile(userField);
-  } else if (userField is Map<String, dynamic>) {
-    user = await AuthService().getUserProfile(userField['_id']); 
-  } else {
-    throw Exception('Invalid user field in task JSON');
+    final User user = userField is String
+        ? await AuthService().getUserProfile(userField)
+        : User.fromJson(userField);
+
+    User? assignedProvider;
+    if (providerField is String) {
+      assignedProvider = await AuthService().getUserProfile(providerField);
+    } else if (providerField is Map<String, dynamic>) {
+      assignedProvider = User.fromJson(providerField);
+    }
+
+    final locationData = json['location'];
+    Location? parsedLocation;
+    if (locationData is Map<String, dynamic>) {
+      parsedLocation = Location.fromJson(locationData);
+    }
+
+    final reviewData = json['review'];
+    final int? rating = reviewData != null ? reviewData['rating'] as int? : null;
+    final String? comment = reviewData != null ? reviewData['comment'] as String? : null;
+
+    return Task(
+      id: json['_id'],
+      title: json['title'],
+      description: json['description'],
+      budget: (json['budget'] as num).toDouble(),
+      deadline: DateTime.parse(json['deadline']),
+      status: json['status'],
+      category: json['category'],
+      user: user,
+      bids: (json['bids'] as List).map((b) => Bid.fromJson(b)).toList(),
+      assignedProvider: assignedProvider,
+      location: parsedLocation,
+      images: List<String>.from(json['images'] ?? []),
+      reviewRating: rating,
+      reviewComment: comment,
+    );
   }
-
-  return Task(
-    id: json['_id'],
-    title: json['title'],
-    description: json['description'],
-    budget: (json['budget'] as num).toDouble(),
-    deadline: DateTime.parse(json['deadline']),
-    user: user,
-    bids: (json['bids'] as List).map((b) => Bid.fromJson(b)).toList(),
-    assignedProvider: json['assignedProvider'],
-    status: json['status'],
-    location: json['location']
-  );
-}
-
 
   Map<String, dynamic> toJson() {
     return {
@@ -62,10 +86,17 @@ static Future<Task> fromJsonAsync(Map<String, dynamic> json) async {
       'description': description,
       'budget': budget,
       'deadline': deadline.toIso8601String(),
-      'user': user.id, 
-      'bids': bids.map((bid) => bid.toJson()).toList(),
-      'assignedProvider': assignedProvider,
       'status': status,
+      'category': category,
+      'user': user.id,
+      'bids': bids.map((b) => b.toJson()).toList(),
+      'assignedProvider': assignedProvider?.id,
+      'location': location?.toJson(),
+      'images': images,
+      'review': {
+        'rating': reviewRating,
+        'comment': reviewComment,
+      }
     };
   }
 }

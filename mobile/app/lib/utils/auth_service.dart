@@ -6,11 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  //ios simulator
+  // iOS simulator:
   // final String baseUrl = 'http://localhost:3300/api/auth';
-  // //Android simulator
-  final String baseUrl = 'http://10.0.2.2:3300/api/auth';
 
+  // Android emulator:
+  // final String baseUrl = 'http://10.0.2.2:3300/api/auth';
+
+  //Real device
+  final String baseUrl = 'http://192.168.1.101:3300/api/auth';
 
   /// Register user (with optional profile photo & skills)
   Future<User> register({
@@ -18,22 +21,27 @@ class AuthService {
     required String email,
     required String password,
     required String role,
-    String? location,
+    Map<String, String>? location, // Fixed: use structured map
     List<String>? skills,
     File? profilePhoto,
     required fcmToken,
   }) async {
     final uri = Uri.parse('$baseUrl/register');
     final request = http.MultipartRequest('POST', uri);
-    final fcmToken = await getFcmToken(); 
+    final token = await getFcmToken();
 
     request.fields['name'] = name;
     request.fields['email'] = email;
     request.fields['password'] = password;
     request.fields['role'] = role;
-    if (fcmToken != null) request.fields['fcmToken'] = fcmToken;
+    if (token != null) request.fields['fcmToken'] = token;
 
-    if (location != null) request.fields['location'] = location;
+    if (location != null) {
+      request.fields['location.state'] = location['state'] ?? '';
+      request.fields['location.city'] = location['city'] ?? '';
+      request.fields['location.suburb'] = location['suburb'] ?? '';
+    }
+
     if (skills != null && skills.isNotEmpty) {
       request.fields['skills'] = skills.join(',');
     }
@@ -66,12 +74,16 @@ class AuthService {
 
   /// Login with email/password
   Future<User> login(String email, String password, String fcmToken) async {
-    final fcmToken = await getFcmToken();
+    final token = await getFcmToken();
     final url = '$baseUrl/login';
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'password': password,'fcmToken': fcmToken,}),
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+        'fcmToken': token,
+      }),
     );
 
     final data = jsonDecode(response.body);
@@ -141,7 +153,7 @@ class AuthService {
   Future<User> updateUserProfile({
     required String userId,
     String? name,
-    String? location,
+    Map<String, String>? location, // Fixed: structured location map
     List<String>? skills,
     File? profilePhoto,
   }) async {
@@ -153,7 +165,13 @@ class AuthService {
     request.headers['Authorization'] = token;
 
     if (name != null) request.fields['name'] = name;
-    if (location != null) request.fields['location'] = location;
+
+    if (location != null) {
+      request.fields['location.state'] = location['state'] ?? '';
+      request.fields['location.city'] = location['city'] ?? '';
+      request.fields['location.suburb'] = location['suburb'] ?? '';
+    }
+
     if (skills != null && skills.isNotEmpty) {
       request.fields['skills'] = skills.join(',');
     }

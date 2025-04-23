@@ -195,7 +195,7 @@ class TaskDetailScreen extends StatelessWidget {
                               if (task.assignedProvider != null) ...[
                                 FutureBuilder<User>(
                                   future: AuthService().getUserProfile(
-                                    task.assignedProvider!,
+                                    task.assignedProvider!.id,
                                   ),
                                   builder: (context, providerSnapshot) {
                                     if (providerSnapshot.connectionState ==
@@ -291,30 +291,33 @@ class TaskDetailScreen extends StatelessWidget {
                                             ],
                                           ),
                                         ),
-                                        Padding(
-                                          padding: const EdgeInsets.all(40.0),
-                                          child: ElevatedButton.icon(
-                                            onPressed:
-                                                () => showMakeOfferModal(
-                                                  context,
-                                                  taskId,
-                                                ),
-                                            icon: Icon(
-                                              Icons.local_offer_outlined,
-                                            ),
-                                            label: Text('Make an Offer'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Theme.of(
+                                        Container(
+                                          width: double.infinity,
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(40,100,40,40),
+                                            child: ElevatedButton.icon(
+                                              onPressed:
+                                                  () => showMakeOfferModal(
                                                     context,
-                                                  ).colorScheme.primary,
-                                              foregroundColor: Colors.white,
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 14,
+                                                    taskId,
+                                                  ),
+                                              icon: Icon(
+                                                Icons.local_offer_outlined,
                                               ),
-                                              textStyle: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
+                                              label: Text('Make an Offer'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary,
+                                                foregroundColor: Colors.white,
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 14,
+                                                ),
+                                                textStyle: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
                                           ),

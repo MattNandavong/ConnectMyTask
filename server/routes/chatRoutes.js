@@ -1,13 +1,35 @@
 const express = require('express');
-const router = express.Router();
+const { Storage } = require('@google-cloud/storage');
+const path = require('path');
+// const upload = require('../middlewares/gcsUpload');
+
 const ChatMessage = require('../models/ChatMessage');
 const Task = require('../models/Task');
 const User = require('../models/User');
 const { upload, uploadToGCS } = require('../middlewares/gcsUpload');
+
+
+const router = express.Router();
+
+const storage = new Storage({
+  keyFilename: path.join(__dirname, '../gcs-key.json'),
+});
+const bucket = storage.bucket('cmt-bucket-1');
+
 console.log("📡 Chat routes loaded");
 
+/// Get chat history by task ID
+router.get('/:taskId', async (req, res) => {
+  try {
+    const messages = await ChatMessage.find({ taskId: req.params.taskId.trim() })
+      .sort('timestamp')
+      .populate('sender', 'name');
 
-
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ msg: 'Server error' });
+  }
+});
 
 /// ✅ 2. Chat summary for message list
 router.get('/summary/:userId', async (req, res) => {
@@ -62,17 +84,35 @@ router.get('/summary/:userId', async (req, res) => {
 
 /// ✅ 3. Image upload route for chat
 router.post('/send-image', upload.single('image'), async (req, res) => {
-  try {
-    const { taskId, userId, caption } = req.body;
+  const { taskId, userId, caption } = req.body;
 
-    const imageUrl = await uploadToGCS(req.file.buffer, `${Date.now()}-${req.file.originalname}`);
+  try {
+    const filename = `${Date.now()}-${req.file.originalname}`;
+    const publicUrl = await uploadToGCS(req.file.buffer, filename);
+    console.log('✅ Image uploaded to GCS:', publicUrl);
 
     const message = await ChatMessage.create({
       taskId,
       sender: userId,
-      image: imageUrl,
+      image: publicUrl,
       text: caption || '[Image]',
       timestamp: new Date(),
+    });
+    console.log("📨 Created DB message:", message);
+
+    const io = req.app.get('io');
+    console.log('💬 Emitting chat image message to room:', taskId);
+    console.log({
+      text: message.text,
+      image: message.image,
+      timestamp: message.timestamp,
+    });
+
+    io.to(taskId).emit('receiveMessage', {
+      sender: { _id: userId },
+      text: message.text,
+      image: message.image,
+      timestamp: message.timestamp,
     });
 
     res.status(200).json({
@@ -81,30 +121,13 @@ router.post('/send-image', upload.single('image'), async (req, res) => {
       image: message.image,
       timestamp: message.timestamp,
     });
-  } catch (error) {
-    console.error('❌ Image upload error:', error);
-    res.status(500).json({ error: 'Failed to upload image' });
-  }
-});
 
-// ✅ Dummy test route - no upload logic
-router.post('/dummy', (req, res) => {
-  console.log("✅ Dummy route hit!");
-  res.status(200).send("Dummy route reached successfully!");
-});
-
-/// ✅ 1. Get chat history by task ID
-router.get('/:taskId', async (req, res) => {
-  try {
-    const messages = await ChatMessage.find({ taskId: req.params.taskId.trim() })
-      .sort('timestamp')
-      .populate('sender', 'name');
-
-    res.json(messages);
   } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
+    console.error('❌ Upload or DB error:', err);
+    res.status(500).send('Server error');
   }
 });
+
 
 
 /// 🔧 Helper: Get all tasks user is part of

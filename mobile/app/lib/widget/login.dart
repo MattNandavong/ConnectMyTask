@@ -25,6 +25,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
 
   Future<void> submit() async {
+         print('submit click');
   final isValid = _form.currentState!.validate();
   final token = await getFcmToken(); // Await actual token string
   if (!isValid) return;
@@ -52,6 +53,8 @@ class _AuthScreenState extends State<AuthScreen> {
         role: _userType,
         fcmToken: token, 
       );
+      print('✅ login user: ${user.id}');
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => ProfileSetupScreen(user: user)),
@@ -116,6 +119,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   SizedBox(height: 24),
                   ElevatedButton(
+               
                     onPressed: submit,
                     child: Text(_isLogin ? 'Login' : 'Register'),
                   ),
