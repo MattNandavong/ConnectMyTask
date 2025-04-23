@@ -52,7 +52,7 @@ class MyTaskCard extends StatelessWidget {
         onTap: () => navigateToTaskDetailByRole(context, task.id),
 
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               Row(

@@ -48,7 +48,7 @@ class TaskService {
     required double budget,
     required String deadline,
     required String category,
-    required String location,
+    required dynamic location,
     required List<File> images,
   }) async {
     final token = await _getToken();
@@ -60,7 +60,9 @@ class TaskService {
     request.fields['budget'] = budget.toString();
     request.fields['deadline'] = deadline;
     request.fields['category'] = category;
-    request.fields['location'] = location;
+
+    request.fields['location'] = location=='Remote'? 'Remote': "${location['state']}, ${location['city']}, ${location['suburb']}";
+
 
     if (images != null && images.isNotEmpty) {
       for (var image in images) {
@@ -116,9 +118,7 @@ class TaskService {
       headers: {'Content-Type': 'application/json', 'Authorization': token},
       body: jsonEncode({'price': price, 'estimatedTime': estimatedTime}),
     );
-    print(
-      "🧾 Making offer -> Task: $id, Price: $price, Time: $estimatedTime",
-    );
+    print("🧾 Making offer -> Task: $id, Price: $price, Time: $estimatedTime");
 
     if (response.statusCode != 200) {
       throw Exception('Failed to bid on task');

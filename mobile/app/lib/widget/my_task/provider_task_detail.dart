@@ -15,6 +15,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 class ProviderTaskDetail extends StatelessWidget {
   final String taskId;
+  
   ProviderTaskDetail({required this.taskId});
 
   final formatter = DateFormat.yMMMMd();

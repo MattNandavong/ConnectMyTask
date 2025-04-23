@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class TaskCardHelpers {
-  static const Color urgentColor = Color.fromRGBO(255, 146, 75, 1);
-  static const Color ongoingColor = Color.fromRGBO(0, 203, 157, 1);
+  static const Color urgentColor = Color.fromRGBO(255, 105, 6, 1);
+  static const Color ongoingColor = Color.fromRGBO(0, 164, 74, 1);
   static const Color completedColor = Color.fromRGBO(168, 168, 168, 1);
-  static const Color inProgressColor = Color.fromARGB(255, 72, 185, 230);
+  static const Color inProgressColor = Color.fromARGB(255, 10, 171, 235);
 
   static Text getStatusText(String status, [double? fontSize]) {
     switch (status) {
@@ -29,17 +29,17 @@ class TaskCardHelpers {
     final priceFont = GoogleFonts.oswald(
       fontSize: 16,
       fontWeight: FontWeight.w900,
-      color: const Color.fromARGB(255, 0, 127, 97),
+      color: Theme.of(context).colorScheme.secondary,
     );
 
     return Column(
-      
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 320,
+              // width: 320,
+              constraints: BoxConstraints(maxWidth: 320),
               height: 70,
               // padding: EdgeInsets.only(left: 10),
               child: Column(
@@ -63,7 +63,7 @@ class TaskCardHelpers {
                 ],
               ),
             ),
-            SizedBox(height: 10,),
+            SizedBox(height: 10),
             //make offer and budget
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -72,9 +72,14 @@ class TaskCardHelpers {
                   children: [
                     Icon(Icons.location_on, size: 14, color: Colors.teal),
                     SizedBox(width: 4),
-                    Text(
-                      task.location ?? 'Unknown',
-                      style: GoogleFonts.figtree(fontSize: 12),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 100),
+                      child: Text(
+                        task.location ?? 'Unknown',
+                        style: GoogleFonts.figtree(fontSize: 12),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
                     ),
                     SizedBox(width: 10),
                     Icon(Icons.calendar_today, size: 14, color: Colors.black87),
@@ -90,55 +95,59 @@ class TaskCardHelpers {
                   ],
                 ),
                 SizedBox(
-                width: 120,
-                // height: 50,
-                child: Center(child: Text('AUD ${task.budget}', style: priceFont)),
-              ),
-                
+                  width: 120,
+                  // height: 50,
+                  child: Center(
+                    child: Text('AUD ${task.budget}', style: priceFont),
+                  ),
+                ),
               ],
             ),
           ],
         ),
         if (minimise == false)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
               Row(
+                children: [
+                  Row(
+                    // crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      task.user.buildAvatar(radius: 10),
+                      SizedBox(width: 5),
+                      Text(task.user!.name),
+                      SizedBox(width: 5),
+                      Row(
                         children: [
-                          Row(
-                            // crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Icon(Icons.account_circle, size: 20),
-                              Text(task.user!.name),
-                              SizedBox(width: 5,),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    color: const Color.fromARGB(
-                                      255,
-                                      255,
-                                      183,
-                                      0,
-                                    ),
-                                    size: 14,
-                                  ),
-                                  
-                                  Text(task.user.averageRating.toString(), style: TextStyle(fontSize: 11)),
-                                ],
-                              ),
-                            ],
+                          Icon(
+                            Icons.star,
+                            color: const Color.fromARGB(255, 255, 183, 0),
+                            size: 14,
                           ),
-                          
+
+                          Text(
+                            task.user.averageRating.toString(),
+                            style: TextStyle(fontSize: 11),
+                          ),
                         ],
                       ),
-            
-            SizedBox(
-              child: FilledButton(onPressed: (){ }, child: Text('Make offer')),
-            )
-          ],
-        ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(
+                child: FilledButton(
+                  onPressed: () {
+                    showMakeOfferModal(context,task.id);
+                  },
+                  child: Text('Make offer'),
+                ),
+              ),
+              
+            ],
+          ),
       ],
     );
   }
