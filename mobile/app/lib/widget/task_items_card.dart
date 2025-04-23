@@ -63,7 +63,7 @@ class TaskCard extends StatelessWidget {
       ),
 
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

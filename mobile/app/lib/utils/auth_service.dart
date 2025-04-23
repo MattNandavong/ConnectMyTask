@@ -105,6 +105,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('user');
+    await prefs.clear();
   }
 
   /// Is logged in

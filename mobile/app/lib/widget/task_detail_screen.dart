@@ -18,7 +18,7 @@ class TaskDetailScreen extends StatelessWidget {
 
   final formatter = DateFormat.yMMMMd();
 
-    Future<String?> _getCurrentUserId() async {
+  Future<String?> _getCurrentUserId() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
     if (userJson == null) return null;
@@ -27,7 +27,7 @@ class TaskDetailScreen extends StatelessWidget {
   }
 
   @override
-    @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -68,7 +68,7 @@ class TaskDetailScreen extends StatelessWidget {
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            
+
                             children: [
                               Text(
                                 task.status == 'Active'
@@ -80,7 +80,6 @@ class TaskDetailScreen extends StatelessWidget {
                                   color: _getStatusColor(task.status),
                                 ),
                               ),
-                              
                             ],
                           ),
                           // SizedBox(height: 6),
@@ -220,6 +219,7 @@ class TaskDetailScreen extends StatelessWidget {
                                     return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
                                           padding: EdgeInsets.symmetric(
@@ -288,8 +288,35 @@ class TaskDetailScreen extends StatelessWidget {
                                                   ],
                                                 ),
                                               ),
-                                              
                                             ],
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.all(40.0),
+                                          child: ElevatedButton.icon(
+                                            onPressed:
+                                                () => showMakeOfferModal(
+                                                  context,
+                                                  taskId,
+                                                ),
+                                            icon: Icon(
+                                              Icons.local_offer_outlined,
+                                            ),
+                                            label: Text('Make an Offer'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                              foregroundColor: Colors.white,
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: 14,
+                                              ),
+                                              textStyle: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -308,20 +335,6 @@ class TaskDetailScreen extends StatelessWidget {
             },
           );
         },
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: ElevatedButton.icon(
-          onPressed: () => showMakeOfferModal(context, taskId),
-          icon: Icon(Icons.local_offer_outlined),
-          label: Text('Make an Offer'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14),
-            textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
       ),
     );
   }

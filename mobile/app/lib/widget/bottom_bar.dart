@@ -25,12 +25,29 @@ class BottomBar extends StatefulWidget {
 class _BottomBarState extends State<BottomBar> {
   int _selectedIndex = 0;
   String? role;
+
+  final List<GButton> userTabs = [
+    GButton(icon: Icons.add_task, text: 'Post Task'),
+    GButton(icon: Icons.edit_document, text: 'My Task'),
+    GButton(icon: Icons.message_outlined, text: 'Messages'),
+    GButton(icon: Icons.notifications, text: 'Notification'),
+  ];
+
+  final List<GButton> providerTabs = [
+    GButton(icon: Icons.add_task, text: 'Browse Task'),
+    GButton(icon: Icons.edit_document, text: 'My Task'),
+    GButton(icon: Icons.message_outlined, text: 'Messages'),
+    GButton(icon: Icons.notifications, text: 'Notification'),
+  ];
+
   List<GButton> tabs = [];
   List<Widget> screens = [];
 
   @override
   void initState() {
     super.initState();
+    tabs.clear();
+    screens.clear();
     _loadRoleAndTabs();
   }
 
@@ -40,38 +57,41 @@ class _BottomBarState extends State<BottomBar> {
 
     if (userString != null) {
       final user = jsonDecode(userString);
+      final fetchedRole = user['role'];
+
       setState(() {
-        role = user['role'];
-        _configureTabs();
+        role = fetchedRole;
+
+        // IMPORTANT: clear previous lists
+        tabs = [];
+        screens = [];
+        if (role == 'user') {
+          tabs = userTabs;
+          screens = [
+            PostTask(),
+            MyTaskScreen(),
+            MessageScreen(),
+            Center(child: Text("Notifications")),
+          ];
+        } else {
+          tabs = providerTabs;
+          screens = [
+            BrowseTask(),
+            MyTaskScreen(),
+            MessageScreen(),
+            Center(child: Text("Notifications")),
+          ];
+        }
       });
     }
-  }
-
-  void _configureTabs() {
-    // Define shared tabs
-    tabs = [
-      if (role == 'user')
-        GButton(icon: Icons.add_task, text: 'Post Task', padding: EdgeInsets.all(5)),
-      GButton(icon: Icons.search, text: 'Browse Task', padding: EdgeInsets.all(5)),
-      GButton(icon: Icons.edit_document, text: 'My Task', padding: EdgeInsets.all(5)),
-      GButton(icon: Icons.message_outlined, text: 'Messages', padding: EdgeInsets.all(5)),
-      GButton(icon: Icons.notifications, text: 'Notification', padding: EdgeInsets.all(5)),
-    ];
-
-    screens = [
-      if (role == 'user') PostTask(),
-      BrowseTask(),
-      MyTaskScreen(),
-      MessageScreen(),
-      // You can add Notification screen later
-      Center(child: Text("Notifications")),
-    ];
   }
 
   @override
   Widget build(BuildContext context) {
     if (role == null) {
-      return Center(child: CircularProgressIndicator()); // Wait until role loads
+      return Center(
+        child: CircularProgressIndicator(),
+      ); // Wait until role loads
     }
 
     return Scaffold(
@@ -79,7 +99,9 @@ class _BottomBarState extends State<BottomBar> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1))],
+          boxShadow: [
+            BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1)),
+          ],
         ),
         child: SafeArea(
           child: Padding(

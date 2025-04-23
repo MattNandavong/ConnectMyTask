@@ -50,30 +50,31 @@ class MyApp extends StatelessWidget {
             fontSize: 14,
           ),
         ),
-        inputDecorationTheme: InputDecorationTheme(
-          labelStyle: GoogleFonts.figtree(fontSize: 16),
-          activeIndicatorBorder: BorderSide(
-            width: 3,
-            color: kColorScheme.primary,
-          ),
-          outlineBorder: BorderSide(width: 2, color: kColorScheme.primary),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(width: 1, color: kColorScheme.onSurface),
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(width: 1, color: kColorScheme.primary),
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          fillColor: kColorScheme.surface,
-          focusColor: kColorScheme.surface,
-          isCollapsed: false,
-          floatingLabelStyle: GoogleFonts.figtree(fontSize: 20),
-        ),
-        scaffoldBackgroundColor: kColorScheme.surface,
+        // inputDecorationTheme: InputDecorationTheme(
+        //   labelStyle: GoogleFonts.figtree(fontSize: 16),
+        //   activeIndicatorBorder: BorderSide(
+        //     width: 3,
+        //     color: kColorScheme.primary,
+        //   ),
+        //   outlineBorder: BorderSide(width: 2, color: kColorScheme.primary),
+        //   enabledBorder: OutlineInputBorder(
+        //     borderSide: BorderSide(width: 1, color: kColorScheme.onSurface),
+        //     borderRadius: BorderRadius.all(Radius.circular(10)),
+        //   ),
+        //   focusedBorder: OutlineInputBorder(
+        //     borderSide: BorderSide(width: 1, color: kColorScheme.primary),
+        //     borderRadius: BorderRadius.all(Radius.circular(10)),
+        //   ),
+        //   fillColor: kColorScheme.surface,
+        //   focusColor: kColorScheme.surface,
+        //   isCollapsed: false,
+        //   floatingLabelStyle: GoogleFonts.figtree(fontSize: 20),
+        // ),
+        scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       ),
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
+      
       home: SplashScreen(),
       
     );

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:app/utils/task_service.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +22,14 @@ class _PostTaskState extends State<PostTask> {
   String _category = 'Cleaning';
   double _budget = 0.0;
   bool _isRemote = true;
-  String _selectedState = 'VIC';
+  // String _selectedState = 'VIC';
   String? _city;
   DateTime? _deadline;
   TimeOfDay? _deadlineTime;
   int _currentStep = 0;
+  String? _selectedState;
+  String? _selectedCity;
+  String? _selectedSuburb;
 
   List<Map<String, dynamic>> _imagesWithCaptions = [];
 
@@ -39,10 +43,23 @@ class _PostTaskState extends State<PostTask> {
     'Gardening',
     'Tutoring',
     'Tech Support',
-    'Other'
+    'Other',
   ];
 
-  final _states = ['VIC', 'NSW', 'QLD', 'SA', 'WA', 'TAS', 'ACT', 'NT'];
+  final Map<String, Map<String, List<String>>> _locationData = {
+    "New South Wales": {
+      "Sydney": ["Parramatta", "Bondi", "Manly", "Chatswood"],
+      "Newcastle": ["Cessnock", "Maitland", "Lake Macquarie"],
+    },
+    "Victoria": {
+      "Melbourne": ["Carlton", "Fitzroy", "Brunswick"],
+      "Geelong": ["Lara", "Torquay"],
+    },
+    "Queensland": {
+      "Brisbane": ["Fortitude Valley", "South Bank", "Paddington"],
+      "Gold Coast": ["Surfers Paradise", "Broadbeach"],
+    },
+  };
 
   Future<void> _pickDeadline() async {
     final date = await showDatePicker(
@@ -75,78 +92,87 @@ class _PostTaskState extends State<PostTask> {
     }
   }
 
-void _submitTask() async {
-  showDialog(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text('Confirm Submit'),
-      content: Text('Do you want to post this task?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            Navigator.pop(context); // close dialog
+  void _submitTask() async {
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text('Confirm Submit'),
+            content: Text('Do you want to post this task?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context); // close dialog
 
-            try {
-              final deadlineDateTime = DateTime(
-                _deadline!.year,
-                _deadline!.month,
-                _deadline!.day,
-                _deadlineTime?.hour ?? 23,
-                _deadlineTime?.minute ?? 59,
-              );
+                  try {
+                    final deadlineDateTime = DateTime(
+                      _deadline!.year,
+                      _deadline!.month,
+                      _deadline!.day,
+                      _deadlineTime?.hour ?? 23,
+                      _deadlineTime?.minute ?? 59,
+                    );
 
-              await TaskService().createTask(
-                title: _titleController.text.trim(),
-                description: _descController.text.trim(),
-                budget: double.tryParse(_budgetController.text.trim()) ?? 0,
-                deadline: deadlineDateTime.toIso8601String(),
-                category: _category,
-                location: _isRemote
-                    ? "Remote"
-                    : '$_selectedState${_locationController.text.isNotEmpty ? ', ${_locationController.text.trim()}' : ''}',
-                images: _imagesWithCaptions
-                    .map((img) => img['file'] as File)
-                    .toList(),
-              );
+                    await TaskService().createTask(
+                      title: _titleController.text.trim(),
+                      description: _descController.text.trim(),
+                      budget:
+                          double.tryParse(_budgetController.text.trim()) ?? 0,
+                      deadline: deadlineDateTime.toIso8601String(),
+                      category: _category,
+                      location:
+                          _isRemote
+                              ? 'Remote'
+                              
+                              : {"state": _selectedState,
+                                "city": _selectedCity,
+                                "suburb": _selectedSuburb},
+                      images:
+                          _imagesWithCaptions
+                              .map((img) => img['file'] as File)
+                              .toList(),
+                    );
 
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Task Submitted')),
-              );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Task Submitted')));
 
-              setState(() {
-                _currentStep = 0;
-                _titleController.clear();
-                _descController.clear();
-                _budgetController.clear();
-                _locationController.clear();
-                _imagesWithCaptions.clear();
-                _deadline = null;
-                _deadlineTime = null;
-                _isRemote = true;
-              });
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Failed to submit task: $e')),
-              );
-            }
-          },
-          child: Text('Submit'),
-        )
-      ],
-    ),
-  );
-}
-
+                    setState(() {
+                      _currentStep = 0;
+                      _titleController.clear();
+                      _descController.clear();
+                      _budgetController.clear();
+                      _locationController.clear();
+                      _imagesWithCaptions.clear();
+                      _deadline = null;
+                      _deadlineTime = null;
+                      _isRemote = true;
+                    });
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to submit task: $e')),
+                    );
+                  }
+                },
+                child: Text('Submit'),
+              ),
+            ],
+          ),
+    );
+  }
 
   Widget _buildPreview() {
     return ListView(
       padding: EdgeInsets.all(16),
       children: [
-        Text("📌 Title: ${_titleController.text}", style: TextStyle(fontSize: 16)),
+        Text(
+          "📌 Title: ${_titleController.text}",
+          style: TextStyle(fontSize: 16),
+        ),
         Text("📂 Category: $_category"),
         Text("📝 Description:\n${_descController.text}"),
         SizedBox(height: 12),
@@ -155,14 +181,21 @@ void _submitTask() async {
           Text(
             "⏳ Deadline: ${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? 'No deadline'}",
           ),
-        Text("📍 Location: ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'}"),
+        Text(
+          "📍 Location: ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'}",
+        ),
         if (!_isRemote) Text("🏙️ City/Suburb: ${_locationController.text}"),
         SizedBox(height: 20),
         Text("🖼️ Images:", style: TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(height: 8),
         ..._imagesWithCaptions.map(
           (img) => ListTile(
-            leading: Image.file(img['file'], width: 50, height: 50, fit: BoxFit.cover),
+            leading: Image.file(
+              img['file'],
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
             // title: Text(img['caption'] ?? ''),
           ),
         ),
@@ -174,7 +207,7 @@ void _submitTask() async {
           // onPressed: () {
           //   print('Task Submit: ${_titleController.text} ${_category} ${_descController.text} ${_budgetController.text} ${_formatter.format(_deadline!)} ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'} ${_locationController.text}');
           // },
-        )
+        ),
       ],
     );
   }
@@ -197,7 +230,12 @@ void _submitTask() async {
                 DropdownButtonFormField(
                   value: _category,
                   decoration: InputDecoration(labelText: 'Category'),
-                  items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                  items:
+                      _categories
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
                   onChanged: (val) => setState(() => _category = val!),
                 ),
                 SizedBox(height: 12),
@@ -226,30 +264,77 @@ void _submitTask() async {
                 ),
                 SizedBox(height: 12),
                 ListTile(
-                  title: Text(_deadline != null
-                      ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
-                      : 'Select Deadline'),
+                  title: Text(
+                    _deadline != null
+                        ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
+                        : 'Select Deadline',
+                  ),
                   trailing: Icon(Icons.calendar_today),
                   onTap: _pickDeadline,
                 ),
                 SwitchListTile(
-                  title: Text('Remote'),
+                  title: Text('Remote Task'),
                   value: _isRemote,
                   onChanged: (val) => setState(() => _isRemote = val),
                 ),
                 if (!_isRemote) ...[
-                  DropdownButtonFormField(
+                  DropdownButtonFormField<String>(
                     value: _selectedState,
+                    hint: Text('Select State'),
                     decoration: InputDecoration(labelText: 'State'),
-                    items: _states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                    onChanged: (val) => setState(() => _selectedState = val!),
+                    items:
+                        _locationData.keys.map((state) {
+                          return DropdownMenuItem(
+                            value: state,
+                            child: Text(state),
+                          );
+                        }).toList(),
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedState = val;
+                        _selectedCity = null;
+                        _selectedSuburb = null;
+                      });
+                    },
                   ),
-                  SizedBox(height: 10),
-                  TextFormField(
-                    controller: _locationController,
-                    decoration: InputDecoration(labelText: 'City / Suburb'),
-                  ),
-                ]
+                  SizedBox(height: 12),
+                  if (_selectedState != null)
+                    DropdownButtonFormField<String>(
+                      value: _selectedCity,
+                      hint: Text('Select City'),
+                      decoration: InputDecoration(labelText: 'City'),
+                      items:
+                          _locationData[_selectedState!]!.keys.map((city) {
+                            return DropdownMenuItem(
+                              value: city,
+                              child: Text(city),
+                            );
+                          }).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedCity = val;
+                          _selectedSuburb = null;
+                        });
+                      },
+                    ),
+                  SizedBox(height: 12),
+                  if (_selectedCity != null)
+                    DropdownButtonFormField<String>(
+                      value: _selectedSuburb,
+                      hint: Text('Select Suburb'),
+                      decoration: InputDecoration(labelText: 'Suburb'),
+                      items:
+                          _locationData[_selectedState!]![_selectedCity!]!.map((
+                            suburb,
+                          ) {
+                            return DropdownMenuItem(
+                              value: suburb,
+                              child: Text(suburb),
+                            );
+                          }).toList(),
+                      onChanged: (val) => setState(() => _selectedSuburb = val),
+                    ),
+                ],
               ],
             ),
           ),
@@ -279,7 +364,12 @@ void _submitTask() async {
                     final image = _imagesWithCaptions[index];
                     return ListTile(
                       key: ValueKey(index),
-                      leading: Image.file(image['file'], width: 60, height: 60, fit: BoxFit.cover),
+                      leading: Image.file(
+                        image['file'],
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                      ),
                       // title: TextFormField(
                       //   initialValue: image['caption'],
                       //   onChanged: (val) => image['caption'] = val,
@@ -287,7 +377,10 @@ void _submitTask() async {
                       // ),
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => setState(() => _imagesWithCaptions.removeAt(index)),
+                        onPressed:
+                            () => setState(
+                              () => _imagesWithCaptions.removeAt(index),
+                            ),
                       ),
                     );
                   },
@@ -323,11 +416,16 @@ void _submitTask() async {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (_currentStep > 0)
-                  OutlinedButton(onPressed: () => setState(() => _currentStep--), child: Text('Back')),
+                  OutlinedButton(
+                    onPressed: () => setState(() => _currentStep--),
+                    child: Text('Back'),
+                  ),
                 if (_currentStep < 3)
                   ElevatedButton(
                     onPressed: () {
-                      final valid = _formKeys[_currentStep].currentState?.validate() ?? true;
+                      final valid =
+                          _formKeys[_currentStep].currentState?.validate() ??
+                          true;
                       if (valid) setState(() => _currentStep++);
                     },
                     child: Text('Next'),
