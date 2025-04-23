@@ -1,4 +1,5 @@
 import 'package:app/model/ChatPreview.dart';
+import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/chat_service.dart';
 import 'package:app/widget/chat_screen.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +14,21 @@ class MessageScreen extends StatefulWidget {
 
 class _MessageScreenState extends State<MessageScreen> {
   late Future<List<ChatPreview>> _chatSummaries;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
-    _chatSummaries = ChatService().getChatSummary();
+    _loadUserAndChats();
+  }
+
+  Future<void> _loadUserAndChats() async {
+    final currentUser = await AuthService().getCurrentUser();
+    final id = currentUser!.id; // or AuthService if needed
+    setState(() {
+      _currentUserId = id;
+      _chatSummaries = ChatService().getChatSummary();
+    });
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -30,6 +41,10 @@ class _MessageScreenState extends State<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_currentUserId == null) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       backgroundColor: Color(0xFFF7F7F7), // light background like the image
       body: FutureBuilder<List<ChatPreview>>(
@@ -60,8 +75,10 @@ class _MessageScreenState extends State<MessageScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
                       child: Text(
@@ -97,10 +114,11 @@ class _MessageScreenState extends State<MessageScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => ChatScreen(
-                            taskId: chat.taskId,
-                            userId: chat.userId,
-                          ),
+                          builder:
+                              (_) => ChatScreen(
+                                taskId: chat.taskId,
+                                userId: _currentUserId!,
+                              ),
                         ),
                       );
                     },

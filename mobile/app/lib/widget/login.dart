@@ -35,7 +35,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     User user;
     if (_isLogin) {
-      user = await _authService.login(
+      user =await _authService.login(
         _emailController.text.trim(),
         _passwordController.text.trim(),
         token!, //  Correct token here

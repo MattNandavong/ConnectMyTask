@@ -93,7 +93,7 @@ class MyTaskDetails extends StatelessWidget {
                                   color: _getStatusColor(task.status),
                                 ),
                               ),
-                              if (isPoster ) ...[
+                              if (isPoster && task.bids.isNotEmpty && task.assignedProvider == null) ...[
                                 FilledButton.icon(
                                   style: ElevatedButton.styleFrom(
                                     minimumSize: Size(
