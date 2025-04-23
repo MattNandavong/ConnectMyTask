@@ -75,7 +75,7 @@ class TaskCardHelpers {
                     ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: 100),
                       child: Text(
-                        task.location ?? 'Unknown',
+                        task.location!.city ?? 'Unknown',
                         style: GoogleFonts.figtree(fontSize: 12),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,

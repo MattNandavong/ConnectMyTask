@@ -1,4 +1,3 @@
-// Required imports
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -8,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as p;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class ChatScreen extends StatefulWidget {
@@ -36,10 +34,13 @@ class _ChatScreenState extends State<ChatScreen> {
     _connectToSocket();
   }
 
+  //Real device
+  final String baseUrl = 'http://192.168.1.101:3300';
+
   Future<void> _loadChatHistory() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:3300/api/chat/${widget.taskId}'),
+        Uri.parse('$baseUrl/api/chat/${widget.taskId}'),
       );
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
@@ -54,11 +55,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _connectToSocket() {
     socket = IO.io(
-      'http://10.0.2.2:3300',
+      '$baseUrl',
       IO.OptionBuilder().setTransports(['websocket']).build(),
     );
     socket.onConnect((_) => socket.emit('joinTask', {'taskId': widget.taskId}));
     socket.on('receiveMessage', (data) {
+      print("📥 Received message from socket:");
+      print(data);
       setState(() => messages.add(data));
       _scrollToBottom();
     });
@@ -96,38 +99,52 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
-  final text = _controller.text.trim();
-  final now = DateTime.now().toIso8601String();
+    final text = _controller.text.trim();
+    final now = DateTime.now().toIso8601String();
 
-  // Emit text message
-  if (text.isNotEmpty) {
-    final msg = {
-      'taskId': widget.taskId,
-      'sender': {'_id': widget.userId},
-      'text': text,
-      'timestamp': now,
-    };
-    socket.emit('sendMessage', msg);
-    _controller.clear();
-    // setState(() => messages.add(msg));
+    if (text.isNotEmpty) {
+      final msg = {
+        'taskId': widget.taskId,
+        'sender': {'_id': widget.userId},
+        'text': text,
+        'timestamp': now,
+      };
+      socket.emit('sendMessage', msg);
+      _controller.clear();
+    }
+
+    for (var img in _pendingImages) {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/api/chat/send-image'),
+      );
+
+      request.fields['taskId'] = widget.taskId;
+      request.fields['userId'] = widget.userId;
+      request.fields['caption'] = img['caption'] ?? '';
+
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          img['file'].path,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
+
+      final response = await request.send();
+      final resBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        final savedMessage = jsonDecode(resBody);
+        // setState(() => messages.add(savedMessage));
+      } else {
+        print('❌ Failed to upload image: ${response.statusCode}');
+      }
+    }
+
+    setState(() => _pendingImages.clear());
+    _scrollToBottom();
   }
-
-  // Simulate local image sending without backend
-  // for (var img in _pendingImages) {
-  //   final simulatedMsg = {
-  //     'sender': {'_id': widget.userId},
-  //     'text': img['caption'] ?? '[Image]',
-  //     'image': img['file'].path, // local file path
-  //     'timestamp': DateTime.now().toIso8601String(),
-  //   };
-  //   setState(() => messages.add(simulatedMsg));
-  // }
-
-  setState(() => _pendingImages.clear());
-  _scrollToBottom();
-}
-
-
 
   String _formatTime(String iso) {
     final time = DateTime.parse(iso);
@@ -184,7 +201,6 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // 📩 Chat messages
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -218,22 +234,41 @@ class _ChatScreenState extends State<ChatScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (msg['image'] != null)
+                            if (msg['image'] != null &&
+                                msg['image'].toString().isNotEmpty)
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 4),
-                                child: Image.network(
-                                  msg['image'],
-                                  width: 200,
-                                  fit: BoxFit.cover,
+                                child: Builder(
+                                  builder: (context) {
+                                    print(
+                                      '🖼️ Trying to load image: ${msg['image']}',
+                                    ); // <== Add this
+                                    return Image.network(
+                                      msg['image'],
+                                      width: 200,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        print('❌ Image load failed: $error');
+                                        return Text('Failed to load image');
+                                      },
+                                    );
+                                  },
                                 ),
                               ),
-                            Text(
-                              msg['text'] ?? '',
-                              style: TextStyle(
-                                color: isMe ? Colors.white : Colors.black87,
-                                fontSize: 14,
+
+                            if ((msg['text'] ?? '').trim().isNotEmpty &&
+                                msg['text'] != '[Image]')
+                              Text(
+                                msg['text'],
+                                style: TextStyle(
+                                  color: isMe ? Colors.white : Colors.black87,
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),

@@ -32,6 +32,7 @@ class _TopBarState extends State<TopBar> {
   Future<void> _loadUser() async {
     final currentUser = await AuthService().getCurrentUser();
     final profile = await AuthService().getUserProfile(currentUser!.id);
+    if (!mounted) return;
     setState(() {
       user = profile;
     });

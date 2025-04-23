@@ -13,8 +13,20 @@ const Chat = require("../models/ChatMessage")
 
 // Create a new task
 const createTask = async (req, res) => {
-  const { title, description, budget, deadline, location, category } = req.body;
+  const { title, description, budget, deadline, category } = req.body;
+  //fix the location
+  const location = {
+    state: req.body['location.state'],
+    city: req.body['location.city'],
+    suburb: req.body['location.suburb'],
+  };
+
   const imageUrls = req.files.map((file) => file.path); // Cloudinary returns .path as URL
+  console.log("Received fields:");
+  console.log("location.state:", req.body["location.state"]);
+  console.log("location.city:", req.body["location.city"]);
+  console.log("location.suburb:", req.body["location.suburb"]);
+
   try {
     const newTask = new Task({
       title,
@@ -26,7 +38,10 @@ const createTask = async (req, res) => {
       images: imageUrls, // save image urls
       category,
     });
+    console.log("📦 Task location before save:", newTask.location);
     const savedTask = await newTask.save();
+
+
     // sendTaskCreationEmail(req.user.email, req.user.name, savedTask.title); // Send email notification to the user
     res.status(201).json(savedTask);
   } catch (error) {
@@ -137,6 +152,8 @@ const bidOnTask = async (req, res) => {
 
     await task.save();
     //push notification to task poster
+    console.log("📲 Sending notification to:", task.user.fcmToken);
+
     if (task.user.fcmToken) {
       await sendNotification(
         task.user.fcmToken,
