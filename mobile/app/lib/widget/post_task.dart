@@ -116,6 +116,17 @@ class _PostTaskState extends State<PostTask> {
                       _deadlineTime?.hour ?? 23,
                       _deadlineTime?.minute ?? 59,
                     );
+                    if (!_isRemote &&
+                        (_selectedState == null ||
+                            _selectedCity == null ||
+                            _selectedSuburb == null)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please select full location')),
+                      );
+                      return;
+                    }
+                    // print( "${_titleController.text.trim()},${_descController.text.trim()},${double.tryParse(_budgetController.text.trim()) ?? 0},${deadlineDateTime.toIso8601String()},$_category,${'location.state':_isRemote ? 'Remote' : _selectedState!,'location.city': _isRemote ? 'Remote' : _selectedCity!,'location.suburb':_isRemote ? 'Remote' : _selectedSuburb!,}}",);
+                    
 
                     await TaskService().createTask(
                       title: _titleController.text.trim(),
@@ -124,13 +135,15 @@ class _PostTaskState extends State<PostTask> {
                           double.tryParse(_budgetController.text.trim()) ?? 0,
                       deadline: deadlineDateTime.toIso8601String(),
                       category: _category,
-                      location:
-                          _isRemote
-                              ? 'Remote'
-                              
-                              : {"state": _selectedState,
-                                "city": _selectedCity,
-                                "suburb": _selectedSuburb},
+
+                      location: {
+                        'location.state':
+                            _isRemote ? 'Remote' : _selectedState!,
+                        'location.city': _isRemote ? 'Remote' : _selectedCity!,
+                        'location.suburb':
+                            _isRemote ? 'Remote' : _selectedSuburb!,
+                      },
+
                       images:
                           _imagesWithCaptions
                               .map((img) => img['file'] as File)

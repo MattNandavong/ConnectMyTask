@@ -1,13 +1,14 @@
 import 'dart:math';
+import 'package:app/model/Location.dart';
 import 'package:flutter/material.dart';
 
 class User {
   final String id;
   final String name;
   final String email;
-  final String role;
+  final String? role;
   final String? profilePhoto;
-  final String? location;
+  final Location? location;
   final List<String> skills;
   final bool isVerified;
   final double? averageRating;
@@ -31,9 +32,11 @@ class User {
       id: json['_id'] ?? json['id'],
       name: json['name'],
       email: json['email'],
-      role: json['role'],
+      role: json['role'] ?? '',
       profilePhoto: json['profilePhoto'],
-      location: json['location'],
+      location: json['location'] != null && json['location'] is Map<String, dynamic>
+          ? Location.fromJson(json['location'])
+          : null,
       skills: List<String>.from(json['skills'] ?? []),
       isVerified: json['isVerified'] ?? false,
       averageRating: json['averageRating'] != null
@@ -50,7 +53,7 @@ class User {
       'email': email,
       'role': role,
       'profilePhoto': profilePhoto,
-      'location': location,
+      'location': location?.toJson(),
       'skills': skills,
       'isVerified': isVerified,
       'averageRating': averageRating,
@@ -58,14 +61,12 @@ class User {
     };
   }
 
-  /// Extract initials for fallback avatar
   String get initials {
     final parts = name.trim().split(' ');
     if (parts.length == 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
-  /// Generate a unique avatar color from user ID
   Color get avatarColor {
     final seed = id.hashCode;
     final random = Random(seed);
@@ -77,7 +78,6 @@ class User {
     );
   }
 
-  /// Build user avatar widget
   Widget buildAvatar({double radius = 24}) {
     return CircleAvatar(
       radius: radius,
@@ -85,12 +85,14 @@ class User {
       backgroundImage:
           profilePhoto != null && profilePhoto!.isNotEmpty ? NetworkImage(profilePhoto!) : null,
       child: profilePhoto == null || profilePhoto!.isEmpty
-          ? Text(initials,
+          ? Text(
+              initials,
               style: TextStyle(
                 fontSize: radius * 0.7,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
-              ))
+              ),
+            )
           : null,
     );
   }

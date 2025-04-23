@@ -15,6 +15,9 @@ const chatMessageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  image: {
+    type: String, // <-- Add this line to store image URL
+  },
   timestamp: {
     type: Date,
     default: Date.now,

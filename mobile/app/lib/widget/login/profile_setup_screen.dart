@@ -19,12 +19,30 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   late TextEditingController _locationController;
   late TextEditingController _skillsController;
   File? _profileImage;
+  String? _selectedState;
+  String? _selectedCity;
+  String? _selectedSuburb;
+
+  final Map<String, Map<String, List<String>>> _locationData = {
+    "New South Wales": {
+      "Sydney": ["Parramatta", "Bondi", "Manly", "Chatswood"],
+      "Newcastle": ["Cessnock", "Maitland", "Lake Macquarie"],
+    },
+    "Victoria": {
+      "Melbourne": ["Carlton", "Fitzroy", "Brunswick"],
+      "Geelong": ["Lara", "Torquay"],
+    },
+    "Queensland": {
+      "Brisbane": ["Fortitude Valley", "South Bank", "Paddington"],
+      "Gold Coast": ["Surfers Paradise", "Broadbeach"],
+    },
+  };
 
   @override
   void initState() {
     super.initState();
     _locationController = TextEditingController(
-      text: widget.user.location ?? '',
+      text: "widget.user.location ?? ''",
     );
     _skillsController = TextEditingController(
       text: widget.user.skills != null ? widget.user.skills.join(', ') : '',
@@ -47,10 +65,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
+      final location =
+          (_selectedState != null &&
+                  _selectedCity != null &&
+                  _selectedSuburb != null)
+              ? {
+                'state': _selectedState!,
+                'city': _selectedCity!,
+                'suburb': _selectedSuburb!,
+              }
+              : null;
+
       await AuthService().updateUserProfile(
         userId: widget.user.id,
         name: widget.user.name,
-        location: _locationController.text.trim(),
+        location: location,
         skills:
             widget.user.role == "provider"
                 ? _skillsController.text
@@ -127,10 +156,52 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               Divider(thickness: 1),
-              TextFormField(
-                controller: _locationController,
-                decoration: InputDecoration(labelText: "Location"),
+              DropdownButtonFormField<String>(
+                value: _selectedState,
+                decoration: InputDecoration(labelText: 'State'),
+                items:
+                    _locationData.keys.map((state) {
+                      return DropdownMenuItem(value: state, child: Text(state));
+                    }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedState = value;
+                    _selectedCity = null;
+                    _selectedSuburb = null;
+                  });
+                },
               ),
+              if (_selectedState != null)
+                DropdownButtonFormField<String>(
+                  value: _selectedCity,
+                  decoration: InputDecoration(labelText: 'City'),
+                  items:
+                      _locationData[_selectedState]!.keys.map((city) {
+                        return DropdownMenuItem(value: city, child: Text(city));
+                      }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCity = value;
+                      _selectedSuburb = null;
+                    });
+                  },
+                ),
+              if (_selectedCity != null)
+                DropdownButtonFormField<String>(
+                  value: _selectedSuburb,
+                  decoration: InputDecoration(labelText: 'Suburb'),
+                  items:
+                      _locationData[_selectedState]![_selectedCity]!.map((
+                        suburb,
+                      ) {
+                        return DropdownMenuItem(
+                          value: suburb,
+                          child: Text(suburb),
+                        );
+                      }).toList(),
+                  onChanged: (value) => setState(() => _selectedSuburb = value),
+                ),
+
               if (isProvider) ...[
                 SizedBox(height: 20),
                 TextFormField(

@@ -31,8 +31,14 @@ router.post(
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
 
-    const { name, email, password, role, location, skills, fcmToken} = 
-    req.body;
+    const { name, email, password, role, skills, fcmToken } = req.body;
+
+    const location = {
+      state: req.body["location.state"],
+      city: req.body["location.city"],
+      suburb: req.body["location.suburb"],
+    };
+
 
     try {
       let user = await User.findOne({ email });
@@ -46,10 +52,11 @@ router.post(
         password,
         role,
         profilePhoto,
-        location,
-        skills: role === "provider"&& skills? skills.split(",") : [],
+        location, // ✅ correct nested location structure
+        skills: role === "provider" && skills ? skills.split(",") : [],
         fcmToken, // save FCM token
       });
+      
       console.log(user);
       await user.save();
 

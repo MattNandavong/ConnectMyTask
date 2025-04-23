@@ -19,11 +19,19 @@ const uploadToGCS = async (fileBuffer, filename) => {
   
   return new Promise((resolve, reject) => {
     blobStream.on('finish', async () => {
-        await blob.makePublic();
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-        resolve(publicUrl);
-      });
-      
+      try {
+        // Generate a signed URL
+        const [url] = await blob.getSignedUrl({
+          version: 'v4',
+          action: 'read',
+          expires: Date.now() + 60 * 60 * 1000, // 1 hour
+        });
+        resolve(url);
+      } catch (err) {
+        reject(err);
+      }
+    });
+
     blobStream.on('error', reject);
   });
 };

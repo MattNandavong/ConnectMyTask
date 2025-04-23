@@ -7,12 +7,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http_parser/http_parser.dart';
 
 class TaskService {
-  //ios simulator
-  // final String baseUrl = 'http://localhost:3300/api/auth';
-  // //Android simulator
-  final String baseUrl = 'http://10.0.2.2:3300/api/tasks';
+  // final String baseUrl = 'http://10.0.2.2:3300/api/tasks';
 
-  Future<List<Task>> getAllTasks() async {
+  //Real device
+  final String baseUrl = 'http://192.168.1.101:3300/api/tasks';
+
+  Future<List<Task>> getAllTasks
+  () async {
     final token = await _getToken();
     final response = await http.get(
       Uri.parse(baseUrl),
@@ -21,7 +22,6 @@ class TaskService {
 
     if (response.statusCode == 200) {
       final List data = jsonDecode(response.body);
-      print(response);
       return await Future.wait(data.map((json) => Task.fromJsonAsync(json)));
     } else {
       throw Exception('Failed to load tasks');
@@ -48,7 +48,7 @@ class TaskService {
     required double budget,
     required String deadline,
     required String category,
-    required dynamic location,
+    required Map<String, String> location,
     required List<File> images,
   }) async {
     final token = await _getToken();
@@ -61,22 +61,26 @@ class TaskService {
     request.fields['deadline'] = deadline;
     request.fields['category'] = category;
 
-    request.fields['location'] = location=='Remote'? 'Remote': "${location['state']}, ${location['city']}, ${location['suburb']}";
+    // Correct way to send nested fields
+    request.fields['location.state'] = location['location.state'] ?? '';
+    request.fields['location.city'] = location['location.city'] ?? '';
+    request.fields['location.suburb'] = location['location.suburb'] ?? '';
 
-
-    if (images != null && images.isNotEmpty) {
-      for (var image in images) {
-        request.files.add(
-          await http.MultipartFile.fromPath(
-            'images',
-            image.path,
-            contentType: MediaType('image', 'jpeg'), // Or use mime package
-          ),
-        );
-      }
+    for (var image in images) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'images',
+          image.path,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
+    print("📤 Submitting Task with the following fields:");
+                    request.fields.forEach(
+                      (key, value) => print("  $key: $value"),
+                    );
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 201) {
@@ -118,7 +122,6 @@ class TaskService {
       headers: {'Content-Type': 'application/json', 'Authorization': token},
       body: jsonEncode({'price': price, 'estimatedTime': estimatedTime}),
     );
-    print("🧾 Making offer -> Task: $id, Price: $price, Time: $estimatedTime");
 
     if (response.statusCode != 200) {
       throw Exception('Failed to bid on task');
@@ -142,7 +145,7 @@ class TaskService {
     final token = await _getToken();
     final response = await http.put(
       Uri.parse('$baseUrl/$taskId/acceptBid/$bidId'),
-      headers: {'Authorization': token},
+      headers: {'Authorization': token, 'Content-Type': 'application/json'},
     );
 
     if (response.statusCode != 200) {
@@ -162,29 +165,17 @@ class TaskService {
     final prefs = await SharedPreferences.getInstance();
     final user = jsonDecode(prefs.getString('user') ?? '{}');
     final userId = user['id'] ?? user['_id'];
-    print('Current Provider ID: $userId');
 
     final tasks = await getAllTasks();
-    print('All tasks fetched: ${tasks.length}');
 
-    final filtered =
-        tasks.where((task) {
-          final assignedProviderId = task.assignedProvider?.toString();
-          final matchesAssigned = assignedProviderId == userId.toString();
+    return tasks.where((task) {
+      final assignedProviderId = task.assignedProvider;
+      final matchesAssigned = assignedProviderId == userId;
 
-          final matchesBid = task.bids.any((bid) {
-            final bidProviderId = bid.provider?.toString();
-            return bidProviderId == userId.toString();
-          });
+      final matchesBid = task.bids.any((bid) => bid.provider == userId);
 
-          print(
-            'Task "${task.title}" -> assigned: $matchesAssigned, bidMatch: $matchesBid',
-          );
-          return matchesAssigned || matchesBid;
-        }).toList();
-
-    print('Filtered tasks for provider: ${filtered.length}');
-    return filtered;
+      return matchesAssigned || matchesBid;
+    }).toList();
   }
 
   Future<String> _getToken() async {

@@ -199,7 +199,7 @@ class ProviderTaskDetail extends StatelessWidget {
                               if (task.assignedProvider != null) ...[
                                 FutureBuilder<User>(
                                   future: AuthService().getUserProfile(
-                                    task.assignedProvider!,
+                                    task.assignedProvider!.id,
                                   ),
                                   builder: (context, providerSnapshot) {
                                     if (providerSnapshot.connectionState ==
