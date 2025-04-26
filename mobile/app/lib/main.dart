@@ -50,6 +50,11 @@ class MyApp extends StatelessWidget {
             fontSize: 14,
           ),
         ),
+        cardTheme: ThemeData().cardTheme.copyWith(
+          color: Colors.white,
+          
+          
+        ),
         // inputDecorationTheme: InputDecorationTheme(
         //   labelStyle: GoogleFonts.figtree(fontSize: 16),
         //   activeIndicatorBorder: BorderSide(
