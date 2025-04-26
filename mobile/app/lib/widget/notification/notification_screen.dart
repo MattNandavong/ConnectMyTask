@@ -1,7 +1,4 @@
 import 'dart:convert';
-// import 'package:app/utils/auth_service.dart';
-// import 'package:app/widget/chat_screen.dart';
-// import 'package:app/widget/my_task/myTask_details.dart';
 import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/task_detail_screen.dart';
 import 'package:flutter/material.dart';
@@ -140,41 +137,44 @@ class _NotificationScreenState extends State<NotificationScreen>
                           },
                           child: GestureDetector(
                             onTap: () {
-  markAsRead(index);
+                              markAsRead(index);
 
-  final data = notifications[index];
+                              final data = notifications[index];
 
-  if (data['type'] == 'chat' && data['taskId'] != null) {
-    final taskId = data['taskId'];
+                              if (data['type'] == 'chat' &&
+                                  data['taskId'] != null) {
+                                final taskId = data['taskId'];
 
-    // Retrieve userId from SharedPreferences or AuthService
-    SharedPreferences.getInstance().then((prefs) {
-      final userJson = prefs.getString('user');
-      if (userJson != null) {
-        final userId = jsonDecode(userJson)['_id'];
+                                // Retrieve userId from SharedPreferences or AuthService
+                                SharedPreferences.getInstance().then((prefs) {
+                                  final userJson = prefs.getString('user');
+                                  if (userJson != null) {
+                                    final userId = jsonDecode(userJson)['_id'];
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              taskId: taskId,
-              userId: userId,
-            ),
-          ),
-        );
-      } 
-    });
-  } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TaskDetailScreen(
-              taskId: data['taskId'],
-            ),
-          ),
-        );
-      }
-},
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (_) => ChatScreen(
+                                              taskId: taskId,
+                                              userId: userId,
+                                            ),
+                                      ),
+                                    );
+                                  }
+                                });
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => TaskDetailScreen(
+                                          taskId: data['taskId'],
+                                        ),
+                                  ),
+                                );
+                              }
+                            },
 
                             child: Card(
                               color:

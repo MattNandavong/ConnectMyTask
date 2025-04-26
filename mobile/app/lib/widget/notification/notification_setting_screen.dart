@@ -1,3 +1,4 @@
+import 'package:app/widget/notification/notification_switchCard_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,59 +44,50 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
-          
           children: [
-            Card(
-              child: SwitchListTile(
-                title: Text('Enable Notifications'),
-                value: notificationsEnabled,
+            NotificationSwitchCard(
+              title: 'Enable Notifications',
+              value: notificationsEnabled,
+              onChanged: (value) {
+                setState(() {
+                  notificationsEnabled = value;
+                });
+                _saveSettings();
+              },
+            ),
+            SizedBox(height: 12),
+            if (notificationsEnabled) ...[
+              NotificationSwitchCard(
+                title: 'Offers',
+                value: offersEnabled,
                 onChanged: (value) {
                   setState(() {
-                    notificationsEnabled = value;
+                    offersEnabled = value;
                   });
                   _saveSettings();
                 },
               ),
-            ),
-            SizedBox(height: 12,),
-            if (notificationsEnabled) ...[
-              Card(
-                child: SwitchListTile(
-                  title: Text('Offers'),
-                  value: offersEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      offersEnabled = value;
-                    });
-                    _saveSettings();
-                  },
-                ),
+              SizedBox(height: 12),
+              NotificationSwitchCard(
+                title: 'Messages',
+                value: messagesEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    messagesEnabled = value;
+                  });
+                  _saveSettings();
+                },
               ),
-              SizedBox(height: 12,),
-              Card(
-                child: SwitchListTile(
-                  title: Text('Messages'),
-                  value: messagesEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      messagesEnabled = value;
-                    });
-                    _saveSettings();
-                  },
-                ),
-              ),
-              SizedBox(height: 12,),
-              Card(
-                child: SwitchListTile(
-                  title: Text('Tasks update'),
-                  value: taskUpdatesEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      taskUpdatesEnabled = value;
-                    });
-                    _saveSettings();
-                  },
-                ),
+              SizedBox(height: 12),
+              NotificationSwitchCard(
+                title: 'Tasks Update',
+                value: taskUpdatesEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    taskUpdatesEnabled = value;
+                  });
+                  _saveSettings();
+                },
               ),
             ],
           ],
