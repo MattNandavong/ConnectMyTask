@@ -40,51 +40,66 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Notification Settings')),
-      body: ListView(
-        children: [
-          SwitchListTile(
-            title: Text('Enable Notifications'),
-            value: notificationsEnabled,
-            onChanged: (value) {
-              setState(() {
-                notificationsEnabled = value;
-              });
-              _saveSettings();
-            },
-          ),
-          if (notificationsEnabled) ...[
-            SwitchListTile(
-              title: Text('bid'),
-              value: offersEnabled,
-              onChanged: (value) {
-                setState(() {
-                  offersEnabled = value;
-                });
-                _saveSettings();
-              },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          
+          children: [
+            Card(
+              child: SwitchListTile(
+                title: Text('Enable Notifications'),
+                value: notificationsEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    notificationsEnabled = value;
+                  });
+                  _saveSettings();
+                },
+              ),
             ),
-            SwitchListTile(
-              title: Text('chat'),
-              value: messagesEnabled,
-              onChanged: (value) {
-                setState(() {
-                  messagesEnabled = value;
-                });
-                _saveSettings();
-              },
-            ),
-            SwitchListTile(
-              title: Text('task'),
-              value: taskUpdatesEnabled,
-              onChanged: (value) {
-                setState(() {
-                  taskUpdatesEnabled = value;
-                });
-                _saveSettings();
-              },
-            ),
+            SizedBox(height: 12,),
+            if (notificationsEnabled) ...[
+              Card(
+                child: SwitchListTile(
+                  title: Text('Offers'),
+                  value: offersEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      offersEnabled = value;
+                    });
+                    _saveSettings();
+                  },
+                ),
+              ),
+              SizedBox(height: 12,),
+              Card(
+                child: SwitchListTile(
+                  title: Text('Messages'),
+                  value: messagesEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      messagesEnabled = value;
+                    });
+                    _saveSettings();
+                  },
+                ),
+              ),
+              SizedBox(height: 12,),
+              Card(
+                child: SwitchListTile(
+                  title: Text('Tasks update'),
+                  value: taskUpdatesEnabled,
+                  onChanged: (value) {
+                    setState(() {
+                      taskUpdatesEnabled = value;
+                    });
+                    _saveSettings();
+                  },
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
