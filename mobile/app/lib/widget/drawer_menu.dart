@@ -1,6 +1,7 @@
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/widget/login/profile_setup_screen.dart';
+import 'package:app/widget/notification/notification_setting_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:app/widget/login.dart';
@@ -35,7 +36,6 @@ class DrawerMenu extends StatelessWidget {
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
-                
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primary,
                 ),
@@ -60,8 +60,7 @@ class DrawerMenu extends StatelessWidget {
                           SizedBox(height: 6),
                           Row(
                             children: [
-                              Icon(Icons.star,
-                                  color: Colors.amber, size: 16),
+                              Icon(Icons.star, color: Colors.amber, size: 16),
                               SizedBox(width: 4),
                               Text(
                                 user.averageRating != null
@@ -85,11 +84,13 @@ class DrawerMenu extends StatelessWidget {
               _buildDrawerItem(
                 icon: Icons.edit,
                 text: 'Edit Profile',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ProfileSetupScreen(user: user)),
-                ),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileSetupScreen(user: user),
+                      ),
+                    ),
               ),
               _buildDrawerItem(
                 icon: Icons.password_outlined,
@@ -99,7 +100,12 @@ class DrawerMenu extends StatelessWidget {
               _buildDrawerItem(
                 icon: Icons.notifications_outlined,
                 text: 'Notification Settings',
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => NotificationSettingsScreen()),
+                  );
+                },
               ),
               const Divider(),
               _buildDrawerItem(
@@ -110,26 +116,31 @@ class DrawerMenu extends StatelessWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Sign out'),
-                      content: const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () async {
-                            Navigator.of(context).pop();
-                            await AuthService().logout();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => AuthScreen()),
-                            );
-                          },
-                          child: const Text('YES'),
+                    builder:
+                        (_) => AlertDialog(
+                          title: const Text('Sign out'),
+                          content: const Text(
+                            'Are you sure you want to sign out?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.of(context).pop();
+                                await AuthService().logout();
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) => AuthScreen(),
+                                  ),
+                                );
+                              },
+                              child: const Text('YES'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('No'),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('No'),
-                        ),
-                      ],
-                    ),
                   );
                 },
               ),
