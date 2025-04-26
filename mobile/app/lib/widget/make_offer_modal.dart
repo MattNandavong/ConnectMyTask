@@ -4,21 +4,24 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void showMakeOfferModal(BuildContext context, String taskId) {
+
+  final _priceController = TextEditingController();
+  final _estimatedTimeController = TextEditingController();
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true, // ✅ This allows modal to expand with keyboard
     builder: (context) {
-      final _priceController = TextEditingController();
-      final _estimatedTimeController = TextEditingController();
+      
 
       return Padding(
         padding: EdgeInsets.only(
           left: 16,
           right: 16,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16, // ✅ Respect keyboard
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16, // Respect keyboard
         ),
-        child: SingleChildScrollView( // ✅ Prevent overflow when keyboard shows
+        child: SingleChildScrollView( 
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -8,7 +8,7 @@ import 'package:app/widget/drawer_menu.dart';
 import 'package:app/widget/login.dart';
 import 'package:app/widget/messages.dart';
 import 'package:app/widget/mytask_screen.dart';
-import 'package:app/widget/notification.dart';
+import 'package:app/widget/notification/notification_screen.dart';
 import 'package:app/widget/post_task.dart';
 import 'package:app/widget/task_detail_screen.dart';
 import 'package:app/widget/top_bar.dart';
