@@ -219,7 +219,8 @@ class TaskDetailScreen extends StatelessWidget {
                                     return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
                                           padding: EdgeInsets.symmetric(
@@ -291,42 +292,62 @@ class TaskDetailScreen extends StatelessWidget {
                                             ],
                                           ),
                                         ),
-                                        Container(
-                                          width: double.infinity,
-                                          child: Padding(
-                                            padding: const EdgeInsets.fromLTRB(40,100,40,40),
-                                            child: ElevatedButton.icon(
-                                              onPressed:
-                                                  () => showMakeOfferModal(
-                                                    context,
-                                                    taskId,
-                                                  ),
-                                              icon: Icon(
-                                                Icons.local_offer_outlined,
-                                              ),
-                                              label: Text('Make an Offer'),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary,
-                                                foregroundColor: Colors.white,
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 14,
-                                                ),
-                                                textStyle: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
                                       ],
                                     );
                                   },
                                 ),
-                              ],
+                              ], //
+                              
+                              Container(
+                                width: double.infinity,
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    40,
+                                    100,
+                                    40,
+                                    40,
+                                  ),
+                                  child: 
+                                  task.assignedProvider ==null ? ElevatedButton.icon(
+                                    onPressed:
+                                        () =>
+                                            showMakeOfferModal(context, taskId),
+                                    icon: Icon(Icons.local_offer_outlined),
+                                    label: Text('Make an Offer'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      foregroundColor: Colors.white,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 14,
+                                      ),
+                                      textStyle: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ): ElevatedButton.icon(
+                                    onPressed:
+                                        (){
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Task is under progress. Can not make offer.")));
+                                        },
+                                    icon: Icon(Icons.local_offer_outlined),
+                                    label: Text('Make an Offer'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Theme.of(context).colorScheme.surface,
+                                      foregroundColor: Colors.blueGrey,
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 14,
+                                      ),
+                                      textStyle: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
