@@ -159,7 +159,7 @@ const bidOnTask = async (req, res) => {
         task.user.fcmToken,
         'New Offer Received',
         `${provider.name} has offered $${price} for your task.`,
-        { taskId: task._id.toString() }
+        { taskId: task._id.toString(), type: "bid" }
       );
     } else {
       console.warn("No FCM token found for user.");
@@ -211,7 +211,7 @@ const acceptBid = async (req, res) => {
         "Offer Accepted!",
         `${task.user.name} has accepted your offer for the task. View task now!`,
         { taskId: task._id.toString(),
-          type: 'task',
+          type: 'bid',
         }
       );
     } else {

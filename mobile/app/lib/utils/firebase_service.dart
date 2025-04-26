@@ -14,6 +14,39 @@ final FlutterLocalNotificationsPlugin localNotifications =
 // Pass a navigator key from main.dart
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+
+Future<void> handleIncomingNotification(RemoteMessage message) async {
+  final prefs = await SharedPreferences.getInstance();
+
+  // Check global notification setting
+  bool notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
+
+  if (!notificationsEnabled) {
+    print('🔕 Notifications are disabled. Not showing this notification.');
+    return; // User turned off all notifications
+  }
+
+  // Now check type-specific
+  String? notificationType = message.data['type']; // "bid", "chat", "task"
+
+  if (notificationType == 'bid' && !(prefs.getBool('notify_offers') ?? true)) {
+    print('🔕 Offer notifications are disabled.');
+    return;
+  }
+  if (notificationType == 'chat' && !(prefs.getBool('notify_messages') ?? true)) {
+    print('🔕 Message notifications are disabled.');
+    return;
+  }
+  if (notificationType == 'task' && !(prefs.getBool('notify_task_updates') ?? true)) {
+    print('🔕 Task Update notifications are disabled.');
+    return;
+  }
+
+  // ✅ If passed all checks, show the notification
+   showLocalNotification(message);
+   await storeNotificationLocally(message);
+}
+
 /// Handle background messages
 @pragma('vm:entry-point') // Required for background execution
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -122,8 +155,7 @@ Future<void> setupFCM() async {
   // Foreground message: show toast and store locally
   FirebaseMessaging.onMessage.listen((message) async {
     print('Foreground Message: ${jsonEncode(message.toMap())}');
-    showLocalNotification(message);
-    await storeNotificationLocally(message);
+    handleIncomingNotification(message);
 
     // Optionally: print chat-related data
     final data = message.data;

@@ -76,6 +76,7 @@ io.on('connection', (socket) => {
         : task.user._id;
 
       const recipient = await User.findById(recipientId);
+      //push notification
       if (recipient?.fcmToken) {
         await admin.messaging().send({
           token: recipient.fcmToken,
