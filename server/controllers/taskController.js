@@ -233,7 +233,7 @@ const acceptBid = async (req, res) => {
 const completeTask = async (req, res) => {
   const { id } = req.params;
   const { rating, comment } = req.body;
-
+  const sendNotification = require('../utils/sendnotification.js');
   try {
     // Find the task by ID
     const task = await Task.findById(id);
@@ -278,35 +278,19 @@ const completeTask = async (req, res) => {
 
     await task.save(); // Save the task with updated status and review
 
-    //push notification
-    await Promise.all([
-      // Notify Poster
-      admin.messaging().send({
-        token: task.user.fcmToken,
-        notification: {
-          title: "Task Completed",
-          body: `You’ve successfully completed "${task.title}".`,
-        },
-        data: {
-          taskId: task._id.toString(),
-          type: 'task', 
-        },
-      }),
-    
-      // Notify Provider
-      admin.messaging().send({
-        token: provider.fcmToken,
-        notification: {
-          title: "Task Completed",
-          body: `Your task "${task.title}" has been marked completed.`,
-        },
-        data: {
-          taskId: task._id.toString(),
-          type: 'task', 
-        },
-      }),
-    ]);
-    
+    // Send push notification to provider
+    if (provider.fcmToken) {
+      await sendNotification(
+        provider.fcmToken,
+        "Task Completed!",
+        `Congratulation! You have successfully complete ${task.title}.`,
+        { taskId: task._id.toString(),
+          type: 'task',
+        }
+      );
+    } else {
+      console.warn("No FCM token found for accepted provider.");
+    }
 
     // sendTaskCompletionEmail(
     //   provider.email,
