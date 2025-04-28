@@ -1,9 +1,11 @@
 import 'package:app/model/ChatPreview.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/chat_service.dart';
+// import 'package:app/utils/socket_service.dart';
 import 'package:app/widget/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class MessageScreen extends StatefulWidget {
   const MessageScreen({super.key});
@@ -13,22 +15,70 @@ class MessageScreen extends StatefulWidget {
 }
 
 class _MessageScreenState extends State<MessageScreen> {
-  late Future<List<ChatPreview>> _chatSummaries;
+  List<ChatPreview> _chatSummaries = [];
   String? _currentUserId;
+  bool _isLoading = true;
+  late IO.Socket socket;
+
+  //Real device
+  final String baseUrl = 'http://192.168.1.101:3300';
 
   @override
   void initState() {
     super.initState();
-    _loadUserAndChats();
+    _initialize();
+    _loadUserAndChats(); // Load first
+    // _connectToSocket();
+  }
+
+  Future<void> _initialize() async {
+    final chats = await ChatService().getChatSummary();
+    final taskIds = chats.map((chat) => chat.taskId).toList();
+
+    setState(() {
+      _chatSummaries = List<ChatPreview>.from(chats);
+      _isLoading = false;
+    });
+
+    _connectToSocket(taskIds);
+  }
+
+  void _connectToSocket(List<String> taskIds) {
+    socket = IO.io(
+      '$baseUrl',
+      IO.OptionBuilder().setTransports(['websocket']).build(),
+    );
+
+    socket.onConnect((_) {
+      print('📡 Socket connected');
+
+      // Join all rooms
+      for (final taskId in taskIds) {
+        socket.emit('joinTask', {'taskId': taskId});
+        print('🏠 Joined task room: $taskId');
+      }
+
+      socket.on('receiveMessage', (data) {
+        print('📥 Received new message related to a task room');
+        _loadUserAndChats(); // Reload message screen
+      });
+    });
+
+    socket.connect();
   }
 
   Future<void> _loadUserAndChats() async {
     final currentUser = await AuthService().getCurrentUser();
-    final id = currentUser!.id; // or AuthService if needed
+    final id = currentUser!.id;
+    final chats = await ChatService().getChatSummary(); // API call to backend
+
     setState(() {
       _currentUserId = id;
-      _chatSummaries = ChatService().getChatSummary();
+      _chatSummaries = List<ChatPreview>.from(chats); // important
+      _isLoading = false;
     });
+
+    print('✅ Chat summaries reloaded: ${_chatSummaries.length} chats');
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -40,95 +90,96 @@ class _MessageScreenState extends State<MessageScreen> {
   }
 
   @override
+  void dispose() {
+    // SocketService().dispose(); // Clean up socket properly
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_currentUserId == null) {
-      return Center(child: CircularProgressIndicator());
+    if (_currentUserId == null || _isLoading) {
+      return Scaffold(
+        backgroundColor: Color(0xFFF7F7F7),
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7), // light background like the image
-      body: FutureBuilder<List<ChatPreview>>(
-        future: _chatSummaries,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error loading messages'));
-          }
-
-          final chats = snapshot.data!;
-          if (chats.isEmpty) return Center(child: Text('No chats yet.'));
-
-          return ListView.builder(
-            padding: EdgeInsets.all(12),
-            itemCount: chats.length,
-            itemBuilder: (context, index) {
-              final chat = chats[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Material(
-                  elevation: 1,
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.white,
-                  child: ListTile(
-                    shape: RoundedRectangleBorder(
+      backgroundColor: Color(0xFFF7F7F7),
+      body:
+          _chatSummaries.isEmpty
+              ? Center(child: Text('No chats yet.'))
+              : ListView.builder(
+                padding: EdgeInsets.all(12),
+                itemCount: _chatSummaries.length,
+                itemBuilder: (context, index) {
+                  final chat = _chatSummaries[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    child: Material(
+                      elevation: 1,
                       borderRadius: BorderRadius.circular(16),
-                    ),
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.secondary,
-                      child: Text(
-                        chat.partnerName[0],
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ),
-                    ),
-                    title: Text(
-                      chat.partnerName,
-                      style: GoogleFonts.figtree(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    subtitle: Text(
-                      chat.lastMessage!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.figtree(),
-                    ),
-                    trailing: Text(
-                      _formatTimestamp(chat.lastTimestamp),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.secondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (_) => ChatScreen(
-                                taskId: chat.taskId,
-                                userId: _currentUserId!,
-                              ),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
                         ),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                        leading: CircleAvatar(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary,
+                          child: Text(
+                            chat.partnerName.isNotEmpty
+                                ? chat.partnerName[0]
+                                : '?',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          chat.taskTitle,
+                          style: GoogleFonts.figtree(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          chat.lastMessage!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.figtree(),
+                        ),
+                        trailing: Text(
+                          _formatTimestamp(chat.lastTimestamp),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.secondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => ChatScreen(
+                                    taskId: chat.taskId,
+                                    userId: _currentUserId!,
+                                  ),
+                            ),
+                          );
+                          _loadUserAndChats(); // reload chats after coming back
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
     );
   }
 }
