@@ -1,5 +1,8 @@
-const Message = require("../models/Message");
+// const Message = require("../models/Message");
 const mongoose = require('mongoose');
+const Task = require('../models/Task');
+const Message = require('../models/Message');
+const User = require('../models/User');
 
 const createMessage = async (req, res) => {
   const { text, receiverId } = req.body;
@@ -55,18 +58,20 @@ const getChatSummary = async (req, res) => {
     const userId = req.params.userId;
   
     try {
-      const chats = await Message.aggregate([
-        {
-          $match: {
-            $or: [
-              { sender: new mongoose.Types.ObjectId(userId) },
-              { receiver: new mongoose.Types.ObjectId(userId) }
-            ]
-          }
-        },
-        {
-          $sort: { timestamp: -1 }
-        },
+      // Step 1: Find tasks where user is poster or assignedProvider
+      const tasks = await Task.find({
+        $or: [
+          { user: userId },
+          { assignedProvider: userId }
+        ]
+      }).select('_id title user assignedProvider');
+  
+      const taskIds = tasks.map(task => task._id);
+  
+      // Step 2: Find messages related to those tasks
+      const messages = await Message.aggregate([
+        { $match: { taskId: { $in: taskIds } } },
+        { $sort: { timestamp: -1 } },
         {
           $group: {
             _id: "$taskId",
@@ -74,63 +79,53 @@ const getChatSummary = async (req, res) => {
             lastImage: { $first: "$image" },
             lastTimestamp: { $first: "$timestamp" },
             sender: { $first: "$sender" },
-            receiver: { $first: "$receiver" },
+            receiver: { $first: "$receiver" }
           }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "receiver",
-            foreignField: "_id",
-            as: "receiverInfo"
-          }
-        },
-        {
-          $unwind: { path: "$receiverInfo", preserveNullAndEmptyArrays: true }
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "sender",
-            foreignField: "_id",
-            as: "senderInfo"
-          }
-        },
-        {
-          $unwind: { path: "$senderInfo", preserveNullAndEmptyArrays: true }
-        },
-        {
-          $addFields: {
-            chatPartner: {
-              $cond: [
-                { $eq: ["$sender", new mongoose.Types.ObjectId(userId)] },
-                "$receiverInfo",
-                "$senderInfo"
-              ]
-            }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            taskId: "$_id",
-            lastMessage: 1,
-            lastImage: 1,
-            lastTimestamp: 1,
-            partnerName: "$chatPartner.name",
-            partnerProfilePhoto: "$chatPartner.profilePhoto"
-          }
-        },
-        {
-          $sort: { lastTimestamp: -1 }
         }
       ]);
   
-      res.json(chats);
+      // Step 3: Build chat summaries only for tasks with messages
+      const chats = await Promise.all(messages.map(async (msg) => {
+        const task = tasks.find(t => t._id.toString() === msg._id.toString());
+        if (!task) return null; // Skip if no corresponding task (should not happen)
+  
+        let partnerId;
+        if (task.user.toString() === userId) {
+          partnerId = task.assignedProvider;
+        } else {
+          partnerId = task.user;
+        }
+  
+        const partner = await User.findById(partnerId).select('name profilePhoto');
+  
+        return {
+          taskId: task._id,
+          taskTitle: task.title,
+          lastMessage: msg.lastMessage || '[Image]',
+          lastImage: msg.lastImage || null,
+          lastTimestamp: msg.lastTimestamp,
+          partnerName: partner ? partner.name : "Unknown",
+          partnerProfilePhoto: partner?.profilePhoto || null,
+        };
+      }));
+  
+      // Step 4: Filter out any nulls (if missing tasks/users)
+      const validChats = chats.filter(chat => chat !== null);
+  
+      // Step 5: Sort newest first
+      validChats.sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp));
+  
+      console.log('✅ Chat summary prepared:', validChats.length, 'chats.');
+      res.json(validChats);
+  
     } catch (err) {
       console.error('❌ Error getting chat summary:', err);
       res.status(500).send("Server Error");
     }
   };
-
+  
+  
+  
+  
+  
 module.exports = { createMessage, getMessages, getChatSummary };
