@@ -9,7 +9,7 @@ import 'package:app/widget/login.dart';
 import 'package:app/widget/messages.dart';
 import 'package:app/widget/mytask_screen.dart';
 import 'package:app/widget/notification/notification_screen.dart';
-import 'package:app/widget/post_task.dart';
+import 'package:app/widget/screen/post_task.dart';
 import 'package:app/widget/task_detail_screen.dart';
 import 'package:app/widget/top_bar.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
