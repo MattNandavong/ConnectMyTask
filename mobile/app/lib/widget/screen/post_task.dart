@@ -72,30 +72,30 @@ class _PostTaskState extends State<PostTask> {
   }
 
   void _openLocationModal() {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (context) => SizedBox(
-      height: MediaQuery.of(context).size.height * 0.6,
-      child: SingleChildScrollView(
-        child: LocationInput(
-          onPlaceSelected: (address, lat, lng) {
-            setState(() {
-              _locationController.text = address;
-              _selectedAddress = address;
-              _selectedLat = lat;
-              _selectedLng = lng;
-            });
-          },
-        ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-    ),
-  );
-}
-
+      builder:
+          (context) => SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: SingleChildScrollView(
+              child: LocationInput(
+                onPlaceSelected: (address, lat, lng) {
+                  setState(() {
+                    _locationController.text = address;
+                    _selectedAddress = address;
+                    _selectedLat = lat;
+                    _selectedLng = lng;
+                  });
+                },
+              ),
+            ),
+          ),
+    );
+  }
 
   Future<void> _pickDeadline() async {
     final date = await showDatePicker(
@@ -386,24 +386,44 @@ class _PostTaskState extends State<PostTask> {
       padding: EdgeInsets.all(16),
       children: [
         Text(
-          "📌 Title: ${_titleController.text}",
-          style: TextStyle(fontSize: 16),
+          "Review Your Task",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
-        Text("📂 Category: $_category"),
-        Text("📝 Description:\n${_descController.text}"),
-        SizedBox(height: 12),
-        Text("💰 Budget: \$${_budgetController.text}"),
-        if (_deadline != null)
-          Text(
-            "⏳ Deadline: ${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}",
-          ),
-        Text("📍 Location: ${_isRemote ? 'Remote' : _selectedAddress ?? ''}"),
         SizedBox(height: 20),
+
+        _buildPreviewTile(Icons.title, "Title", _titleController.text),
+        _buildPreviewTile(Icons.category, "Category", _category),
+        _buildPreviewTile(
+          Icons.description,
+          "Description",
+          _descController.text,
+        ),
+        _buildPreviewTile(
+          Icons.attach_money,
+          "Budget",
+          "\$${_budgetController.text}",
+        ),
+
+        if (_deadline != null)
+          _buildPreviewTile(
+            Icons.schedule,
+            "Deadline",
+            "${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}",
+          ),
+
+        _buildPreviewTile(
+          Icons.location_on,
+          "Location",
+          _isRemote ? "Remote" : (_selectedAddress ?? "Not selected"),
+        ),
+
+        SizedBox(height: 20),
+
         if (!_isRemote && _selectedLat != null && _selectedLng != null)
-          SizedBox(
-            height: 200,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              height: 200,
               child: GoogleMap(
                 initialCameraPosition: CameraPosition(
                   target: LatLng(_selectedLat!, _selectedLng!),
@@ -416,31 +436,96 @@ class _PostTaskState extends State<PostTask> {
                   ),
                 },
                 zoomControlsEnabled: false,
-                liteModeEnabled:
-                    true, // ⚡ Lighter map, good for preview screens
+                liteModeEnabled: true,
               ),
             ),
           ),
+
         SizedBox(height: 20),
-        Text("🖼️ Images:", style: TextStyle(fontWeight: FontWeight.bold)),
+
+        Text(
+          "Images",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         SizedBox(height: 8),
-        ..._imagesWithCaptions.map(
-          (img) => ListTile(
-            leading: Image.file(
-              img['file'],
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
+
+        if (_imagesWithCaptions.isEmpty)
+          Center(
+            child: Text(
+              "No images uploaded",
+              style: TextStyle(color: Colors.grey),
             ),
           ),
-        ),
-        SizedBox(height: 20),
+        if (_imagesWithCaptions.isNotEmpty)
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _imagesWithCaptions.length,
+              separatorBuilder: (_, __) => SizedBox(width: 10),
+              itemBuilder: (context, index) {
+                final img = _imagesWithCaptions[index];
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    img['file'],
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              },
+            ),
+          ),
+
+        SizedBox(height: 30),
+
         ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
           icon: Icon(Icons.send),
-          label: Text('Confirm & Submit'),
+          label: Text('Confirm & Submit', style: TextStyle(fontSize: 18)),
           onPressed: _submitTask,
         ),
       ],
+    );
+  }
+
+  
+  Widget _buildPreviewTile(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.teal),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  value.isNotEmpty ? value : '-',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
