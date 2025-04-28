@@ -9,7 +9,7 @@ const {
   sendTaskCompletionEmail,
 } = require("../utils/mail");
 //chat model
-const Chat = require("../models/ChatMessage")
+const Chat = require("../models/Message.js")
 
 // Create a new task
 const createTask = async (req, res) => {

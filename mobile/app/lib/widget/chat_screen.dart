@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:app/utils/auth_service.dart';
+import 'package:app/utils/task_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,17 +41,28 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _loadChatHistory() async {
     try {
+      // final prefs = await SharedPreferences.getInstance();
+      final token = await AuthService().getToken();
+
       final response = await http.get(
-        Uri.parse('$baseUrl/api/chat/${widget.taskId}'),
+        Uri.parse('http://192.168.1.101:3300/api/messages/${widget.taskId}'),
+        headers: {
+          'Authorization': "$token",
+          'Content-Type': 'application/json',
+        },
       );
+
       if (response.statusCode == 200) {
         final List data = jsonDecode(response.body);
         setState(() {
           messages.addAll(data.cast<Map<String, dynamic>>());
         });
+        _scrollToBottom();
+      } else {
+        print('❌ Failed to load chat history: ${response.statusCode}');
       }
     } catch (e) {
-      print("❌ Error loading chat: $e");
+      print("❌ Error loading chat history: $e");
     }
   }
 
@@ -101,44 +114,70 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     final now = DateTime.now().toIso8601String();
+    final task = await TaskService().getTask(widget.taskId);
 
     if (text.isNotEmpty) {
-      final msg = {
-        'taskId': widget.taskId,
-        'sender': {'_id': widget.userId},
-        'text': text,
-        'timestamp': now,
-      };
-      socket.emit('sendMessage', msg);
+      // Send text message via HTTP POST (not socket.emit directly)
+      try {
+        final token = await AuthService().getToken();
+        final response = await http.post(
+          Uri.parse('http://192.168.1.101:3300/api/messages/${widget.taskId}'),
+          headers: {
+            'Authorization': '$token',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'text': text,
+            'receiverId': task.assignedProvider?.id,
+          }),
+        );
+
+        if (response.statusCode == 201) {
+          final savedMessage = jsonDecode(response.body);
+          print('📨 Text message saved: $savedMessage');
+          // No need to manually emit socket now — server already emits after save
+        } else {
+          print('❌ Failed to send text message: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('❌ Error sending text message: $e');
+      }
+
       _controller.clear();
     }
 
+    // Upload pending images
     for (var img in _pendingImages) {
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/api/chat/send-image'),
-      );
+      try {
+        final token = await AuthService().getToken();
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('http://192.168.1.101:3300/api/messages/${widget.taskId}'),
+        );
 
-      request.fields['taskId'] = widget.taskId;
-      request.fields['userId'] = widget.userId;
-      request.fields['caption'] = img['caption'] ?? '';
+        request.headers['Authorization'] = '$token';
+        request.fields['caption'] = img['caption'] ?? '';
+        request.fields['receiverId'] = task.assignedProvider?.id ?? '';
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'image',
+            img['file'].path,
+            contentType: MediaType('image', 'jpeg'),
+          ),
+        );
 
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          img['file'].path,
-          contentType: MediaType('image', 'jpeg'),
-        ),
-      );
+        final streamedResponse = await request.send();
+        final resBody = await streamedResponse.stream.bytesToString();
 
-      final response = await request.send();
-      final resBody = await response.stream.bytesToString();
-
-      if (response.statusCode == 200) {
-        final savedMessage = jsonDecode(resBody);
-        // setState(() => messages.add(savedMessage));
-      } else {
-        print('❌ Failed to upload image: ${response.statusCode}');
+        if (streamedResponse.statusCode == 201) {
+          final savedImageMessage = jsonDecode(resBody);
+          print('🖼️ Image uploaded and saved: $savedImageMessage');
+          // Again, server will emit receiveMessage automatically
+        } else {
+          print('❌ Failed to upload image: ${streamedResponse.statusCode}');
+        }
+      } catch (e) {
+        print('❌ Error uploading image: $e');
       }
     }
 
