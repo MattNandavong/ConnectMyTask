@@ -1,5 +1,6 @@
 class ChatPreview {
   final String taskId;
+  final String taskTitle;
   final String partnerName;
   final String? partnerProfilePhoto;
   final String? lastMessage;
@@ -8,6 +9,7 @@ class ChatPreview {
 
   ChatPreview({
     required this.taskId,
+    required this.taskTitle,
     required this.partnerName,
     this.partnerProfilePhoto,
     this.lastMessage,
@@ -18,6 +20,7 @@ class ChatPreview {
   factory ChatPreview.fromJson(Map<String, dynamic> json) {
     return ChatPreview(
       taskId: json['taskId'],
+      taskTitle: json['taskTitle'],
       partnerName: json['partnerName'],
       partnerProfilePhoto: json['partnerProfilePhoto'],
       lastMessage: json['lastMessage'],
