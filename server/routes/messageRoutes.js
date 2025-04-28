@@ -2,6 +2,7 @@ const express = require("express");
 const {
   createMessage,
   getMessages,
+  getChatSummary
 } = require("../controllers/messageController");
 const {
   authMiddleware,
@@ -27,5 +28,8 @@ router.get(
   //  authorizeRoles("user"),
   getMessages
 );
+
+//Get summary chat
+router.get("/summary/:userId", authMiddleware, getChatSummary);
 
 module.exports = router;

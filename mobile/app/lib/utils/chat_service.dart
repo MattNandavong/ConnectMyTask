@@ -38,17 +38,36 @@ class ChatService {
     }
   }
 
-  Future<List<ChatPreview>> getChatSummary() async {
-    final userId = await _getUserId();
-    final response = await http.get(Uri.parse('$baseUrl/summary/$userId'));
+  // Future<List<ChatPreview>> getChatSummary() async {
+  //   final userId = await _getUserId();
+  //   final response = await http.get(Uri.parse('$baseUrl/summary/$userId'));
 
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((json) => ChatPreview.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load chat summary');
-    }
+  //   if (response.statusCode == 200) {
+  //     final List data = jsonDecode(response.body);
+  //     return data.map((json) => ChatPreview.fromJson(json)).toList();
+  //   } else {
+  //     throw Exception('Failed to load chat summary');
+  //   }
+  // }
+
+  Future<List<ChatPreview>> getChatSummary() async {
+  final userId = await _getUserId();
+  final token = await _getToken();
+  
+  final response = await http.get(
+    Uri.parse('$baseUrl/summary/$userId'),
+    headers: {
+      'Authorization': '$token',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.map((json) => ChatPreview.fromJson(json)).toList();
+  } else {
+    throw Exception('Failed to load chat summary');
   }
+}
 
   // Optional: Fallback HTTP POST if WebSocket not available
   // Future<void> sendMessage(String taskId, String text) async {

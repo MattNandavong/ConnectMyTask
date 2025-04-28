@@ -3,7 +3,7 @@ const express = require("express");
 const connectDB = require("./config/db");
 const taskRoutes = require("./routes/taskRoutes");
 const authRoutes = require("./routes/authRoutes");
-const chatRoutes = require('./routes/chatRoutes');
+// const chatRoutes = require('./routes/chatRoutes');
 const locationRoutes = require("./routes/locationRoutes");
 const { initIO, sendTestMessage } = require('./routes/testChatRoutes');
 const messageRoutes = require("./routes/messageRoutes");
@@ -36,7 +36,7 @@ connectDB();
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
-app.use("/api/chat", chatRoutes);
+// app.use("/api/chat", chatRoutes);
 app.use("/api/locations", locationRoutes);
 app.use("/api/messages", messageRoutes);
 
