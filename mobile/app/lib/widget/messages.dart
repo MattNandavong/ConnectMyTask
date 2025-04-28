@@ -82,7 +82,7 @@ class _MessageScreenState extends State<MessageScreen> {
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.secondary,
                       child: Text(
-                        chat.userName[0],
+                        chat.partnerName[0],
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -90,20 +90,20 @@ class _MessageScreenState extends State<MessageScreen> {
                       ),
                     ),
                     title: Text(
-                      chat.userName,
+                      chat.partnerName,
                       style: GoogleFonts.figtree(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     subtitle: Text(
-                      chat.lastMessage,
+                      chat.lastMessage!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.figtree(),
                     ),
                     trailing: Text(
-                      _formatTimestamp(chat.timestamp),
+                      _formatTimestamp(chat.lastTimestamp),
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.secondary,
