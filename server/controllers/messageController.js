@@ -16,6 +16,7 @@ const createMessage = async (req, res) => {
       receiver: receiverId,
       text: text || '[Image]',
       image: req.file?.path || null,
+      read: false,
     });
     console.log("Message created:", message);
 
@@ -68,7 +69,7 @@ const getChatSummary = async (req, res) => {
   
       const taskIds = tasks.map(task => task._id);
   
-      // Step 2: Find messages related to those tasks
+      // Step 2: Find last message and unread count for each task
       const messages = await Message.aggregate([
         { $match: { taskId: { $in: taskIds } } },
         { $sort: { timestamp: -1 } },
@@ -84,10 +85,10 @@ const getChatSummary = async (req, res) => {
         }
       ]);
   
-      // Step 3: Build chat summaries only for tasks with messages
+      // Step 3: Build chat summaries
       const chats = await Promise.all(messages.map(async (msg) => {
         const task = tasks.find(t => t._id.toString() === msg._id.toString());
-        if (!task) return null; // Skip if no corresponding task (should not happen)
+        if (!task) return null;
   
         let partnerId;
         if (task.user.toString() === userId) {
@@ -98,6 +99,15 @@ const getChatSummary = async (req, res) => {
   
         const partner = await User.findById(partnerId).select('name profilePhoto');
   
+        // Find unread messages count for this task
+        const unreadCount = await Message.countDocuments({
+          taskId: task._id,
+          receiver: userId,
+          sender: { $ne: userId },
+          read: false
+          
+        });
+  
         return {
           taskId: task._id,
           taskTitle: task.title,
@@ -106,14 +116,13 @@ const getChatSummary = async (req, res) => {
           lastTimestamp: msg.lastTimestamp,
           partnerName: partner ? partner.name : "Unknown",
           partnerProfilePhoto: partner?.profilePhoto || null,
+          unreadCount: unreadCount || 0,
         };
       }));
   
-      // Step 4: Filter out any nulls (if missing tasks/users)
-      const validChats = chats.filter(chat => chat !== null);
-  
-      // Step 5: Sort newest first
-      validChats.sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp));
+      // Step 4: Filter out nulls and sort newest first
+      const validChats = chats.filter(chat => chat !== null)
+                              .sort((a, b) => new Date(b.lastTimestamp) - new Date(a.lastTimestamp));
   
       console.log('✅ Chat summary prepared:', validChats.length, 'chats.');
       res.json(validChats);
@@ -124,8 +133,30 @@ const getChatSummary = async (req, res) => {
     }
   };
   
+  const markMessagesAsRead = async (req, res) => {
+    const { taskId } = req.params;
+    const userId = req.user.id;
+  
+    try {
+      await Message.updateMany(
+        {
+          taskId: taskId,
+          receiver: userId,
+          read: false,
+        },
+        { $set: { read: true } }
+      );
+  
+      res.json({ success: true });
+    } catch (error) {
+      console.error('❌ Error marking messages as read:', error);
+      res.status(500).send('Server Error');
+    }
+  };
   
   
   
   
-module.exports = { createMessage, getMessages, getChatSummary };
+  
+  
+module.exports = { createMessage, getMessages, getChatSummary, markMessagesAsRead };

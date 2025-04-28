@@ -34,10 +34,19 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _loadChatHistory();
     _connectToSocket();
+    markMessagesAsRead();
   }
 
   //Real device
   final String baseUrl = 'http://192.168.1.101:3300';
+
+  Future<void> markMessagesAsRead() async {
+    final token = await AuthService().getToken();
+    await http.put(
+      Uri.parse('http://192.168.1.101:3300/api/messages/${widget.taskId}/read'),
+      headers: {'Authorization': '$token', 'Content-Type': 'application/json'},
+    );
+  }
 
   Future<void> _loadChatHistory() async {
     try {
@@ -91,6 +100,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _selectImages() async {
     final pickedFiles = await _picker.pickMultiImage(imageQuality: 75);
+
     if (pickedFiles == null) return;
 
     final tempDir = await getTemporaryDirectory();
@@ -119,6 +129,13 @@ class _ChatScreenState extends State<ChatScreen> {
     if (text.isNotEmpty) {
       // Send text message via HTTP POST (not socket.emit directly)
       try {
+        // Correct receiver logic based on who is sending
+        final currentUserId = widget.userId;
+        final receiverId =
+            (currentUserId == task.user?.id)
+                ? task.assignedProvider?.id
+                : task.user?.id;
+
         final token = await AuthService().getToken();
         final response = await http.post(
           Uri.parse('http://192.168.1.101:3300/api/messages/${widget.taskId}'),
@@ -126,10 +143,7 @@ class _ChatScreenState extends State<ChatScreen> {
             'Authorization': '$token',
             'Content-Type': 'application/json',
           },
-          body: jsonEncode({
-            'text': text,
-            'receiverId': task.assignedProvider?.id,
-          }),
+          body: jsonEncode({'text': text, 'receiverId': receiverId}),
         );
 
         if (response.statusCode == 201) {
@@ -149,6 +163,13 @@ class _ChatScreenState extends State<ChatScreen> {
     // Upload pending images
     for (var img in _pendingImages) {
       try {
+        final currentUserId = widget.userId;
+        final receiverId =
+            (currentUserId == task.user?.id)
+                ? task.assignedProvider?.id
+                : task.user?.id;
+
+
         final token = await AuthService().getToken();
         final request = http.MultipartRequest(
           'POST',
@@ -157,7 +178,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
         request.headers['Authorization'] = '$token';
         request.fields['caption'] = img['caption'] ?? '';
-        request.fields['receiverId'] = task.assignedProvider?.id ?? '';
+        request.fields['receiverId'] = receiverId ?? '';
         request.files.add(
           await http.MultipartFile.fromPath(
             'image',
