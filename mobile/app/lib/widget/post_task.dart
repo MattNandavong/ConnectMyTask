@@ -4,6 +4,10 @@ import 'package:app/utils/task_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:app/utils/voice_service.dart';
+
+late VoiceService _voiceService;
 
 class PostTask extends StatefulWidget {
   const PostTask({super.key});
@@ -18,6 +22,13 @@ class _PostTaskState extends State<PostTask> {
   final _budgetController = TextEditingController();
   final _locationController = TextEditingController();
   final DateFormat _formatter = DateFormat.yMMMMd();
+
+  late FocusNode _titleFocus;
+  late FocusNode _descFocus;
+
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _activeField = ''; // To know which input field to fill
 
   String _category = 'Cleaning';
   double _budget = 0.0;
@@ -126,7 +137,6 @@ class _PostTaskState extends State<PostTask> {
                       return;
                     }
                     // print( "${_titleController.text.trim()},${_descController.text.trim()},${double.tryParse(_budgetController.text.trim()) ?? 0},${deadlineDateTime.toIso8601String()},$_category,${'location.state':_isRemote ? 'Remote' : _selectedState!,'location.city': _isRemote ? 'Remote' : _selectedCity!,'location.suburb':_isRemote ? 'Remote' : _selectedSuburb!,}}",);
-                    
 
                     await TaskService().createTask(
                       title: _titleController.text.trim(),
@@ -176,6 +186,23 @@ class _PostTaskState extends State<PostTask> {
             ],
           ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+    _titleFocus = FocusNode(); // 👈 Initialize here
+    _descFocus = FocusNode(); // 👈 Initialize here
+    _voiceService = VoiceService();
+  }
+
+  @override
+  void dispose() {
+    
+    _titleFocus.dispose();
+    _descFocus.dispose();
+    super.dispose();
   }
 
   Widget _buildPreview() {
@@ -236,9 +263,43 @@ class _PostTaskState extends State<PostTask> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: InputDecoration(labelText: 'Title'),
+                  focusNode: _titleFocus,
+                  decoration: InputDecoration(
+                    labelText: 'Title',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isListening && _activeField == 'title'
+                            ? Icons.mic
+                            : Icons.mic_none,
+                      ),
+                      // For Title
+                      onPressed: () {
+                        if (_voiceService.isListening) {
+                          _voiceService.stopListening(() {
+                            setState(() {});
+                          });
+                        } else {
+                          _titleFocus.unfocus();
+                          _voiceService.startListening(
+                            onResult: (newText) {
+                              setState(() {
+                                _titleController.text += ' $newText';
+                              });
+                            },
+                            onListeningStarted: () {
+                              setState(() {});
+                            },
+                            onListeningStopped: () {
+                              setState(() {});
+                            },
+                          );
+                        }
+                      },
+                    ),
+                  ),
                   validator: (val) => val!.isEmpty ? 'Required' : null,
                 ),
+
                 SizedBox(height: 12),
                 DropdownButtonFormField(
                   value: _category,
@@ -254,8 +315,41 @@ class _PostTaskState extends State<PostTask> {
                 SizedBox(height: 12),
                 TextFormField(
                   controller: _descController,
+                  focusNode: _descFocus,
                   maxLines: 3,
-                  decoration: InputDecoration(labelText: 'Description'),
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isListening && _activeField == 'description'
+                            ? Icons.mic
+                            : Icons.mic_none,
+                      ),
+                      // For Title
+                      onPressed: () {
+                        if (_voiceService.isListening) {
+                          _voiceService.stopListening(() {
+                            setState(() {});
+                          });
+                        } else {
+                          _titleFocus.unfocus();
+                          _voiceService.startListening(
+                            onResult: (newText) {
+                              setState(() {
+                                _descController.text += ' $newText';
+                              });
+                            },
+                            onListeningStarted: () {
+                              setState(() {});
+                            },
+                            onListeningStopped: () {
+                              setState(() {});
+                            },
+                          );
+                        }
+                      },
+                    ),
+                  ),
                   validator: (val) => val!.isEmpty ? 'Required' : null,
                 ),
               ],
