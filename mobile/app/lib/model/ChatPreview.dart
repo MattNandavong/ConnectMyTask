@@ -6,6 +6,7 @@ class ChatPreview {
   final String? lastMessage;
   final String? lastImage;
   final DateTime lastTimestamp;
+  final int? unreadCount;
 
   ChatPreview({
     required this.taskId,
@@ -15,6 +16,7 @@ class ChatPreview {
     this.lastMessage,
     this.lastImage,
     required this.lastTimestamp,
+    this.unreadCount
   });
 
   factory ChatPreview.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class ChatPreview {
       lastMessage: json['lastMessage'],
       lastImage: json['lastImage'],
       lastTimestamp: DateTime.parse(json['lastTimestamp']),
+      unreadCount: json['unreadCount']
     );
   }
 }

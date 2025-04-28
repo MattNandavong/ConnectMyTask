@@ -72,6 +72,8 @@ class _MessageScreenState extends State<MessageScreen> {
     final id = currentUser!.id;
     final chats = await ChatService().getChatSummary(); // API call to backend
 
+    if (!mounted) return;
+
     setState(() {
       _currentUserId = id;
       _chatSummaries = List<ChatPreview>.from(chats); // important
@@ -154,16 +156,41 @@ class _MessageScreenState extends State<MessageScreen> {
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.figtree(),
                         ),
-                        trailing: Text(
-                          _formatTimestamp(chat.lastTimestamp),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.secondary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                        trailing: Column(
+                          children: [
+                            Text(
+                              _formatTimestamp(chat.lastTimestamp),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.secondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (chat.unreadCount! > 0) ...[
+                              SizedBox(height: 4),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${chat.unreadCount}',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                        onTap: () async {
-                          await Navigator.push(
+                        onTap: () {
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder:
@@ -172,8 +199,10 @@ class _MessageScreenState extends State<MessageScreen> {
                                     userId: _currentUserId!,
                                   ),
                             ),
-                          );
-                          _loadUserAndChats(); // reload chats after coming back
+                          ).then((_) async {
+                            await _loadUserAndChats();
+                          
+                          });
                         },
                       ),
                     ),
