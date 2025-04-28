@@ -5,6 +5,7 @@ import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app/widget/map_screen.dart';
 // import 'package:mobile/widgets/browsetask/browsetask_list.dart';
 
 class TopBar extends StatefulWidget implements PreferredSizeWidget {
@@ -71,7 +72,9 @@ class _TopBarState extends State<TopBar> {
             children: [
               widget.screen == 'Browse Task'
                   ? IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => MapScreen()));
+                    },
                     icon: Icon(FluentIcons.search_12_regular, size: 20),
                     padding: EdgeInsets.all(10),
                   )
