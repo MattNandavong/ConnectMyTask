@@ -1,11 +1,13 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:app/utils/location_input.dart';
 import 'package:app/utils/task_service.dart';
+import 'package:app/utils/voice_service.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:app/utils/voice_service.dart';
+import 'package:google_places_flutter/google_places_flutter.dart';
 
 late VoiceService _voiceService;
 
@@ -25,24 +27,20 @@ class _PostTaskState extends State<PostTask> {
 
   late FocusNode _titleFocus;
   late FocusNode _descFocus;
-
   late stt.SpeechToText _speech;
-  bool _isListening = false;
-  String _activeField = ''; // To know which input field to fill
 
-  String _category = 'Cleaning';
-  double _budget = 0.0;
+  bool _isListening = false;
   bool _isRemote = true;
-  // String _selectedState = 'VIC';
-  String? _city;
+  int _currentStep = 0;
   DateTime? _deadline;
   TimeOfDay? _deadlineTime;
-  int _currentStep = 0;
-  String? _selectedState;
-  String? _selectedCity;
-  String? _selectedSuburb;
+  String _category = 'Cleaning';
 
   List<Map<String, dynamic>> _imagesWithCaptions = [];
+
+  String? _selectedAddress;
+  double? _selectedLat;
+  double? _selectedLng;
 
   final _categories = [
     'Cleaning',
@@ -57,20 +55,47 @@ class _PostTaskState extends State<PostTask> {
     'Other',
   ];
 
-  final Map<String, Map<String, List<String>>> _locationData = {
-    "New South Wales": {
-      "Sydney": ["Parramatta", "Bondi", "Manly", "Chatswood"],
-      "Newcastle": ["Cessnock", "Maitland", "Lake Macquarie"],
-    },
-    "Victoria": {
-      "Melbourne": ["Carlton", "Fitzroy", "Brunswick"],
-      "Geelong": ["Lara", "Torquay"],
-    },
-    "Queensland": {
-      "Brisbane": ["Fortitude Valley", "South Bank", "Paddington"],
-      "Gold Coast": ["Surfers Paradise", "Broadbeach"],
-    },
-  };
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+    _titleFocus = FocusNode();
+    _descFocus = FocusNode();
+    _voiceService = VoiceService();
+  }
+
+  @override
+  void dispose() {
+    _titleFocus.dispose();
+    _descFocus.dispose();
+    super.dispose();
+  }
+
+  void _openLocationModal() {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (context) => SizedBox(
+      height: MediaQuery.of(context).size.height * 0.6,
+      child: SingleChildScrollView(
+        child: LocationInput(
+          onPlaceSelected: (address, lat, lng) {
+            setState(() {
+              _locationController.text = address;
+              _selectedAddress = address;
+              _selectedLat = lat;
+              _selectedLng = lng;
+            });
+          },
+        ),
+      ),
+    ),
+  );
+}
+
 
   Future<void> _pickDeadline() async {
     final date = await showDatePicker(
@@ -103,106 +128,257 @@ class _PostTaskState extends State<PostTask> {
     }
   }
 
-  void _submitTask() async {
-    showDialog(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: Text('Confirm Submit'),
-            content: Text('Do you want to post this task?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Cancel'),
+  Future<void> _submitTask() async {
+    if (_formKeys[_currentStep].currentState?.validate() ?? true) {
+      if (!_isRemote &&
+          (_selectedAddress == null ||
+              _selectedLat == null ||
+              _selectedLng == null)) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Please select location')));
+        return;
+      }
+      try {
+        final deadlineDateTime = DateTime(
+          _deadline!.year,
+          _deadline!.month,
+          _deadline!.day,
+          _deadlineTime?.hour ?? 23,
+          _deadlineTime?.minute ?? 59,
+        );
+        await TaskService().createTask(
+          title: _titleController.text.trim(),
+          description: _descController.text.trim(),
+          budget: double.tryParse(_budgetController.text.trim()) ?? 0,
+          deadline: deadlineDateTime.toIso8601String(),
+          category: _category,
+          location:
+              _isRemote
+                  ? {'type': 'remote'}
+                  : {
+                    'type': 'physical',
+                    'address': _selectedAddress ?? '',
+                    'lat':
+                        _selectedLat?.toString() ??
+                        '0.0', // Convert double to String
+                    'lng': _selectedLng?.toString() ?? '0.0',
+                  },
+          images:
+              _imagesWithCaptions.map((img) => img['file'] as File).toList(),
+        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Task Submitted')));
+        _resetForm();
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to submit task: $e')));
+      }
+    }
+  }
+
+  void _resetForm() {
+    setState(() {
+      _currentStep = 0;
+      _titleController.clear();
+      _descController.clear();
+      _budgetController.clear();
+      _locationController.clear();
+      _imagesWithCaptions.clear();
+      _isRemote = true;
+      _selectedAddress = null;
+      _selectedLat = null;
+      _selectedLng = null;
+      _deadline = null;
+      _deadlineTime = null;
+    });
+  }
+
+  Widget _buildStepContent(int step) {
+    switch (step) {
+      case 0:
+        return _buildBasicDetailsForm();
+      case 1:
+        return _buildImagesUploadForm();
+      case 2:
+        return _buildPreview();
+      default:
+        return SizedBox();
+    }
+  }
+
+  Widget _buildBasicDetailsForm() {
+    return Form(
+      key: _formKeys[0],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _titleController,
+                focusNode: _titleFocus,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _voiceService.isListening ? Icons.mic : Icons.mic_none,
+                    ),
+                    onPressed: () {
+                      if (_voiceService.isListening) {
+                        _voiceService.stopListening(() => setState(() {}));
+                      } else {
+                        _titleFocus.unfocus();
+                        _voiceService.startListening(
+                          onResult:
+                              (text) => setState(
+                                () => _titleController.text += ' $text',
+                              ),
+                          onListeningStarted: () => setState(() {}),
+                          onListeningStopped: () => setState(() {}),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context); // close dialog
-
-                  try {
-                    final deadlineDateTime = DateTime(
-                      _deadline!.year,
-                      _deadline!.month,
-                      _deadline!.day,
-                      _deadlineTime?.hour ?? 23,
-                      _deadlineTime?.minute ?? 59,
-                    );
-                    if (!_isRemote &&
-                        (_selectedState == null ||
-                            _selectedCity == null ||
-                            _selectedSuburb == null)) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please select full location')),
-                      );
-                      return;
-                    }
-                    // print( "${_titleController.text.trim()},${_descController.text.trim()},${double.tryParse(_budgetController.text.trim()) ?? 0},${deadlineDateTime.toIso8601String()},$_category,${'location.state':_isRemote ? 'Remote' : _selectedState!,'location.city': _isRemote ? 'Remote' : _selectedCity!,'location.suburb':_isRemote ? 'Remote' : _selectedSuburb!,}}",);
-
-                    await TaskService().createTask(
-                      title: _titleController.text.trim(),
-                      description: _descController.text.trim(),
-                      budget:
-                          double.tryParse(_budgetController.text.trim()) ?? 0,
-                      deadline: deadlineDateTime.toIso8601String(),
-                      category: _category,
-
-                      location: {
-                        'location.state':
-                            _isRemote ? 'Remote' : _selectedState!,
-                        'location.city': _isRemote ? 'Remote' : _selectedCity!,
-                        'location.suburb':
-                            _isRemote ? 'Remote' : _selectedSuburb!,
+              SizedBox(height: 12),
+              DropdownButtonFormField(
+                value: _category,
+                decoration: InputDecoration(labelText: 'Category'),
+                items:
+                    _categories
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                        .toList(),
+                onChanged: (val) => setState(() => _category = val!),
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _descController,
+                focusNode: _descFocus,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Description',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _voiceService.isListening ? Icons.mic : Icons.mic_none,
+                    ),
+                    onPressed: () {
+                      if (_voiceService.isListening) {
+                        _voiceService.stopListening(() => setState(() {}));
+                      } else {
+                        _descFocus.unfocus();
+                        _voiceService.startListening(
+                          onResult:
+                              (text) => setState(
+                                () => _descController.text += ' $text',
+                              ),
+                          onListeningStarted: () => setState(() {}),
+                          onListeningStopped: () => setState(() {}),
+                        );
+                      }
+                    },
+                  ),
+                ),
+                validator: (val) => val!.isEmpty ? 'Required' : null,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _budgetController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: 'Budget (AUD)'),
+                validator: (val) => val!.isEmpty ? 'Required' : null,
+              ),
+              SizedBox(height: 12),
+              ListTile(
+                title: Text(
+                  _deadline != null
+                      ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
+                      : 'Select Deadline',
+                ),
+                trailing: Icon(Icons.calendar_today),
+                onTap: _pickDeadline,
+              ),
+              SwitchListTile(
+                title: Text('Remote Task'),
+                value: _isRemote,
+                onChanged: (val) => setState(() => _isRemote = val),
+              ),
+              if (!_isRemote) ...[
+                GestureDetector(
+                  onTap: () => _openLocationModal(),
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: _locationController,
+                      decoration: const InputDecoration(
+                        labelText: 'Location',
+                        hintText: 'Select location',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (val) {
+                        if (!_isRemote && (val == null || val.isEmpty)) {
+                          return 'Please select a location';
+                        }
+                        return null;
                       },
-
-                      images:
-                          _imagesWithCaptions
-                              .map((img) => img['file'] as File)
-                              .toList(),
-                    );
-
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Task Submitted')));
-
-                    setState(() {
-                      _currentStep = 0;
-                      _titleController.clear();
-                      _descController.clear();
-                      _budgetController.clear();
-                      _locationController.clear();
-                      _imagesWithCaptions.clear();
-                      _deadline = null;
-                      _deadlineTime = null;
-                      _isRemote = true;
-                    });
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to submit task: $e')),
-                    );
-                  }
-                },
-                child: Text('Submit'),
-              ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
+        ),
+      ),
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _speech = stt.SpeechToText();
-    _titleFocus = FocusNode(); // 👈 Initialize here
-    _descFocus = FocusNode(); // 👈 Initialize here
-    _voiceService = VoiceService();
-  }
-
-  @override
-  void dispose() {
-    
-    _titleFocus.dispose();
-    _descFocus.dispose();
-    super.dispose();
+  Widget _buildImagesUploadForm() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ElevatedButton.icon(
+            icon: Icon(Icons.photo_library),
+            label: Text('Upload Images'),
+            onPressed: _pickImages,
+          ),
+          SizedBox(height: 10),
+          Expanded(
+            child: ReorderableListView.builder(
+              itemCount: _imagesWithCaptions.length,
+              onReorder: (oldIndex, newIndex) {
+                setState(() {
+                  if (newIndex > oldIndex) newIndex--;
+                  final item = _imagesWithCaptions.removeAt(oldIndex);
+                  _imagesWithCaptions.insert(newIndex, item);
+                });
+              },
+              itemBuilder: (context, index) {
+                final image = _imagesWithCaptions[index];
+                return ListTile(
+                  key: ValueKey(index),
+                  leading: Image.file(
+                    image['file'],
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed:
+                        () =>
+                            setState(() => _imagesWithCaptions.removeAt(index)),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildPreview() {
@@ -219,12 +395,32 @@ class _PostTaskState extends State<PostTask> {
         Text("💰 Budget: \$${_budgetController.text}"),
         if (_deadline != null)
           Text(
-            "⏳ Deadline: ${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? 'No deadline'}",
+            "⏳ Deadline: ${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}",
           ),
-        Text(
-          "📍 Location: ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'}",
-        ),
-        if (!_isRemote) Text("🏙️ City/Suburb: ${_locationController.text}"),
+        Text("📍 Location: ${_isRemote ? 'Remote' : _selectedAddress ?? ''}"),
+        SizedBox(height: 20),
+        if (!_isRemote && _selectedLat != null && _selectedLng != null)
+          SizedBox(
+            height: 200,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(_selectedLat!, _selectedLng!),
+                  zoom: 15,
+                ),
+                markers: {
+                  Marker(
+                    markerId: MarkerId('selected-location'),
+                    position: LatLng(_selectedLat!, _selectedLng!),
+                  ),
+                },
+                zoomControlsEnabled: false,
+                liteModeEnabled:
+                    true, // ⚡ Lighter map, good for preview screens
+              ),
+            ),
+          ),
         SizedBox(height: 20),
         Text("🖼️ Images:", style: TextStyle(fontWeight: FontWeight.bold)),
         SizedBox(height: 8),
@@ -236,7 +432,6 @@ class _PostTaskState extends State<PostTask> {
               height: 50,
               fit: BoxFit.cover,
             ),
-            // title: Text(img['caption'] ?? ''),
           ),
         ),
         SizedBox(height: 20),
@@ -244,277 +439,19 @@ class _PostTaskState extends State<PostTask> {
           icon: Icon(Icons.send),
           label: Text('Confirm & Submit'),
           onPressed: _submitTask,
-          // onPressed: () {
-          //   print('Task Submit: ${_titleController.text} ${_category} ${_descController.text} ${_budgetController.text} ${_formatter.format(_deadline!)} ${_isRemote ? 'Remote' : 'On Location ($_selectedState)'} ${_locationController.text}');
-          // },
         ),
       ],
     );
   }
 
-Widget _buildStepContent(int step) {
-  switch (step) {
-    case 0:
-      return Form(
-        key: _formKeys[0],
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Title
-                TextFormField(
-                  controller: _titleController,
-                  focusNode: _titleFocus,
-                  decoration: InputDecoration(
-                    labelText: 'Title',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _voiceService.isListening
-                            ? Icons.mic
-                            : Icons.mic_none,
-                      ),
-                      onPressed: () {
-                        if (_voiceService.isListening) {
-                          _voiceService.stopListening(() {
-                            setState(() {});
-                          });
-                        } else {
-                          _titleFocus.unfocus();
-                          _voiceService.startListening(
-                            onResult: (newText) {
-                              setState(() {
-                                _titleController.text += ' $newText';
-                              });
-                            },
-                            onListeningStarted: () {
-                              setState(() {});
-                            },
-                            onListeningStopped: () {
-                              setState(() {});
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  validator: (val) => val!.isEmpty ? 'Required' : null,
-                ),
-
-                SizedBox(height: 12),
-
-                // Category
-                DropdownButtonFormField(
-                  value: _category,
-                  decoration: InputDecoration(labelText: 'Category'),
-                  items: _categories
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                      .toList(),
-                  onChanged: (val) => setState(() => _category = val!),
-                ),
-
-                SizedBox(height: 12),
-
-                // Description
-                TextFormField(
-                  controller: _descController,
-                  focusNode: _descFocus,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _voiceService.isListening
-                            ? Icons.mic
-                            : Icons.mic_none,
-                      ),
-                      onPressed: () {
-                        if (_voiceService.isListening) {
-                          _voiceService.stopListening(() {
-                            setState(() {});
-                          });
-                        } else {
-                          _descFocus.unfocus();
-                          _voiceService.startListening(
-                            onResult: (newText) {
-                              setState(() {
-                                _descController.text += ' $newText';
-                              });
-                            },
-                            onListeningStarted: () {
-                              setState(() {});
-                            },
-                            onListeningStopped: () {
-                              setState(() {});
-                            },
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  validator: (val) => val!.isEmpty ? 'Required' : null,
-                ),
-
-                SizedBox(height: 12),
-
-                // Budget
-                TextFormField(
-                  controller: _budgetController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: 'Budget (AUD)'),
-                  validator: (val) => val!.isEmpty ? 'Required' : null,
-                ),
-
-                SizedBox(height: 12),
-
-                // Deadline
-                ListTile(
-                  title: Text(
-                    _deadline != null
-                        ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
-                        : 'Select Deadline',
-                  ),
-                  trailing: Icon(Icons.calendar_today),
-                  onTap: _pickDeadline,
-                ),
-
-                SizedBox(height: 12),
-
-                // Remote toggle
-                SwitchListTile(
-                  title: Text('Remote Task'),
-                  value: _isRemote,
-                  onChanged: (val) => setState(() => _isRemote = val),
-                ),
-
-                if (!_isRemote) ...[
-                  // Location: State, City, Suburb
-                  DropdownButtonFormField<String>(
-                    value: _selectedState,
-                    hint: Text('Select State'),
-                    decoration: InputDecoration(labelText: 'State'),
-                    items: _locationData.keys
-                        .map((state) => DropdownMenuItem(
-                              value: state,
-                              child: Text(state),
-                            ))
-                        .toList(),
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedState = val;
-                        _selectedCity = null;
-                        _selectedSuburb = null;
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: 12),
-
-                  if (_selectedState != null)
-                    DropdownButtonFormField<String>(
-                      value: _selectedCity,
-                      hint: Text('Select City'),
-                      decoration: InputDecoration(labelText: 'City'),
-                      items: _locationData[_selectedState!]!.keys
-                          .map((city) => DropdownMenuItem(
-                                value: city,
-                                child: Text(city),
-                              ))
-                          .toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedCity = val;
-                          _selectedSuburb = null;
-                        });
-                      },
-                    ),
-
-                  SizedBox(height: 12),
-
-                  if (_selectedCity != null)
-                    DropdownButtonFormField<String>(
-                      value: _selectedSuburb,
-                      hint: Text('Select Suburb'),
-                      decoration: InputDecoration(labelText: 'Suburb'),
-                      items: _locationData[_selectedState!]![_selectedCity!]!
-                          .map((suburb) => DropdownMenuItem(
-                                value: suburb,
-                                child: Text(suburb),
-                              ))
-                          .toList(),
-                      onChanged: (val) => setState(() => _selectedSuburb = val),
-                    ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      );
-
-    case 1:
-      // Now case 1 becomes the "Upload Images" step (what was case 2 before)
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ElevatedButton.icon(
-              icon: Icon(Icons.photo_library),
-              label: Text('Upload Images'),
-              onPressed: _pickImages,
-            ),
-            SizedBox(height: 10),
-            Expanded(
-              child: ReorderableListView.builder(
-                itemCount: _imagesWithCaptions.length,
-                onReorder: (oldIndex, newIndex) {
-                  setState(() {
-                    if (newIndex > oldIndex) newIndex--;
-                    final item = _imagesWithCaptions.removeAt(oldIndex);
-                    _imagesWithCaptions.insert(newIndex, item);
-                  });
-                },
-                itemBuilder: (context, index) {
-                  final image = _imagesWithCaptions[index];
-                  return ListTile(
-                    key: ValueKey(index),
-                    leading: Image.file(
-                      image['file'],
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => setState(
-                          () => _imagesWithCaptions.removeAt(index)),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      );
-
-    case 2:
-      // Preview Step
-      return _buildPreview();
-
-    default:
-      return SizedBox();
-  }
-}
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // appBar: AppBar(title: Text('Post Task')),
       body: Column(
         children: [
           LinearProgressIndicator(
-            value: (_currentStep + 1) / 4,
+            value: (_currentStep + 1) / 3,
             minHeight: 6,
             backgroundColor: Colors.grey.shade300,
             color: Colors.teal,
@@ -530,14 +467,29 @@ Widget _buildStepContent(int step) {
                     onPressed: () => setState(() => _currentStep--),
                     child: Text('Back'),
                   ),
-                if (_currentStep < 3)
+                if (_currentStep < 2)
                   ElevatedButton(
                     onPressed: () {
-                      final valid =
+                      bool validForm =
                           _formKeys[_currentStep].currentState?.validate() ??
                           true;
-                      if (valid) setState(() => _currentStep++);
+                      if (!validForm) return;
+
+                      if (_currentStep == 0 && !_isRemote) {
+                        if (_selectedAddress == null ||
+                            _selectedAddress!.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Please select a valid location'),
+                            ),
+                          );
+                          return;
+                        }
+                      }
+
+                      setState(() => _currentStep++);
                     },
+
                     child: Text('Next'),
                   ),
               ],
