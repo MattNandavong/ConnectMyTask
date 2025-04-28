@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app/widget/messages.dart';
 import 'package:app/widget/browsetask_screen.dart';
 import 'package:app/widget/mytask_screen.dart';
-import 'package:app/widget/post_task.dart';
+import 'package:app/widget/screen/post_task.dart';
 
 class BottomBar extends StatefulWidget {
   BottomBar({
