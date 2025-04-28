@@ -252,15 +252,17 @@ class _PostTaskState extends State<PostTask> {
     );
   }
 
-  Widget _buildStepContent(int step) {
-    switch (step) {
-      case 0:
-        return Form(
-          key: _formKeys[0],
-          child: Padding(
-            padding: const EdgeInsets.all(16),
+Widget _buildStepContent(int step) {
+  switch (step) {
+    case 0:
+      return Form(
+        key: _formKeys[0],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
             child: Column(
               children: [
+                // Title
                 TextFormField(
                   controller: _titleController,
                   focusNode: _titleFocus,
@@ -268,11 +270,10 @@ class _PostTaskState extends State<PostTask> {
                     labelText: 'Title',
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isListening && _activeField == 'title'
+                        _voiceService.isListening
                             ? Icons.mic
                             : Icons.mic_none,
                       ),
-                      // For Title
                       onPressed: () {
                         if (_voiceService.isListening) {
                           _voiceService.stopListening(() {
@@ -301,18 +302,20 @@ class _PostTaskState extends State<PostTask> {
                 ),
 
                 SizedBox(height: 12),
+
+                // Category
                 DropdownButtonFormField(
                   value: _category,
                   decoration: InputDecoration(labelText: 'Category'),
-                  items:
-                      _categories
-                          .map(
-                            (c) => DropdownMenuItem(value: c, child: Text(c)),
-                          )
-                          .toList(),
+                  items: _categories
+                      .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
                   onChanged: (val) => setState(() => _category = val!),
                 ),
+
                 SizedBox(height: 12),
+
+                // Description
                 TextFormField(
                   controller: _descController,
                   focusNode: _descFocus,
@@ -321,18 +324,17 @@ class _PostTaskState extends State<PostTask> {
                     labelText: 'Description',
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isListening && _activeField == 'description'
+                        _voiceService.isListening
                             ? Icons.mic
                             : Icons.mic_none,
                       ),
-                      // For Title
                       onPressed: () {
                         if (_voiceService.isListening) {
                           _voiceService.stopListening(() {
                             setState(() {});
                           });
                         } else {
-                          _titleFocus.unfocus();
+                          _descFocus.unfocus();
                           _voiceService.startListening(
                             onResult: (newText) {
                               setState(() {
@@ -352,24 +354,20 @@ class _PostTaskState extends State<PostTask> {
                   ),
                   validator: (val) => val!.isEmpty ? 'Required' : null,
                 ),
-              ],
-            ),
-          ),
-        );
-      case 1:
-        return Form(
-          key: _formKeys[1],
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
+
+                SizedBox(height: 12),
+
+                // Budget
                 TextFormField(
                   controller: _budgetController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(labelText: 'Budget (AUD)'),
                   validator: (val) => val!.isEmpty ? 'Required' : null,
                 ),
+
                 SizedBox(height: 12),
+
+                // Deadline
                 ListTile(
                   title: Text(
                     _deadline != null
@@ -379,23 +377,28 @@ class _PostTaskState extends State<PostTask> {
                   trailing: Icon(Icons.calendar_today),
                   onTap: _pickDeadline,
                 ),
+
+                SizedBox(height: 12),
+
+                // Remote toggle
                 SwitchListTile(
                   title: Text('Remote Task'),
                   value: _isRemote,
                   onChanged: (val) => setState(() => _isRemote = val),
                 ),
+
                 if (!_isRemote) ...[
+                  // Location: State, City, Suburb
                   DropdownButtonFormField<String>(
                     value: _selectedState,
                     hint: Text('Select State'),
                     decoration: InputDecoration(labelText: 'State'),
-                    items:
-                        _locationData.keys.map((state) {
-                          return DropdownMenuItem(
-                            value: state,
-                            child: Text(state),
-                          );
-                        }).toList(),
+                    items: _locationData.keys
+                        .map((state) => DropdownMenuItem(
+                              value: state,
+                              child: Text(state),
+                            ))
+                        .toList(),
                     onChanged: (val) {
                       setState(() {
                         _selectedState = val;
@@ -404,19 +407,20 @@ class _PostTaskState extends State<PostTask> {
                       });
                     },
                   ),
+
                   SizedBox(height: 12),
+
                   if (_selectedState != null)
                     DropdownButtonFormField<String>(
                       value: _selectedCity,
                       hint: Text('Select City'),
                       decoration: InputDecoration(labelText: 'City'),
-                      items:
-                          _locationData[_selectedState!]!.keys.map((city) {
-                            return DropdownMenuItem(
-                              value: city,
-                              child: Text(city),
-                            );
-                          }).toList(),
+                      items: _locationData[_selectedState!]!.keys
+                          .map((city) => DropdownMenuItem(
+                                value: city,
+                                child: Text(city),
+                              ))
+                          .toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedCity = val;
@@ -424,84 +428,83 @@ class _PostTaskState extends State<PostTask> {
                         });
                       },
                     ),
+
                   SizedBox(height: 12),
+
                   if (_selectedCity != null)
                     DropdownButtonFormField<String>(
                       value: _selectedSuburb,
                       hint: Text('Select Suburb'),
                       decoration: InputDecoration(labelText: 'Suburb'),
-                      items:
-                          _locationData[_selectedState!]![_selectedCity!]!.map((
-                            suburb,
-                          ) {
-                            return DropdownMenuItem(
-                              value: suburb,
-                              child: Text(suburb),
-                            );
-                          }).toList(),
+                      items: _locationData[_selectedState!]![_selectedCity!]!
+                          .map((suburb) => DropdownMenuItem(
+                                value: suburb,
+                                child: Text(suburb),
+                              ))
+                          .toList(),
                       onChanged: (val) => setState(() => _selectedSuburb = val),
                     ),
                 ],
               ],
             ),
           ),
-        );
-      case 2:
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              ElevatedButton.icon(
-                icon: Icon(Icons.photo_library),
-                label: Text('Upload Images'),
-                onPressed: _pickImages,
+        ),
+      );
+
+    case 1:
+      // Now case 1 becomes the "Upload Images" step (what was case 2 before)
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            ElevatedButton.icon(
+              icon: Icon(Icons.photo_library),
+              label: Text('Upload Images'),
+              onPressed: _pickImages,
+            ),
+            SizedBox(height: 10),
+            Expanded(
+              child: ReorderableListView.builder(
+                itemCount: _imagesWithCaptions.length,
+                onReorder: (oldIndex, newIndex) {
+                  setState(() {
+                    if (newIndex > oldIndex) newIndex--;
+                    final item = _imagesWithCaptions.removeAt(oldIndex);
+                    _imagesWithCaptions.insert(newIndex, item);
+                  });
+                },
+                itemBuilder: (context, index) {
+                  final image = _imagesWithCaptions[index];
+                  return ListTile(
+                    key: ValueKey(index),
+                    leading: Image.file(
+                      image['file'],
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => setState(
+                          () => _imagesWithCaptions.removeAt(index)),
+                    ),
+                  );
+                },
               ),
-              SizedBox(height: 10),
-              Expanded(
-                child: ReorderableListView.builder(
-                  itemCount: _imagesWithCaptions.length,
-                  onReorder: (oldIndex, newIndex) {
-                    setState(() {
-                      if (newIndex > oldIndex) newIndex--;
-                      final item = _imagesWithCaptions.removeAt(oldIndex);
-                      _imagesWithCaptions.insert(newIndex, item);
-                    });
-                  },
-                  itemBuilder: (context, index) {
-                    final image = _imagesWithCaptions[index];
-                    return ListTile(
-                      key: ValueKey(index),
-                      leading: Image.file(
-                        image['file'],
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
-                      ),
-                      // title: TextFormField(
-                      //   initialValue: image['caption'],
-                      //   onChanged: (val) => image['caption'] = val,
-                      //   decoration: InputDecoration(labelText: 'Caption'),
-                      // ),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed:
-                            () => setState(
-                              () => _imagesWithCaptions.removeAt(index),
-                            ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      case 3:
-        return _buildPreview();
-      default:
-        return SizedBox();
-    }
+            ),
+          ],
+        ),
+      );
+
+    case 2:
+      // Preview Step
+      return _buildPreview();
+
+    default:
+      return SizedBox();
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
