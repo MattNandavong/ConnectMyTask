@@ -74,8 +74,8 @@ class TaskCardHelpers {
                     SizedBox(width: 4),
                     ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: 100),
-                      child: Text(
-                        task.location!.city ?? 'Unknown',
+                      child: Text(task.location!.type == "remote" ? "Remote" : task.location!.address ?? "Unknown Address" ,
+                        
                         style: GoogleFonts.figtree(fontSize: 12),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
