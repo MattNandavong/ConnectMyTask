@@ -86,7 +86,7 @@ class TaskDetailBody extends StatelessWidget {
                     // Icon(Icons.calendar_today, size: 18),
                     // SizedBox(width: 6),
                     Text(
-                      'Deadline: ${formatter.format(task.deadline)}',
+                      task.deadline !=null ? 'Deadline: ${formatter.format(task.deadline!)}': 'Deadline: Flexible',
                       style: GoogleFonts.figtree(
                         color: Colors.grey,
                         fontSize: 12,
