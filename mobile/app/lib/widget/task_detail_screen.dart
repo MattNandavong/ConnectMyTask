@@ -5,9 +5,11 @@ import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/widget/make_offer_modal.dart';
 import 'package:app/widget/my_task/myTask_details.dart';
+import 'package:app/widget/task_detail_body.dart';
 import 'package:flutter/material.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,30 +28,100 @@ class TaskDetailScreen extends StatelessWidget {
     return user['_id'] ?? user['id'];
   }
 
-  @override
+  void _showImageGallery(
+    BuildContext context,
+    List<String> images,
+    int initialIndex,
+  ) {
+    PageController pageController = PageController(initialPage: initialIndex);
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => Dialog(
+            backgroundColor: Colors.black,
+            insetPadding: EdgeInsets.zero,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  controller: pageController,
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    return InteractiveViewer(
+                      child: Image.network(
+                        images[index],
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Center(child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Icon(
+                              Icons.broken_image,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  top: 30,
+                  right: 20,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: Colors.white, size: 30),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: Text('Task Details')),
-      body: FutureBuilder<Task>(
-        future: TaskService().getTask(taskId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return Center(child: CircularProgressIndicator());
-          final task = snapshot.data!;
-          final user = task.user;
+    return FutureBuilder<Task>(
+      future: TaskService().getTask(taskId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return Center(child: CircularProgressIndicator());
+        final task = snapshot.data!;
+        final user = task.user;
 
-          return FutureBuilder<String?>(
-            future: _getCurrentUserId(),
-            builder: (context, userSnapshot) {
-              if (!userSnapshot.hasData)
-                return Center(child: CircularProgressIndicator());
-              final currentUserId = userSnapshot.data;
-              final isPoster = currentUserId == task.user.id;
-              final isCompleted = task.status.toLowerCase() == 'completed';
+        return FutureBuilder<String?>(
+          future: _getCurrentUserId(),
+          builder: (context, userSnapshot) {
+            if (!userSnapshot.hasData)
+              return Center(child: CircularProgressIndicator());
+            final currentUserId = userSnapshot.data;
+            final isPoster = currentUserId == task.user.id;
+            final isCompleted = task.status.toLowerCase() == 'completed';
+            return Scaffold(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              appBar: AppBar(
+                title: Text('Task Details'),
+                actions: [
+                  if (isPoster && !isCompleted)
+                    IconButton(
+                      icon: Icon(Icons.edit_rounded),
+                      tooltip: 'Edit Task',
+                      onPressed: () {
+                        // Navigate to Edit Task screen (you'll implement it)
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (_) => EditTaskScreen(taskId: task.id),
+                        //   ),
+                        // );
+                      },
+                    ),
+                ],
+              ),
 
-              return Stack(
+              body: Stack(
                 children: [
                   // BACKGROUND STATUS SECTION
                   Positioned(
@@ -95,271 +167,67 @@ class TaskDetailScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // ✅ MAIN CONTENT
-                  Positioned.fill(
-                    top: 80, // Leaves room for the status section
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        color: Colors.white,
-                      ),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
-
-                        child: Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                task.title,
-                                style: GoogleFonts.figtree(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                task.description,
-                                style: GoogleFonts.figtree(fontSize: 15),
-                              ),
-                              SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  // Icon(Icons.attach_money_rounded, color: Theme.of(context).colorScheme.secondary),
-                                  // SizedBox(width: 6),
-                                  Text(
-                                    '${task.budget.toStringAsFixed(2)}',
-                                    style: GoogleFonts.oswald(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  // Icon(Icons.calendar_today, size: 18),
-                                  // SizedBox(width: 6),
-                                  Text(
-                                    'Deadline: ${formatter.format(task.deadline)}',
-                                    style: GoogleFonts.figtree(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 20),
-                              Text(
-                                'Posted by: ',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              // Divider(),
-                              Row(
-                                children: [
-                                  user.buildAvatar(radius: 18),
-                                  SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        user.name,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      // Text(
-                                      //   user.email,
-                                      //   style: TextStyle(
-                                      //     fontSize: 12,
-                                      //     color: Colors.grey,
-                                      //   ),
-                                      // ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 24),
-                              // show privider brief profile if task assigned
-                              if (task.assignedProvider != null) ...[
-                                FutureBuilder<User>(
-                                  future: AuthService().getUserProfile(
-                                    task.assignedProvider!.id,
-                                  ),
-                                  builder: (context, providerSnapshot) {
-                                    if (providerSnapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (!providerSnapshot.hasData) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Text(
-                                          'Failed to load provider info',
-                                        ),
-                                      );
-                                    }
-
-                                    final provider = providerSnapshot.data!;
-
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.teal.shade50,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons
-                                                    .assignment_turned_in_outlined,
-                                                color: Colors.teal,
-                                              ),
-                                              SizedBox(width: 10),
-                                              Expanded(
-                                                child: Text(
-                                                  'This task is assigned to:',
-                                                  style: GoogleFonts.figtree(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: 12),
-                                        Container(
-                                          child: Row(
-                                            children: [
-                                              provider.buildAvatar(radius: 18),
-                                              SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      provider.name,
-                                                      style:
-                                                          GoogleFonts.figtree(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                    ),
-
-                                                    Text(
-                                                      provider.averageRating !=
-                                                                  null ||
-                                                              provider.averageRating! >
-                                                                  0
-                                                          ? '⭐ ${provider.averageRating!.toStringAsFixed(1)}'
-                                                          : 'No rating yet',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ], //
-                              
-                              Container(
-                                width: double.infinity,
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    40,
-                                    100,
-                                    40,
-                                    40,
-                                  ),
-                                  child: 
-                                  task.assignedProvider ==null ? ElevatedButton.icon(
-                                    onPressed:
-                                        () =>
-                                            showMakeOfferModal(context, taskId),
-                                    icon: Icon(Icons.local_offer_outlined),
-                                    label: Text('Make an Offer'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      foregroundColor: Colors.white,
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      textStyle: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ): ElevatedButton.icon(
-                                    onPressed:
-                                        (){
-                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Task is under progress. Can not make offer.")));
-                                        },
-                                    icon: Icon(Icons.local_offer_outlined),
-                                    label: Text('Make an Offer'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.surface,
-                                      foregroundColor: Colors.blueGrey,
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      textStyle: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                  // MAIN CONTENT
+                  TaskDetailBody(
+                    task: task,
+                    user: user,
+                    isPoster: isPoster,
+                    isCompleted: isCompleted,
+                    currentUserId: currentUserId,
+                    onMakeOffer: () => showMakeOfferModal(context, taskId),
+                    // onMarkComplete: () => ,
+                  ),
+                  // Floating Make Offer Button
+                  if (!isCompleted && !isPoster)
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ElevatedButton.icon(
+                          onPressed:
+                              task.assignedProvider == null
+                                  ? () => showMakeOfferModal(context, taskId)
+                                  : () => ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Task is under progress. Cannot make offer.",
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            ],
+                          icon: Icon(Icons.local_offer_outlined),
+                          label: Text(
+                            task.assignedProvider == null
+                                ? 'Make an Offer'
+                                : 'Task In Progress',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(double.infinity, 55),
+                            backgroundColor:
+                                task.assignedProvider == null
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Colors.grey.shade400,
+                            foregroundColor: Colors.white,
+                            textStyle: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(50),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
                 ],
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

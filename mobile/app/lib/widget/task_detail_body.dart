@@ -1,230 +1,45 @@
-import 'dart:convert';
-import 'package:app/model/bid.dart';
+// lib/widget/task_details/task_detail_body.dart
+
 import 'package:app/model/task.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
-import 'package:app/utils/task_service.dart';
-import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/make_offer_modal.dart';
-import 'package:app/widget/my_task/bids.dart';
-import 'package:app/widget/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
-class MyTaskDetails extends StatelessWidget {
-  final String taskId;
-  MyTaskDetails({required this.taskId});
+class TaskDetailBody extends StatelessWidget {
+  final Task task;
+  final User user;
+  final bool isPoster;
+  final bool isCompleted;
+  final String? currentUserId;
+  final void Function()? onViewOffers;
+  final void Function()? onOpenChat;
+  final void Function()? onMarkComplete;
+  final void Function()? onMakeOffer;
+  final void Function()? showImageGallery;
 
-  final formatter = DateFormat.yMMMMd();
-
-  Future<String?> _getCurrentUserId() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString('user');
-    if (userJson == null) return null;
-    final user = jsonDecode(userJson);
-    return user['_id'] ?? user['id'];
-  }
-
-  Future<Map<String, User>> fetchProvidersForBids(List<Bid> bids) async {
-    final Map<String, User> providerMap = {};
-    for (var bid in bids) {
-      if (!providerMap.containsKey(bid.provider)) {
-        final user = await AuthService().getUserProfile(bid.provider);
-        providerMap[bid.provider] = user;
-      }
-    }
-    return providerMap;
-  }
-
-  void _showImageGallery(
-    BuildContext context,
-    List<String> images,
-    int initialIndex,
-  ) {
-    PageController pageController = PageController(initialPage: initialIndex);
-
-    showDialog(
-      context: context,
-      builder:
-          (_) => Dialog(
-            backgroundColor: Colors.black,
-            insetPadding: EdgeInsets.zero,
-            child: Stack(
-              children: [
-                PageView.builder(
-                  controller: pageController,
-                  itemCount: images.length,
-                  itemBuilder: (context, index) {
-                    return InteractiveViewer(
-                      child: Image.network(
-                        images[index],
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return Center(child: CircularProgressIndicator());
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-                Positioned(
-                  top: 30,
-                  right: 20,
-                  child: IconButton(
-                    icon: Icon(Icons.close, color: Colors.white, size: 30),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
+  const TaskDetailBody({
+    required this.task,
+    required this.user,
+    required this.isPoster,
+    required this.isCompleted,
+    this.currentUserId,
+    this.onViewOffers,
+    this.onOpenChat,
+    this.onMarkComplete,
+    this.onMakeOffer,
+    this.showImageGallery,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    // return Scaffold(
-    //   backgroundColor: Theme.of(context).colorScheme.surface,
-    //   appBar: AppBar(title: Text('Task Details')),
-    return FutureBuilder<Task>(
-      future: TaskService().getTask(taskId),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData)
-          return Center(child: CircularProgressIndicator());
-        final task = snapshot.data!;
-        final user = task.user;
+    final formatter = DateFormat.yMMMMd();
 
-        return FutureBuilder<String?>(
-          future: _getCurrentUserId(),
-          builder: (context, userSnapshot) {
-            if (!userSnapshot.hasData)
-              return Center(child: CircularProgressIndicator());
-            final currentUserId = userSnapshot.data;
-            final isPoster = currentUserId == task.user.id;
-            final isCompleted = task.status.toLowerCase() == 'completed';
-
-            return Scaffold(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              appBar: AppBar(
-                title: Text('Task Details'),
-                actions: [
-                  if (isPoster && !isCompleted)
-                    IconButton(
-                      icon: Icon(Icons.edit_rounded),
-                      tooltip: 'Edit Task',
-                      onPressed: () {
-                        // Navigate to Edit Task screen (you'll implement it)
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (_) => EditTaskScreen(taskId: task.id),
-                        //   ),
-                        // );
-                      },
-                    ),
-                ],
-              ),
-
-              body: Stack(
-                children: [
-                  // BACKGROUND STATUS SECTION
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 100,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      color: _getStatusColor(task.status).withOpacity(0.1),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                            children: [
-                              Text(
-                                task.status == 'Active'
-                                    ? 'WAITING OFFERS'
-                                    : task.status.toUpperCase(),
-                                style: GoogleFonts.oswald(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getStatusColor(task.status),
-                                ),
-                              ),
-                              if (isPoster &&
-                                  task.bids.isNotEmpty &&
-                                  task.assignedProvider == null) ...[
-                                FilledButton.icon(
-                                  style: ElevatedButton.styleFrom(
-                                    minimumSize: Size(
-                                      0,
-                                      24,
-                                    ), // Optional: sets a smaller height baseline
-                                  ),
-                                  icon: Icon(
-                                    Icons.visibility,
-                                    size: 12,
-                                  ), // Smaller icon
-                                  label: Text(
-                                    'View Offers',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    ), // Smaller text
-                                  ),
-                                  onPressed: () {
-                                    showBidsModal(
-                                      context: context,
-                                      bids: task.bids,
-                                      taskId: task.id,
-                                      onBidAccepted: () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (_) => MyTaskDetails(
-                                                  taskId: task.id,
-                                                ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                              ],
-                            ],
-                          ),
-                          // SizedBox(height: 6),
-                          LinearProgressIndicator(
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                            value: _getStatusProgress(task.status),
-                            backgroundColor: Colors.grey.shade300,
-                            color: _getStatusColor(task.status),
-                            minHeight: 6,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  //  MAIN CONTENT
-                  Positioned.fill(
+    return Positioned.fill(
                     top: 80, // Leaves room for the status section
                     child: Container(
                       decoration: BoxDecoration(
@@ -241,9 +56,9 @@ class MyTaskDetails extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                task.title,
-                                style: GoogleFonts.figtree(
-                                  fontSize: 22,
+                                task.title.toUpperCase(),
+                                style: GoogleFonts.oswald(
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -306,11 +121,8 @@ class MyTaskDetails extends StatelessWidget {
                                       final imageUrl = task.images[index];
                                       return GestureDetector(
                                         onTap: () {
-                                          _showImageGallery(
-                                            context,
-                                            task.images,
-                                            index,
-                                          );
+                                          showImageGallery
+                                          ;
                                         },
                                         child: ClipRRect(
                                           borderRadius: BorderRadius.circular(
@@ -425,6 +237,7 @@ class MyTaskDetails extends StatelessWidget {
                                           ],
                                         ),
                               ),
+
                               SizedBox(height: 20),
                               Text(
                                 'Posted by: ',
@@ -481,6 +294,8 @@ class MyTaskDetails extends StatelessWidget {
                                     return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Container(
                                           padding: EdgeInsets.symmetric(
@@ -549,34 +364,6 @@ class MyTaskDetails extends StatelessWidget {
                                                   ],
                                                 ),
                                               ),
-                                              SizedBox(height: 12),
-                                              ElevatedButton.icon(
-                                                icon: Icon(
-                                                  Icons.chat_bubble_outline,
-                                                ),
-                                                label: Text("Open Chat"),
-                                                style: ElevatedButton.styleFrom(
-                                                  // backgroundColor: Colors.blueAccent,
-                                                  // foregroundColor: Colors.white,
-                                                  padding: EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 5,
-                                                  ),
-                                                ),
-                                                onPressed: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder:
-                                                          (_) => ChatScreen(
-                                                            taskId: task.id,
-                                                            userId:
-                                                                currentUserId!,
-                                                          ),
-                                                    ),
-                                                  );
-                                                },
-                                              ),
                                             ],
                                           ),
                                         ),
@@ -585,154 +372,15 @@ class MyTaskDetails extends StatelessWidget {
                                   },
                                 ),
                               ],
-                              if (task.status.toLowerCase() == 'in progress' && isPoster)
-                                Container(
-                                  padding: const EdgeInsets.all(40.0),
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      //TODO: Implement simulated payment
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) {
-                                          double rating = 5.0;
-                                          TextEditingController
-                                          commentController =
-                                              TextEditingController();
-
-                                          return AlertDialog(
-                                            title: Text(
-                                              'How was your experience?',
-                                            ),
-                                            content: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text('Rate the provider'),
-                                                SizedBox(height: 8),
-                                                StatefulBuilder(
-                                                  builder:
-                                                      (
-                                                        context,
-                                                        setState,
-                                                      ) => Slider(
-                                                        min: 1,
-                                                        max: 5,
-                                                        divisions: 4,
-                                                        label:
-                                                            rating.toString(),
-                                                        value: rating,
-                                                        onChanged:
-                                                            (val) => setState(
-                                                              () =>
-                                                                  rating = val,
-                                                            ),
-                                                      ),
-                                                ),
-                                                TextField(
-                                                  controller: commentController,
-                                                  decoration: InputDecoration(
-                                                    hintText:
-                                                        'Leave a comment...',
-                                                  ),
-                                                  maxLines: 3,
-                                                ),
-                                              ],
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                child: Text('Cancel'),
-                                                onPressed:
-                                                    () =>
-                                                        Navigator.pop(context),
-                                              ),
-                                              ElevatedButton(
-                                                child: Text('Submit'),
-                                                onPressed: () async {
-                                                  Navigator.pop(context);
-                                                  await TaskService()
-                                                      .completeTask(
-                                                        task.id,
-                                                        rating,
-                                                        commentController.text
-                                                            .trim(),
-                                                      );
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Task marked as completed!',
-                                                      ),
-                                                    ),
-                                                  );
-                                                  Navigator.pop(
-                                                    context,
-                                                  ); // or refresh screen
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                    icon: Icon(Icons.done_all),
-                                    label: Text('Mark as Completed'),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      foregroundColor: Colors.white,
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 14,
-                                      ),
-                                      textStyle: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                              SizedBox(height: 100),
                             ],
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+                  );
   }
+}
 
-  double _getStatusProgress(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 1.0;
-      case 'in progress':
-        return 0.7;
-      case 'active':
-        return 0.4;
-      case 'urgent':
-        return 0.2;
-      default:
-        return 0.1;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.grey;
-      case 'in progress':
-        return Colors.blueAccent;
-      case 'active':
-        return Colors.green;
-      case 'urgent':
-        return Colors.orange;
-      default:
-        return Colors.teal;
-    }
-  }
+class _showImageGallery {
 }
