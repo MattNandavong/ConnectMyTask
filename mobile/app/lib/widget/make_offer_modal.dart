@@ -4,24 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void showMakeOfferModal(BuildContext context, String taskId) {
-
   final _priceController = TextEditingController();
-  final _estimatedTimeController = TextEditingController();
+  final _estimatedTimeNumberController = TextEditingController(); // Number part
+  final _commentController = TextEditingController();
+  String _estimatedTimeUnit = 'hour'; // Default unit
 
   showModalBottomSheet(
     context: context,
-    isScrollControlled: true, // ✅ This allows modal to expand with keyboard
+    isScrollControlled: true,
     builder: (context) {
-      
-
       return Padding(
         padding: EdgeInsets.only(
           left: 16,
           right: 16,
           top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16, // Respect keyboard
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        child: SingleChildScrollView( 
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -35,23 +34,86 @@ void showMakeOfferModal(BuildContext context, String taskId) {
               SizedBox(height: 10),
               TextField(
                 controller: _priceController,
-                decoration: InputDecoration(labelText: 'Price'),
+                decoration: InputDecoration(labelText: 'Price (AUD)'),
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _estimatedTimeNumberController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: 'Estimated Time'),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Container(
+                    padding: EdgeInsets.all(5),
+
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      borderRadius: BorderRadius.all(Radius.circular(12))
+                    ),
+                    child: DropdownButton<String>(
+                      dropdownColor: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      value: _estimatedTimeUnit,
+                      onChanged: (value) {
+                        if (value != null) {
+                          _estimatedTimeUnit = value;
+                          (context as Element).markNeedsBuild();
+                        }
+                      },
+                      items:
+                          ['hour', 'day', 'month']
+                              .map(
+                                (unit) => DropdownMenuItem(
+                                  value: unit,
+                                  child: Text(
+                                    unit[0].toUpperCase() + unit.substring(1),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
               TextField(
-                controller: _estimatedTimeController,
-                decoration: InputDecoration(labelText: 'Estimated Time'),
+                controller: _commentController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: 'Comment (optional)',
+                  alignLabelWithHint: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   final price = double.tryParse(_priceController.text);
-                  final estimatedTime = _estimatedTimeController.text;
+                  final estimatedNumber =
+                      _estimatedTimeNumberController.text.trim();
+                  final comment = _commentController.text.trim();
 
-                  if (price != null && estimatedTime.isNotEmpty) {
+                  if (price != null && estimatedNumber.isNotEmpty) {
+                    final estimatedTime =
+                        "$estimatedNumber $_estimatedTimeUnit";
+
                     try {
-                      await TaskService().bidOnTask(taskId, price, estimatedTime);
+                      await TaskService().bidOnTask(
+                        taskId,
+                        price,
+                        estimatedTime,
+                        // comment: comment,
+                      );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Offer made successfully!')),
@@ -68,15 +130,11 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                         );
                         showDialog(
                           context: context,
-                          builder: (BuildContext context) {
+                          builder: (context) {
                             return AlertDialog(
-                              title: const Text('Authorization failed'),
-                              content: const SingleChildScrollView(
-                                child: ListBody(
-                                  children: [
-                                    Text('Do you want to sign up as provider?'),
-                                  ],
-                                ),
+                              title: Text('Authorization failed'),
+                              content: Text(
+                                'Do you want to sign up as a provider?',
                               ),
                               actions: [
                                 TextButton(
@@ -91,7 +149,7 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                                   child: Text('YES'),
                                 ),
                                 TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
+                                  onPressed: () => Navigator.pop(context),
                                   child: Text('No'),
                                 ),
                               ],
@@ -100,14 +158,18 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to make offer: $error')),
+                          SnackBar(
+                            content: Text('Failed to make offer: $error'),
+                          ),
                         );
                       }
                     }
                   } else {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please enter valid offer details')),
+                      SnackBar(
+                        content: Text('Please enter valid offer details'),
+                      ),
                     );
                   }
                 },
