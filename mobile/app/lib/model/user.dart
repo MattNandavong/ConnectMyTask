@@ -8,7 +8,7 @@ class User {
   final String email;
   final String? role;
   final String? profilePhoto;
-  final Location? location;
+  final Map<String, dynamic>? location; 
   final List<String> skills;
   final bool isVerified;
   final double? averageRating;
@@ -34,9 +34,7 @@ class User {
       email: json['email'],
       role: json['role'] ?? '',
       profilePhoto: json['profilePhoto'],
-      location: json['location'] != null && json['location'] is Map<String, dynamic>
-          ? Location.fromJson(json['location'])
-          : null,
+      location: json['location'] != null ? Map<String, dynamic>.from(json['location']) : null,
       skills: List<String>.from(json['skills'] ?? []),
       isVerified: json['isVerified'] ?? false,
       averageRating: json['averageRating'] != null
@@ -53,7 +51,7 @@ class User {
       'email': email,
       'role': role,
       'profilePhoto': profilePhoto,
-      'location': location?.toJson(),
+      'location': location,
       'skills': skills,
       'isVerified': isVerified,
       'averageRating': averageRating,

@@ -37,9 +37,9 @@ class AuthService {
     if (token != null) request.fields['fcmToken'] = token;
 
     if (location != null) {
-      request.fields['location.state'] = location['state'] ?? '';
-      request.fields['location.city'] = location['city'] ?? '';
-      request.fields['location.suburb'] = location['suburb'] ?? '';
+      request.fields['location.country'] = location['country'] ?? '';
+      request.fields['location.lat'] = location['lat'] ?? '';
+      request.fields['location.lng'] = location['lng'] ?? '';
     }
 
     if (skills != null && skills.isNotEmpty) {
@@ -153,7 +153,7 @@ class AuthService {
   Future<User> updateUserProfile({
     required String userId,
     String? name,
-    Map<String, String>? location, // Fixed: structured location map
+    Map<String, dynamic>? location, // Now dynamic to support lat/lng as double
     List<String>? skills,
     File? profilePhoto,
   }) async {
@@ -167,9 +167,9 @@ class AuthService {
     if (name != null) request.fields['name'] = name;
 
     if (location != null) {
-      request.fields['location.state'] = location['state'] ?? '';
-      request.fields['location.city'] = location['city'] ?? '';
-      request.fields['location.suburb'] = location['suburb'] ?? '';
+      request.fields['location.country'] = location['country'] ?? '';
+      request.fields['location.lat'] = location['lat']?.toString() ?? '';
+      request.fields['location.lng'] = location['lng']?.toString() ?? '';
     }
 
     if (skills != null && skills.isNotEmpty) {
@@ -197,7 +197,8 @@ class AuthService {
       await saveUserSession(token, updatedUser);
       return updatedUser;
     } else {
-      throw Exception('Failed to update profile');
+      final error = jsonDecode(result.body);
+      throw Exception(error['msg'] ?? 'Failed to update profile');
     }
   }
 }

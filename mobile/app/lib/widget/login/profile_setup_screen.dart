@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'package:app/utils/global_country_map.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/widget/splash_screen.dart';
+import 'package:country_picker/country_picker.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   final User user;
@@ -22,6 +25,25 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   String? _selectedState;
   String? _selectedCity;
   String? _selectedSuburb;
+  String? _selectedCountry;
+  double? _countryLat;
+  double? _countryLng;
+  String? _selectedCountryFlag;
+
+  Future<void> getCoordinatesFromCountry(String countryName) async {
+    try {
+      List<Location> locations = await locationFromAddress(countryName);
+      if (locations.isNotEmpty) {
+        setState(() {
+          _countryLat = locations.first.latitude;
+          _countryLng = locations.first.longitude;
+        });
+        print('✅ Country Lat: $_countryLat, Lng: $_countryLng');
+      }
+    } catch (e) {
+      print('Failed to get coordinates: $e');
+    }
+  }
 
   final Map<String, Map<String, List<String>>> _locationData = {
     "New South Wales": {
@@ -47,6 +69,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     _skillsController = TextEditingController(
       text: widget.user.skills != null ? widget.user.skills.join(', ') : '',
     );
+
+    initializeCountryMap();
+
+    // 🔥 After initializing the map, pre-fill selected country and flag
+    if (widget.user.location != null &&
+        widget.user.location!['country'] != null) {
+      _selectedCountry = widget.user.location!['country'];
+      _selectedCountryFlag = countryNameToFlag[_selectedCountry!] ?? '🌍';
+      _countryLat = double.tryParse(
+        widget.user.location!['lat']?.toString() ?? '',
+      );
+      _countryLng = double.tryParse(
+        widget.user.location!['lng']?.toString() ?? '',
+      );
+    }
   }
 
   @override
@@ -66,29 +103,35 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     try {
       final location =
-          (_selectedState != null &&
-                  _selectedCity != null &&
-                  _selectedSuburb != null)
+          (_selectedCountry != null &&
+                  _countryLat != null &&
+                  _countryLng != null)
               ? {
-                'state': _selectedState!,
-                'city': _selectedCity!,
-                'suburb': _selectedSuburb!,
+                'country': _selectedCountry!,
+                'lat': _countryLat.toString(),
+                'lng': _countryLng.toString(),
               }
               : null;
 
-      await AuthService().updateUserProfile(
-        userId: widget.user.id,
-        name: widget.user.name,
-        location: location,
-        skills:
-            widget.user.role == "provider"
-                ? _skillsController.text
-                    .split(',')
-                    .map((e) => e.trim())
-                    .toList()
-                : [],
-        profilePhoto: _profileImage,
-      );
+      if (location != null) {
+        await AuthService().updateUserProfile(
+          userId: widget.user.id,
+          name: widget.user.name,
+          location: location,
+          skills:
+              widget.user.role == "provider"
+                  ? _skillsController.text
+                      .split(',')
+                      .map((e) => e.trim())
+                      .toList()
+                  : [],
+          profilePhoto: _profileImage,
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Location is null!')));
+      }
 
       ScaffoldMessenger.of(
         context,
@@ -110,6 +153,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     final isProvider = widget.user.role == 'provider';
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(title: Text("Complete Profile")),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -156,51 +200,32 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 ),
               ),
               Divider(thickness: 1),
-              DropdownButtonFormField<String>(
-                value: _selectedState,
-                decoration: InputDecoration(labelText: 'State'),
-                items:
-                    _locationData.keys.map((state) {
-                      return DropdownMenuItem(value: state, child: Text(state));
-                    }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedState = value;
-                    _selectedCity = null;
-                    _selectedSuburb = null;
-                  });
+              OutlinedButton(
+                onPressed: () {
+                  showCountryPicker(
+                    context: context,
+                    showPhoneCode: false,
+                    onSelect: (Country country) {
+                      setState(() {
+                        _selectedCountry = country.name;
+                        _selectedCountryFlag = country.flagEmoji;
+                      });
+                      getCoordinatesFromCountry(
+                        country.name.trim(),
+                      ); // <-- Correct!
+                    },
+                  );
                 },
+                child: Text(
+                  _selectedCountry == null
+                      ? '🌍 Select Country'
+                      : '$_selectedCountryFlag   $_selectedCountry',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
               ),
-              if (_selectedState != null)
-                DropdownButtonFormField<String>(
-                  value: _selectedCity,
-                  decoration: InputDecoration(labelText: 'City'),
-                  items:
-                      _locationData[_selectedState]!.keys.map((city) {
-                        return DropdownMenuItem(value: city, child: Text(city));
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCity = value;
-                      _selectedSuburb = null;
-                    });
-                  },
-                ),
-              if (_selectedCity != null)
-                DropdownButtonFormField<String>(
-                  value: _selectedSuburb,
-                  decoration: InputDecoration(labelText: 'Suburb'),
-                  items:
-                      _locationData[_selectedState]![_selectedCity]!.map((
-                        suburb,
-                      ) {
-                        return DropdownMenuItem(
-                          value: suburb,
-                          child: Text(suburb),
-                        );
-                      }).toList(),
-                  onChanged: (value) => setState(() => _selectedSuburb = value),
-                ),
 
               if (isProvider) ...[
                 SizedBox(height: 20),
