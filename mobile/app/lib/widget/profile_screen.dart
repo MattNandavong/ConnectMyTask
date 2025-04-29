@@ -82,7 +82,7 @@ class ProfileScreen extends StatelessWidget {
                 user.isVerified ? 'Verified' : 'Unverified',
               ),
               const SizedBox(width: 20),
-              _buildStat(Icons.location_on, "user.location ?? ''"),
+              _buildStat(Icons.location_on, user.location?['country'] ?? ''),
             ],
           ),
         ],
