@@ -6,7 +6,17 @@ import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/chat_test.dart';
+import 'package:app/widget/comment_section.dart';
 import 'package:app/widget/make_offer_modal.dart';
+import 'package:app/widget/screen/edit_task_screen.dart';
+import 'package:app/widget/task_detail/Image_section.dart';
+import 'package:app/widget/task_detail/assigned_provider.dart';
+import 'package:app/widget/task_detail/basic_info.dart';
+import 'package:app/widget/task_detail/chat_to_poster_btn.dart';
+import 'package:app/widget/task_detail/map_section.dart';
+import 'package:app/widget/task_detail/mark_complete_button.dart';
+import 'package:app/widget/task_detail/posted_by.dart';
+import 'package:app/widget/task_detail/status_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -15,7 +25,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 class ProviderTaskDetail extends StatelessWidget {
   final String taskId;
-  
+
   ProviderTaskDetail({required this.taskId});
 
   final formatter = DateFormat.yMMMMd();
@@ -28,78 +38,60 @@ class ProviderTaskDetail extends StatelessWidget {
     return user['_id'] ?? user['id'];
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: Text('Task Details')),
-      body: FutureBuilder<Task>(
-        future: TaskService().getTask(taskId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return Center(child: CircularProgressIndicator());
-          final task = snapshot.data!;
-          final user = task.user;
+    return FutureBuilder<Task>(
+      future: TaskService().getTask(taskId),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return Center(child: CircularProgressIndicator());
+        final task = snapshot.data!;
+        final user = task.user;
 
-          return FutureBuilder<String?>(
-            future: _getCurrentUserId(),
-            builder: (context, userSnapshot) {
-              if (!userSnapshot.hasData)
-                return Center(child: CircularProgressIndicator());
-              final currentUserId = userSnapshot.data;
-              final isPoster = currentUserId == task.user.id;
-              final isCompleted = task.status.toLowerCase() == 'completed';
+        return FutureBuilder<String?>(
+          future: _getCurrentUserId(),
+          builder: (context, userSnapshot) {
+            if (!userSnapshot.hasData)
+              return Center(child: CircularProgressIndicator());
+            final currentUserId = userSnapshot.data;
+            final isPoster = currentUserId == task.user.id;
+            final isCompleted = task.status.toLowerCase() == 'completed';
 
-              return Stack(
+            return Scaffold(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              appBar: AppBar(
+                surfaceTintColor: Colors.white,
+                elevation: 8,
+                title: Text('Task Details'),
+                actions: [
+                  if (isPoster && !isCompleted)
+                    IconButton(
+                      icon: Icon(Icons.edit_rounded),
+                      tooltip: 'Edit Task',
+                      onPressed: () {
+                        // Navigate to Edit Task screen (you'll implement it)
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditTaskScreen(task: task),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+
+              body: Stack(
                 children: [
                   // BACKGROUND STATUS SECTION
                   Positioned(
                     top: 0,
                     left: 0,
                     right: 0,
-                    child: Container(
-                      height: 100,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      color: _getStatusColor(task.status).withOpacity(0.1),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            
-                            children: [
-                              Text(
-                                task.status == 'Active'
-                                    ? 'WAITING OFFERS'
-                                    : task.status.toUpperCase(),
-                                style: GoogleFonts.oswald(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getStatusColor(task.status),
-                                ),
-                              ),
-                              
-                            ],
-                          ),
-                          // SizedBox(height: 6),
-                          LinearProgressIndicator(
-                            borderRadius: BorderRadius.all(Radius.circular(20)),
-                            value: _getStatusProgress(task.status),
-                            backgroundColor: Colors.grey.shade300,
-                            color: _getStatusColor(task.status),
-                            minHeight: 6,
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: TaskStatusHeader(task: task, isPoster: isPoster),
                   ),
 
-                  // ✅ MAIN CONTENT
+                  //  MAIN CONTENT
                   Positioned.fill(
                     top: 80, // Leaves room for the status section
                     child: Container(
@@ -116,278 +108,68 @@ class ProviderTaskDetail extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                task.title,
-                                style: GoogleFonts.figtree(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                task.description,
-                                style: GoogleFonts.figtree(fontSize: 15),
-                              ),
-                              SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  // Icon(Icons.attach_money_rounded, color: Theme.of(context).colorScheme.secondary),
-                                  // SizedBox(width: 6),
-                                  Text(
-                                    '${task.budget.toStringAsFixed(2)}',
-                                    style: GoogleFonts.oswald(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  // Icon(Icons.calendar_today, size: 18),
-                                  // SizedBox(width: 6),
-                                  Text(
-                                    task.deadline !=null ? 'Deadline: ${formatter.format(task.deadline!)}': 'Deadline: Flexible',
-                                    style: GoogleFonts.figtree(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              //BASIC INFO SECTION
+                              BasicInfo(task: task, formatter: formatter),
+                              // IMAGES SECTION
+                              ImageSection(images: task.images),
+
+                              // LOCATION DETAILS SECTION
+                              SizedBox(height: 20),
+                              LocationSection(location: task.location),
+
+                              //POSTED BY USER SECTION
+                              SizedBox(height: 20),
+                              PostedByUser(user: user),
+
+                              // ASSIGNED TO PROVIDER SECTION WITH CHAT
+                              //  SizedBox(height: 20),
+                              // AssignedProviderSection(
+                              //   task: task,
+                              //   currentUserId: currentUserId!,
+                              // ),
+
+                              //MARK AS COMPLETE BUTTON
+                              // Container(
+                              //   padding: const EdgeInsets.all(40.0),
+                              //   width: double.infinity,
+                              //   child: MarkAsCompleteBtn(task: task),
+                              // ),
+                              
+
+                              //COMMENT SECTION
                               SizedBox(height: 20),
                               Text(
-                                'Posted by: ',
+                                'Comments',
                                 style: GoogleFonts.figtree(
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              // Divider(),
-                              Row(
-                                children: [
-                                  user.buildAvatar(radius: 18),
-                                  SizedBox(width: 10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        user.name,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      // Text(
-                                      //   user.email,
-                                      //   style: TextStyle(
-                                      //     fontSize: 12,
-                                      //     color: Colors.grey,
-                                      //   ),
-                                      // ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 24),
-                              // show privider brief profile if task assigned
-                              if (task.assignedProvider != null) ...[
-                                FutureBuilder<User>(
-                                  future: AuthService().getUserProfile(
-                                    task.assignedProvider!.id,
-                                  ),
-                                  builder: (context, providerSnapshot) {
-                                    if (providerSnapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (!providerSnapshot.hasData) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Text(
-                                          'Failed to load provider info',
-                                        ),
-                                      );
-                                    }
-
-                                    final provider = providerSnapshot.data!;
-
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.teal.shade50,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons
-                                                    .assignment_turned_in_outlined,
-                                                color: Colors.teal,
-                                              ),
-                                              SizedBox(width: 10),
-                                              Expanded(
-                                                child: Text(
-                                                  'This task is assigned to:',
-                                                  style: GoogleFonts.figtree(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: 12),
-                                        Container(
-                                          child: Row(
-                                            children: [
-                                              provider.buildAvatar(radius: 18),
-                                              SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      provider.name,
-                                                      style:
-                                                          GoogleFonts.figtree(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                    ),
-
-                                                    Text(
-                                                      provider.averageRating !=
-                                                                  null ||
-                                                              provider.averageRating! >
-                                                                  0
-                                                          ? '⭐ ${provider.averageRating!.toStringAsFixed(1)}'
-                                                          : 'No rating yet',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ],
+                              SizedBox(height: 8),
+                              CommentSection(taskId: task.id),
+                              SizedBox(height: 20),
+                              SizedBox(height: 100),
                             ],
                           ),
                         ),
                       ),
                     ),
                   ),
+                  Positioned(
+                                bottom: 16,
+                                left: 16,
+                                right: 16,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: ChatToPosterBtn(task: task, currentUserId: currentUserId!)
+                                ),
+                              ),
                 ],
-                
-              );
-              
-            },
-            
-          );
-        },
-      ),
-      bottomNavigationBar: FutureBuilder(
-  future: Future.wait([
-    TaskService().getTask(taskId),
-    _getCurrentUserId(),
-  ]),
-  builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-    if (!snapshot.hasData) return SizedBox.shrink();
-
-    final task = snapshot.data![0] as Task;
-    final currentUserId = snapshot.data![1] as String?;
-
-    if (task.user.id == currentUserId) return SizedBox.shrink();
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                // builder: (_) => ChatTestScreen(taskId: taskId),
-                builder: (_) => ChatScreen(
-                  taskId: task.id,
-                  userId: currentUserId!,
-                ),
               ),
             );
           },
-          icon: Icon(Icons.chat_rounded),
-          label: Text('Chat to Poster'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 14),
-            textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+        );
+      },
     );
-  },
-),
-
-    );
-  }
-
-  double _getStatusProgress(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 1.0;
-      case 'in progress':
-        return 0.7;
-      case 'active':
-        return 0.4;
-      case 'urgent':
-        return 0.2;
-      default:
-        return 0.1;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Colors.grey;
-      case 'in progress':
-        return Colors.blueAccent;
-      case 'active':
-        return Colors.green;
-      case 'urgent':
-        return Colors.orange;
-      default:
-        return Colors.teal;
-    }
   }
 }
