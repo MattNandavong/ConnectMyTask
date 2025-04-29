@@ -159,14 +159,13 @@ class _PostTaskState extends State<PostTask> {
                   : {
                     'type': 'physical',
                     'address': _selectedAddress ?? '',
-                    'lat':
-                        _selectedLat?.toString() ??
-                        '0.0', // Convert double to String
-                    'lng': _selectedLng?.toString() ?? '0.0',
+                    'lat': _selectedLat ?? 0.0,
+                    'lng': _selectedLng ?? 0.0,
                   },
           images:
               _imagesWithCaptions.map((img) => img['file'] as File).toList(),
         );
+
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Task Submitted')));
@@ -495,7 +494,6 @@ class _PostTaskState extends State<PostTask> {
     );
   }
 
-  
   Widget _buildPreviewTile(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
