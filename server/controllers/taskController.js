@@ -139,7 +139,7 @@ const deleteTask = async (req, res) => {
 
 // Bid on a task
 const bidOnTask = async (req, res) => {
-  const { price, estimatedTime } = req.body;
+  const { price, estimatedTime, comment } = req.body;
   const sendNotification = require('../utils/sendnotification.js');
 // Get user's FCM token from DB or request
 
@@ -157,6 +157,7 @@ const bidOnTask = async (req, res) => {
     task.bids.push({
       provider: req.user.id,
       price,
+      comment: comment || '',
       estimatedTime,
     });
 
