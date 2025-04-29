@@ -59,8 +59,8 @@ class TaskService {
     request.fields['description'] = description;
     request.fields['budget'] = budget.toString();
     if (deadline != null) {
-    request.fields['deadline'] = deadline; // Only send if not null
-  }
+      request.fields['deadline'] = deadline; // Only send if not null
+    }
     request.fields['category'] = category;
 
     request.fields['location'] = jsonEncode(location);
@@ -114,12 +114,21 @@ class TaskService {
     }
   }
 
-  Future<void> bidOnTask(String id, double price, String estimatedTime) async {
+  Future<void> bidOnTask(
+    String id,
+    double price,
+    String estimatedTime, {
+    String? comment,
+  }) async {
     final token = await _getToken();
     final response = await http.post(
       Uri.parse('$baseUrl/$id/bid'),
       headers: {'Content-Type': 'application/json', 'Authorization': token},
-      body: jsonEncode({'price': price, 'estimatedTime': estimatedTime}),
+      body: jsonEncode({
+        'price': price,
+        'estimatedTime': estimatedTime,
+        if (comment != null) 'comment': comment,//only send if not null
+      }),
     );
 
     if (response.statusCode != 200) {
