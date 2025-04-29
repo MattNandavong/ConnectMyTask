@@ -13,36 +13,46 @@ const Chat = require("../models/Message.js")
 
 // Create a new task
 const createTask = async (req, res) => {
-  const { title, description, budget, deadline, category } = req.body;
-  //fix the location
-  const location = {
-    state: req.body['location.state'],
-    city: req.body['location.city'],
-    suburb: req.body['location.suburb'],
-  };
-
-  const imageUrls = req.files.map((file) => file.path); // Cloudinary returns .path as URL
-  console.log("Received fields:");
-  console.log("location.state:", req.body["location.state"]);
-  console.log("location.city:", req.body["location.city"]);
-  console.log("location.suburb:", req.body["location.suburb"]);
-
   try {
+    const { title, description, budget, deadline, category } = req.body;
+
+    // Manually parse location string
+    let location;
+    if (req.body.location) {
+      location = JSON.parse(req.body.location);
+    } else {
+      return res.status(400).json({ message: "Missing location field" });
+    }
+
+    // Validate required fields first
+    if (!title || !description || !budget || !deadline || !category || !location) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Validate location type
+    if (location.type === 'physical') {
+      if (!location.address || location.lat == null || location.lng == null) {
+        return res.status(400).json({ message: "Physical location requires address, lat, and lng" });
+      }
+    } else if (location.type !== 'remote') {
+      return res.status(400).json({ message: "Location type must be 'physical' or 'remote'" });
+    }
+
+    const imageUrls = req.files?.map((file) => file.path) || [];
+
     const newTask = new Task({
       title,
       description,
       budget,
       deadline,
-      user: req.user.id, // Set the logged-in user who is posting the task
-      location,
-      images: imageUrls, // save image urls
+      user: req.user.id, // Logged-in user
+      location,           // Save location object directly
+      images: imageUrls,   // Save image paths (from Cloudinary or wherever)
       category,
     });
-    console.log("📦 Task location before save:", newTask.location);
+
     const savedTask = await newTask.save();
 
-
-    // sendTaskCreationEmail(req.user.email, req.user.name, savedTask.title); // Send email notification to the user
     res.status(201).json(savedTask);
   } catch (error) {
     console.error(error.message);
