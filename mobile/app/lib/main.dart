@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:app/widget/splash_screen.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 var kColorScheme = ColorScheme(
   brightness: Brightness.light,
@@ -19,16 +20,27 @@ var kColorScheme = ColorScheme(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(); //
   await setupFCM();
-  runApp(MyApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: [Locale('en'), Locale('lo')],
+      path: 'lib/assets/translation',
+      fallbackLocale: Locale('en'),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter App',
+      title: 'ConnectMyTask',
+      locale: context.locale, 
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
       theme: ThemeData().copyWith(
         colorScheme: kColorScheme,
         appBarTheme: AppBarTheme(
@@ -64,16 +76,20 @@ class MyApp extends StatelessWidget {
             borderSide: BorderSide(width: 0, color: Colors.transparent),
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
+
           // focusedBorder: OutlineInputBorder(
           //   // borderSide: BorderSide(width: 2, color: kColorScheme.primary),
           //   borderRadius: BorderRadius.all(Radius.circular(10)),
           // ),
-       
           fillColor: kColorScheme.surface,
           filled: true,
           focusColor: kColorScheme.surface,
           isCollapsed: false,
-          floatingLabelStyle: GoogleFonts.figtree(fontSize: 20, color: kColorScheme.secondary, fontWeight: FontWeight.w600),
+          floatingLabelStyle: GoogleFonts.figtree(
+            fontSize: 20,
+            color: kColorScheme.secondary,
+            fontWeight: FontWeight.w600,
+          ),
           // label: GoogleFonts.figtree(fontSize: 20, color: Colors.red),
         ),
         dropdownMenuTheme: DropdownMenuThemeData(

@@ -8,7 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 late VoiceService _voiceService;
 
@@ -225,7 +225,7 @@ class _PostTaskState extends State<PostTask> {
           Row(
             children: [
               Text(
-                'Task detail'.toUpperCase(),
+                'postTask'.tr().toUpperCase(),
                 style: GoogleFonts.oswald(
                   fontSize: 32,
                   color: Theme.of(context).colorScheme.secondary,
