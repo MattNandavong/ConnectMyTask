@@ -33,11 +33,11 @@ router.post(
 
     const { name, email, password, role, skills, fcmToken } = req.body;
 
-    const location = {
-      state: req.body["location.state"],
-      city: req.body["location.city"],
-      suburb: req.body["location.suburb"],
-    };
+    // const location = {
+    //   country: req.body["location.country"],
+    //   lat: parseFloat(req.body["location.lat"]),
+    //   lng: parseFloat(req.body["location.lng"]),
+    // };
 
 
     try {
@@ -52,7 +52,7 @@ router.post(
         password,
         role,
         profilePhoto,
-        location, // ✅ correct nested location structure
+
         skills: role === "provider" && skills ? skills.split(",") : [],
         fcmToken, // save FCM token
       });
@@ -123,16 +123,25 @@ router.put(
       const user = await User.findById(userId);
       if (!user) return res.status(404).json({ msg: "User not found" });
 
-      const { name, location, skills } = req.body;
+      const { name, skills } = req.body;
+      const location = {
+        country: req.body['location.country'],
+        lat: req.body['location.lat'] ? parseFloat(req.body['location.lat']) : undefined,
+        lng: req.body['location.lng'] ? parseFloat(req.body['location.lng']) : undefined,
+      };
 
       if (name) user.name = name;
-      if (location) user.location = location;
+      if (location.country) {
+        user.location = location;
+      }
       if (skills && user.role === "provider") {
         user.skills = skills.split(",").map((s) => s.trim());
       }
       if (req.file?.path) {
         user.profilePhoto = req.file.path;
       }
+      console.log('🛰️ Saving location:', user.location);
+
 
       await user.save();
 
