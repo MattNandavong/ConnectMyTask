@@ -38,6 +38,7 @@ class _PostTaskState extends State<PostTask> {
   String _category = 'Cleaning';
   bool _isFlexible = false;
   String _deadlineType = 'Flexible'; // or 'Flexible'
+  bool _deadlineError = false;
 
   List<Map<String, dynamic>> _imagesWithCaptions = [];
 
@@ -144,18 +145,22 @@ class _PostTaskState extends State<PostTask> {
         return;
       }
       try {
-        final deadlineDateTime = DateTime(
+        DateTime? deadlineDateTime;
+        if(_deadline != null){
+          deadlineDateTime = DateTime(
           _deadline!.year,
           _deadline!.month,
           _deadline!.day,
           _deadlineTime?.hour ?? 23,
           _deadlineTime?.minute ?? 59,
         );
+        }
+          
         await TaskService().createTask(
           title: _titleController.text.trim(),
           description: _descController.text.trim(),
           budget: double.tryParse(_budgetController.text.trim()) ?? 0,
-          deadline: deadlineDateTime.toIso8601String(),
+          deadline: deadlineDateTime?.toIso8601String(),
           category: _category,
           location:
               _isRemote
@@ -387,15 +392,25 @@ class _PostTaskState extends State<PostTask> {
                                     color:
                                         Theme.of(context).colorScheme.surface,
                                     borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color:
+                                          _deadlineError
+                                              ? Theme.of(context).colorScheme.error
+                                              : Colors.transparent, 
+                                      width: 2,
+                                    ),
                                   ),
                                   child: Center(
                                     child: Text(
                                       _deadline != null
                                           ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
                                           : 'Select Deadline',
-                                      // style: TextStyle(
-                                      //   backgroundColor: Theme.of(context).colorScheme.surface,
-                                      // ),
+                                      style: TextStyle(
+                                        color:
+                                          _deadlineError
+                                              ? Theme.of(context).colorScheme.error
+                                              : Colors.transparent, 
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -590,7 +605,6 @@ class _PostTaskState extends State<PostTask> {
                 child: ListView(
                   padding: EdgeInsets.all(16),
                   children: [
-                    
                     _buildPreviewTile(
                       Icons.title,
                       "Title",
@@ -779,7 +793,7 @@ class _PostTaskState extends State<PostTask> {
                           _formKeys[_currentStep].currentState?.validate() ??
                           true;
                       if (!validForm) return;
-
+                      // Validate location if not remote
                       if (_currentStep == 0 && !_isRemote) {
                         if (_selectedAddress == null ||
                             _selectedAddress!.isEmpty) {
@@ -790,6 +804,22 @@ class _PostTaskState extends State<PostTask> {
                           );
                           return;
                         }
+                      }
+
+                      // Validate deadline if not flexible
+                      if (_deadlineType.toLowerCase() != 'flexible' &&
+                          _deadline == null) {
+                        setState(() {
+                          _deadlineError = true; // Set error flag
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Please select a deadline')),
+                        );
+                        return;
+                      } else {
+                        setState(() {
+                          _deadlineError = false;
+                        });
                       }
 
                       setState(() => _currentStep++);

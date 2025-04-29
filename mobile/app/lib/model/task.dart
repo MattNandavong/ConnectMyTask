@@ -8,7 +8,7 @@ class Task {
   final String title;
   final String description;
   final double budget;
-  final DateTime deadline;
+  final DateTime? deadline;
   final String status;
   final String category;
   final User user;
@@ -24,7 +24,7 @@ class Task {
     required this.title,
     required this.description,
     required this.budget,
-    required this.deadline,
+    this.deadline,
     required this.status,
     required this.category,
     required this.user,
@@ -66,7 +66,7 @@ class Task {
       title: json['title'],
       description: json['description'],
       budget: (json['budget'] as num).toDouble(),
-      deadline: DateTime.parse(json['deadline']),
+      deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
       status: json['status'],
       category: json['category'],
       user: user,
@@ -85,7 +85,7 @@ class Task {
       'title': title,
       'description': description,
       'budget': budget,
-      'deadline': deadline.toIso8601String(),
+      'deadline': deadline?.toIso8601String(),
       'status': status,
       'category': category,
       'user': user.id,
