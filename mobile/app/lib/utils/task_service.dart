@@ -45,7 +45,7 @@ class TaskService {
     required String title,
     required String description,
     required double budget,
-    required String deadline,
+    required String? deadline,
     required String category,
     required Map<String, dynamic> location,
     required List<File> images,
@@ -58,7 +58,9 @@ class TaskService {
     request.fields['title'] = title;
     request.fields['description'] = description;
     request.fields['budget'] = budget.toString();
-    request.fields['deadline'] = deadline;
+    if (deadline != null) {
+    request.fields['deadline'] = deadline; // Only send if not null
+  }
     request.fields['category'] = category;
 
     request.fields['location'] = jsonEncode(location);

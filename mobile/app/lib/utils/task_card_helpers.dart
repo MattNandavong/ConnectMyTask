@@ -85,7 +85,7 @@ class TaskCardHelpers {
                     Icon(Icons.calendar_today, size: 14, color: Colors.black87),
                     SizedBox(width: 4),
                     Text(
-                      DateFormat.yMMMd().format(task.deadline),
+                      task.deadline != null? DateFormat.yMMMd().format(task.deadline!) : "Flexible",
                       style: GoogleFonts.figtree(
                         fontSize: 12,
                         color: Colors.black87,
