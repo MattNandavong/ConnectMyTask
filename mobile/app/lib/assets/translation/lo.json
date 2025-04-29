@@ -1,0 +1,19 @@
+{
+    "appTitle": "ຄອນເນັກມາຍແທສ",
+    "welcome": "ສະບາຍດີ!",
+    "postTask": "ໂພສຕໍ່ໜ້າວຽກ",
+    "browseTasks": "ຄົ້ນຫາໜ້າວຽກ",
+
+    "error": "ຜິດພາດ: ",
+    "noUserFound": "ບໍ່ພົບຜູ້ໃຊ້",
+    "editProfile": "ແກ້ໄຂໂປຣໄຟລ໌",
+    "changePassword": "ປ່ຽນລະຫັດຜ່ານ",
+    "notificationSettings": "ການຕັ້ງຄ່າແຈ້ງເຕືອນ",
+    "languageSetting": "ຕັ້ງຄ່າພາສາ",
+    "signOut": "ອອກຈາກລະບົບ",
+    "signOutTitle": "ອອກຈາກລະບົບ",
+    "signOutConfirmation": "ທ່ານແນ່ໃຈບໍ່ທີ່ຈະອອກຈາກລະບົບ?",
+    "yes": "ແມ່ນ",
+    "no": "ບໍ່",
+    "noReviews": "ບໍ່ມີການຣີວິວ"
+  }
