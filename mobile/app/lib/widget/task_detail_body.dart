@@ -40,347 +40,366 @@ class TaskDetailBody extends StatelessWidget {
     final formatter = DateFormat.yMMMMd();
 
     return Positioned.fill(
-                    top: 80, // Leaves room for the status section
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                        color: Colors.white,
-                      ),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(16),
+      top: 80, // Leaves room for the status section
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          color: Colors.white,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
 
-                        child: Container(
-                          child: Column(
+          child: Container(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title.toUpperCase(),
+                  style: GoogleFonts.oswald(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  task.description,
+                  style: GoogleFonts.figtree(fontSize: 15),
+                ),
+                SizedBox(height: 12),
+                Row(
+                  children: [
+                    // Icon(Icons.attach_money_rounded, color: Theme.of(context).colorScheme.secondary),
+                    // SizedBox(width: 6),
+                    Text(
+                      '${task.budget.toStringAsFixed(2)}',
+                      style: GoogleFonts.oswald(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    // Icon(Icons.calendar_today, size: 18),
+                    // SizedBox(width: 6),
+                    Text(
+                      'Deadline: ${formatter.format(task.deadline)}',
+                      style: GoogleFonts.figtree(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                // IMAGES SECTION
+                if (task.images.isNotEmpty) ...[
+                  SizedBox(height: 24),
+                  Text(
+                    'Images:',
+                    style: GoogleFonts.figtree(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: task.images.length,
+                      separatorBuilder: (_, __) => SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        final imageUrl = task.images[index];
+                        return GestureDetector(
+                          onTap: () {
+                            showImageGallery;
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              imageUrl,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+
+                // LOCATION DETAILS SECTION
+                SizedBox(height: 20),
+                Text(
+                  'Location:',
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child:
+                      task.location?.type == 'remote'
+                          ? Row(
+                            children: [
+                              Icon(Icons.cloud_outlined, color: Colors.teal),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'This is a remote task',
+                                  style: GoogleFonts.figtree(fontSize: 14),
+                                ),
+                              ),
+                            ],
+                          )
+                          : Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                task.title.toUpperCase(),
-                                style: GoogleFonts.oswald(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 12),
-                              Text(
-                                task.description,
-                                style: GoogleFonts.figtree(fontSize: 15),
-                              ),
-                              SizedBox(height: 12),
                               Row(
                                 children: [
-                                  // Icon(Icons.attach_money_rounded, color: Theme.of(context).colorScheme.secondary),
-                                  // SizedBox(width: 6),
-                                  Text(
-                                    '${task.budget.toStringAsFixed(2)}',
-                                    style: GoogleFonts.oswald(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    color: Colors.teal,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      task.location?.address ??
+                                          'Unknown Address',
+                                      style: GoogleFonts.figtree(fontSize: 14),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  // Icon(Icons.calendar_today, size: 18),
-                                  // SizedBox(width: 6),
-                                  Text(
-                                    'Deadline: ${formatter.format(task.deadline)}',
-                                    style: GoogleFonts.figtree(
-                                      color: Colors.grey,
-                                      fontSize: 12,
+                              SizedBox(height: 10),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: SizedBox(
+                                  height: 200,
+                                  child: GoogleMap(
+                                    initialCameraPosition: CameraPosition(
+                                      target: LatLng(
+                                        task.location?.lat ?? 0.0,
+                                        task.location?.lng ?? 0.0,
+                                      ),
+                                      zoom: 15,
                                     ),
-                                  ),
-                                ],
-                              ),
-                              // IMAGES SECTION
-                              if (task.images.isNotEmpty) ...[
-                                SizedBox(height: 24),
-                                Text(
-                                  'Images:',
-                                  style: GoogleFonts.figtree(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                SizedBox(
-                                  height: 120,
-                                  child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: task.images.length,
-                                    separatorBuilder:
-                                        (_, __) => SizedBox(width: 10),
-                                    itemBuilder: (context, index) {
-                                      final imageUrl = task.images[index];
-                                      return GestureDetector(
-                                        onTap: () {
-                                          showImageGallery
-                                          ;
-                                        },
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: Image.network(
-                                            imageUrl,
-                                            width: 120,
-                                            height: 120,
-                                            fit: BoxFit.cover,
-                                          ),
+                                    markers: {
+                                      Marker(
+                                        markerId: MarkerId('task-location'),
+                                        position: LatLng(
+                                          task.location?.lat ?? 0.0,
+                                          task.location?.lng ?? 0.0,
                                         ),
-                                      );
+                                      ),
                                     },
+                                    zoomControlsEnabled: false,
+                                    liteModeEnabled: true, // faster map
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                ),
+
+                SizedBox(height: 20),
+                Text(
+                  'Posted by: ',
+                  style: GoogleFonts.figtree(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                // Divider(),
+                Row(
+                  children: [
+                    user.buildAvatar(radius: 18),
+                    SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.name,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24),
+                // show privider brief profile if task assigned
+                if (task.assignedProvider != null) ...[
+                  FutureBuilder<User>(
+                    future: AuthService().getUserProfile(
+                      task.assignedProvider!.id,
+                    ),
+                    builder: (context, providerSnapshot) {
+                      if (providerSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+                      if (!providerSnapshot.hasData) {
+                        return Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text('Failed to load provider info'),
+                        );
+                      }
+
+                      final provider = providerSnapshot.data!;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.assignment_turned_in_outlined,
+                                  color: Colors.teal,
+                                ),
+                                SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'This task is assigned to:',
+                                    style: GoogleFonts.figtree(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],
-
-                              // LOCATION DETAILS SECTION
-                              SizedBox(height: 20),
-                              Text(
-                                'Location:',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Container(
-                                padding: EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.teal.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child:
-                                    task.location?.type == 'remote'
-                                        ? Row(
-                                          children: [
-                                            Icon(
-                                              Icons.cloud_outlined,
-                                              color: Colors.teal,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                'This is a remote task',
-                                                style: GoogleFonts.figtree(
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                        : Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.location_on_outlined,
-                                                  color: Colors.teal,
-                                                ),
-                                                SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    task.location?.address ??
-                                                        'Unknown Address',
-                                                    style: GoogleFonts.figtree(
-                                                      fontSize: 14,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            SizedBox(height: 10),
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: SizedBox(
-                                                height: 200,
-                                                child: GoogleMap(
-                                                  initialCameraPosition:
-                                                      CameraPosition(
-                                                        target: LatLng(
-                                                          task.location?.lat ??
-                                                              0.0,
-                                                          task.location?.lng ??
-                                                              0.0,
-                                                        ),
-                                                        zoom: 15,
-                                                      ),
-                                                  markers: {
-                                                    Marker(
-                                                      markerId: MarkerId(
-                                                        'task-location',
-                                                      ),
-                                                      position: LatLng(
-                                                        task.location?.lat ??
-                                                            0.0,
-                                                        task.location?.lng ??
-                                                            0.0,
-                                                      ),
-                                                    ),
-                                                  },
-                                                  zoomControlsEnabled: false,
-                                                  liteModeEnabled:
-                                                      true, // faster map
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                              ),
-
-                              SizedBox(height: 20),
-                              Text(
-                                'Posted by: ',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              // Divider(),
-                              Row(
-                                children: [
-                                  user.buildAvatar(radius: 18),
-                                  SizedBox(width: 10),
-                                  Column(
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          Container(
+                            child: Row(
+                              children: [
+                                provider.buildAvatar(radius: 18),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        user.name,
+                                        provider.name,
+                                        style: GoogleFonts.figtree(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+
+                                      Text(
+                                        provider.averageRating != null ||
+                                                provider.averageRating! > 0
+                                            ? '⭐ ${provider.averageRating!.toStringAsFixed(1)}'
+                                            : 'No rating yet',
                                         style: TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: Colors.grey,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
-                              SizedBox(height: 24),
-                              // show privider brief profile if task assigned
-                              if (task.assignedProvider != null) ...[
-                                FutureBuilder<User>(
-                                  future: AuthService().getUserProfile(
-                                    task.assignedProvider!.id,
-                                  ),
-                                  builder: (context, providerSnapshot) {
-                                    if (providerSnapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (!providerSnapshot.hasData) {
-                                      return Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Text(
-                                          'Failed to load provider info',
-                                        ),
-                                      );
-                                    }
-
-                                    final provider = providerSnapshot.data!;
-
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 10,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.teal.shade50,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons
-                                                    .assignment_turned_in_outlined,
-                                                color: Colors.teal,
-                                              ),
-                                              SizedBox(width: 10),
-                                              Expanded(
-                                                child: Text(
-                                                  'This task is assigned to:',
-                                                  style: GoogleFonts.figtree(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: 12),
-                                        Container(
-                                          child: Row(
-                                            children: [
-                                              provider.buildAvatar(radius: 18),
-                                              SizedBox(width: 12),
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      provider.name,
-                                                      style:
-                                                          GoogleFonts.figtree(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                          ),
-                                                    ),
-
-                                                    Text(
-                                                      provider.averageRating !=
-                                                                  null ||
-                                                              provider.averageRating! >
-                                                                  0
-                                                          ? '⭐ ${provider.averageRating!.toStringAsFixed(1)}'
-                                                          : 'No rating yet',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  },
                                 ),
                               ],
-                              SizedBox(height: 100),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  );
-  }
-}
+                          
+                          // Comments or Questions Section
+                          SizedBox(height: 24),
+                          Text(
+                            'Comments & Questions:',
+                            style: GoogleFonts.figtree(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 12),
 
-class _showImageGallery {
+                          // TODO: Replace this ListView with real comment fetching from backend
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount:
+                                  3, // Just for demo purpose, pretend 3 comments
+                              itemBuilder: (context, index) {
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    child: Icon(Icons.person),
+                                  ),
+                                  title: Text('User $index'),
+                                  subtitle: Text(
+                                    'This is a sample question or comment number $index.',
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(height: 20),
+
+                          // Write a Comment Input
+                          TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Ask a question or leave a comment...',
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.send),
+                                onPressed: () {
+                                  // TODO: Submit the comment to backend
+                                  // Clear the input field after submit
+                                },
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 100),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+                SizedBox(height: 100),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
