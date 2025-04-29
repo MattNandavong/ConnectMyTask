@@ -8,6 +8,7 @@ import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/make_offer_modal.dart';
 import 'package:app/widget/my_task/bids.dart';
 import 'package:app/widget/profile_screen.dart';
+import 'package:app/widget/screen/edit_task_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -128,12 +129,12 @@ class MyTaskDetails extends StatelessWidget {
                       tooltip: 'Edit Task',
                       onPressed: () {
                         // Navigate to Edit Task screen (you'll implement it)
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (_) => EditTaskScreen(taskId: task.id),
-                        //   ),
-                        // );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditTaskScreen(task: task,),
+                          ),
+                        );
                       },
                     ),
                 ],
