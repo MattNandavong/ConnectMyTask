@@ -317,6 +317,52 @@ const completeTask = async (req, res) => {
     res.status(500).send("Server error");
   }
 };
+// Create a Comment
+const createComment = async (req, res) => {
+  const { text } = req.body;
+  try {
+    const task = await Task.findById(req.params.taskId);
+    if (!task) return res.status(404).json({ msg: "Task not found" });
+
+    const newComment = {
+      user: req.user.id,
+      text,
+    };
+
+    task.comments.push(newComment);
+    await task.save();
+
+    res.status(201).json(task);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+};
+
+// Reply to a Comment
+const replyToComment = async (req, res) => {
+  const { text } = req.body;
+  try {
+    const task = await Task.findById(req.params.taskId);
+    if (!task) return res.status(404).json({ msg: "Task not found" });
+
+    const comment = task.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ msg: "Comment not found" });
+
+    const newReply = {
+      user: req.user.id,
+      text,
+    };
+
+    comment.replies.push(newReply);
+    await task.save();
+
+    res.status(201).json(task);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server error");
+  }
+};
 
 module.exports = {
   createTask,
@@ -327,4 +373,6 @@ module.exports = {
   bidOnTask,
   acceptBid,
   completeTask,
+  createComment,
+  replyToComment
 };
