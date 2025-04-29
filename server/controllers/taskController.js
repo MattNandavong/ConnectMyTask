@@ -25,7 +25,7 @@ const createTask = async (req, res) => {
     }
 
     // Validate required fields first
-    if (!title || !description || !budget || !deadline || !category || !location) {
+    if (!title || !description || !budget  || !category || !location) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -44,7 +44,7 @@ const createTask = async (req, res) => {
       title,
       description,
       budget,
-      deadline,
+      ...(deadline && { deadline }),
       user: req.user.id, // Logged-in user
       location,           // Save location object directly
       images: imageUrls,   // Save image paths (from Cloudinary or wherever)
