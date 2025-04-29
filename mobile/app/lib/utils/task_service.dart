@@ -12,8 +12,7 @@ class TaskService {
   //Real device
   final String baseUrl = 'http://192.168.1.101:3300/api/tasks';
 
-  Future<List<Task>> getAllTasks
-  () async {
+  Future<List<Task>> getAllTasks() async {
     final token = await _getToken();
     final response = await http.get(
       Uri.parse(baseUrl),
@@ -48,10 +47,11 @@ class TaskService {
     required double budget,
     required String deadline,
     required String category,
-    required Map<String, String> location,
+    required Map<String, dynamic> location,
     required List<File> images,
   }) async {
-    final token = await _getToken();
+    final token = await _getToken(); // Your method to get the auth token
+
     var request = http.MultipartRequest('POST', Uri.parse(baseUrl));
     request.headers['Authorization'] = token;
 
@@ -61,10 +61,7 @@ class TaskService {
     request.fields['deadline'] = deadline;
     request.fields['category'] = category;
 
-    // Correct way to send nested fields
-    request.fields['location.state'] = location['location.state'] ?? '';
-    request.fields['location.city'] = location['location.city'] ?? '';
-    request.fields['location.suburb'] = location['location.suburb'] ?? '';
+    request.fields['location'] = jsonEncode(location);
 
     for (var image in images) {
       request.files.add(
@@ -76,16 +73,16 @@ class TaskService {
       );
     }
 
+    print("📤 Submitting Task with fields:");
+    request.fields.forEach((key, value) => print("  $key: $value"));
+
     final streamedResponse = await request.send();
-    print("📤 Submitting Task with the following fields:");
-                    request.fields.forEach(
-                      (key, value) => print("  $key: $value"),
-                    );
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
+      print('❌ Error Response: ${response.body}');
       throw Exception('Failed to create task');
     }
   }
