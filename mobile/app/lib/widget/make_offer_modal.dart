@@ -13,14 +13,16 @@ void showMakeOfferModal(BuildContext context, String taskId) {
     context: context,
     isScrollControlled: true,
     builder: (context) {
-      return Padding(
+      return Container(
         padding: EdgeInsets.only(
           left: 16,
           right: 16,
           top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
         child: SingleChildScrollView(
+          
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -84,9 +86,10 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                 ],
               ),
               SizedBox(height: 10),
-              TextField(
+              TextFormField(
                 controller: _commentController,
-                maxLines: 4,
+                maxLines: 6,
+                maxLength: 200,
                 decoration: InputDecoration(
                   labelText: 'Comment (optional)',
                   alignLabelWithHint: true,
@@ -112,7 +115,7 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                         taskId,
                         price,
                         estimatedTime,
-                        // comment: comment,
+                        comment: comment.isNotEmpty ? comment : null,
                       );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(

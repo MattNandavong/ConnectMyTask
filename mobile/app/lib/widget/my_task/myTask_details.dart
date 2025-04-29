@@ -118,6 +118,8 @@ class MyTaskDetails extends StatelessWidget {
             return Scaffold(
               backgroundColor: Theme.of(context).colorScheme.surface,
               appBar: AppBar(
+                surfaceTintColor: Colors.white,
+                elevation: 8,
                 title: Text('Task Details'),
                 actions: [
                   if (isPoster && !isCompleted)
@@ -276,7 +278,9 @@ class MyTaskDetails extends StatelessWidget {
                                   // Icon(Icons.calendar_today, size: 18),
                                   // SizedBox(width: 6),
                                   Text(
-                                    task.deadline !=null ? 'Deadline: ${formatter.format(task.deadline!)}': 'Deadline: Flexible',
+                                    task.deadline != null
+                                        ? 'Deadline: ${formatter.format(task.deadline!)}'
+                                        : 'Deadline: Flexible',
                                     style: GoogleFonts.figtree(
                                       color: Colors.grey,
                                       fontSize: 12,
@@ -295,8 +299,14 @@ class MyTaskDetails extends StatelessWidget {
                                   ),
                                 ),
                                 SizedBox(height: 12),
-                                SizedBox(
-                                  height: 120,
+                                Container(
+                                  height: 140,
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
                                   child: ListView.separated(
                                     scrollDirection: Axis.horizontal,
                                     itemCount: task.images.length,
@@ -342,7 +352,8 @@ class MyTaskDetails extends StatelessWidget {
                               Container(
                                 padding: EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.teal.shade50,
+                                  color:
+                                        Theme.of(context).colorScheme.surface,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child:
@@ -585,7 +596,8 @@ class MyTaskDetails extends StatelessWidget {
                                   },
                                 ),
                               ],
-                              if (task.status.toLowerCase() == 'in progress' && isPoster)
+                              if (task.status.toLowerCase() == 'in progress' &&
+                                  isPoster)
                                 Container(
                                   padding: const EdgeInsets.all(40.0),
                                   width: double.infinity,
@@ -691,12 +703,14 @@ class MyTaskDetails extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+                                SizedBox(height: 100),
                             ],
                           ),
                         ),
                       ),
                     ),
                   ),
+                  
                 ],
               ),
             );

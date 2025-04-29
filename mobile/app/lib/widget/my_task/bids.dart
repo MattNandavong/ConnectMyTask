@@ -67,61 +67,87 @@ Widget _buildBidCard(
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text('${timeago.format(bid.date)}', style: TextStyle(fontSize: 10, color: Colors.grey),),
+                  Text(
+                    '${timeago.format(bid.date)}',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(provider.name, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-                  Text('\$${bid.price}', style: GoogleFonts.oswald(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.secondary),),
+                  Text(
+                    provider.name.toUpperCase(),
+                    style: GoogleFonts.figtree(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    '\$${bid.price}',
+                    style: GoogleFonts.oswald(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ),
                 ],
               ),
+              SizedBox(height: 10),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
-                  Text('Duration: ${bid.estimatedTime}'),
-                  
+                  Text(
+                    '${bid.comment}',
+                    // maxLines: 2,
+                    // overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 10),
+
+                  Text('Estimate time: ${bid.estimatedTime}'),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => ProfileScreen(user: provider, editable: false),
-                      ),
-                    ),
-                  child: Text("View profile"),
-                ),
-                FilledButton(
-                onPressed: () {
-                  TaskService().acceptBid(taskId, bid.id).then((_) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Bid accepted successfully!')),
-                    );
-                    Navigator.pop(context);
-                    onBidAccepted();
-                  }).catchError((error) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed: $error')),
-                    );
-                  });
-                },
-                child: Text('Accept Offer'),),
-                
-              ],
-            ),
-            
+                children: [
+                  TextButton(
+                    onPressed:
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => ProfileScreen(
+                                  user: provider,
+                                  editable: false,
+                                ),
+                          ),
+                        ),
+                    child: Text("View profile"),
+                  ),
+                  FilledButton(
+                    onPressed: () {
+                      TaskService()
+                          .acceptBid(taskId, bid.id)
+                          .then((_) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Bid accepted successfully!'),
+                              ),
+                            );
+                            Navigator.pop(context);
+                            onBidAccepted();
+                          })
+                          .catchError((error) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed: $error')),
+                            );
+                          });
+                    },
+                    child: Text('Accept Offer'),
+                  ),
+                ],
+              ),
             ],
-          
-            
-            
-                
           ),
         ),
       );
