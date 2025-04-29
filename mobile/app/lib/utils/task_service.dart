@@ -127,7 +127,7 @@ class TaskService {
       body: jsonEncode({
         'price': price,
         'estimatedTime': estimatedTime,
-        if (comment != null) 'comment': comment,//only send if not null
+        if (comment != null) 'comment': comment, //only send if not null
       }),
     );
 
@@ -192,4 +192,49 @@ class TaskService {
     if (token == null) throw Exception('No token found');
     return token;
   }
+
+  Future<List<dynamic>> getTaskComments(String taskId) async {
+    final token = await _getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/$taskId'),
+      headers: {'Authorization': token},
+    );
+
+    if (response.statusCode == 200) {
+      final task = jsonDecode(response.body);
+      return task['comments'] ?? [];
+    } else {
+      throw Exception('Failed to load comments');
+    }
+  }
+
+  Future<void> postComment(String taskId, String text) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/$taskId/comment'),
+      headers: {'Authorization': token, 'Content-Type': 'application/json'},
+      body: jsonEncode({'text': text}),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to post comment');
+    }
+  }
+
+  Future<void> postReply(String taskId, String commentId, String text) async {
+  final token = await _getToken();
+  final response = await http.post(
+    Uri.parse('$baseUrl/$taskId/comment/$commentId/reply'),
+    headers: {
+      'Authorization': token,
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({'text': text}),
+  );
+
+  if (response.statusCode != 201) {
+    throw Exception('Failed to post reply');
+  }
+}
+
 }
