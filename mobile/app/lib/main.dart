@@ -1,4 +1,3 @@
-
 import 'package:app/utils/firebase_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -14,19 +13,16 @@ var kColorScheme = ColorScheme(
   onSecondary: Colors.white,
   error: Color.fromRGBO(255, 146, 75, 1),
   onError: Colors.white,
-  surface: const Color.fromARGB(255, 247, 255, 253),
+  surface: const Color.fromARGB(255, 245, 245, 245),
   onSurface: const Color.fromARGB(255, 0, 104, 81),
 );
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // 
+  await Firebase.initializeApp(); //
   await setupFCM();
-  runApp(MyApp(
-    
-  ));
+  runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   @override
@@ -50,40 +46,67 @@ class MyApp extends StatelessWidget {
             fontSize: 14,
           ),
         ),
-        cardTheme: ThemeData().cardTheme.copyWith(
-          color: Colors.white,
-          
-          
-        ),
+        cardTheme: ThemeData().cardTheme.copyWith(color: Colors.white),
         inputDecorationTheme: InputDecorationTheme(
-          labelStyle: GoogleFonts.figtree(fontSize: 16),
-          // filled: true,
-          // fillColor: Colors.white,
-          activeIndicatorBorder: BorderSide(
-            width: 3,
-            color: kColorScheme.primary,
+          labelStyle: GoogleFonts.figtree(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color.fromARGB(255, 65, 110, 100),
           ),
-          outlineBorder: BorderSide(width: 2, color: kColorScheme.primary),
+          // // filled: true,
+          // // // fillColor: Colors.white,
+          // // activeIndicatorBorder: BorderSide(
+          // //   width: 3,
+          // //   color: kColorScheme.primary,
+          // // ),
+          // // outlineBorder: BorderSide(width: 2, color: kColorScheme.primary),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(width: 1, color: kColorScheme.onSurface),
+            borderSide: BorderSide(width: 0, color: Colors.transparent),
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(width: 1, color: kColorScheme.primary),
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          fillColor: Colors.white, 
+          // focusedBorder: OutlineInputBorder(
+          //   // borderSide: BorderSide(width: 2, color: kColorScheme.primary),
+          //   borderRadius: BorderRadius.all(Radius.circular(10)),
+          // ),
+       
+          fillColor: kColorScheme.surface,
+          filled: true,
           focusColor: kColorScheme.surface,
           isCollapsed: false,
-          floatingLabelStyle: GoogleFonts.figtree(fontSize: 20),
+          floatingLabelStyle: GoogleFonts.figtree(fontSize: 20, color: kColorScheme.secondary, fontWeight: FontWeight.w600),
+          // label: GoogleFonts.figtree(fontSize: 20, color: Colors.red),
+        ),
+        dropdownMenuTheme: DropdownMenuThemeData(
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true, // Fill background
+            fillColor: Colors.white, // White background
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(
+                8,
+              ), // Optional: rounded corners
+              borderSide: BorderSide(
+                color: Colors.grey, // Border color
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: Colors.teal, // Highlight color when focused
+                width: 2,
+              ),
+            ),
+          ),
         ),
         scaffoldBackgroundColor: const Color(0xFFF7F7F7),
       ),
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      
+
       home: SplashScreen(),
-      
     );
   }
 }

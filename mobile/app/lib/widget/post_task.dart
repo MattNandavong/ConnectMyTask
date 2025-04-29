@@ -3,6 +3,7 @@ import 'package:app/utils/location_input.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:app/utils/voice_service.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -35,6 +36,8 @@ class _PostTaskState extends State<PostTask> {
   DateTime? _deadline;
   TimeOfDay? _deadlineTime;
   String _category = 'Cleaning';
+  bool _isFlexible = false;
+  String _deadlineType = 'Flexible'; // or 'Flexible'
 
   List<Map<String, dynamic>> _imagesWithCaptions = [];
 
@@ -62,6 +65,7 @@ class _PostTaskState extends State<PostTask> {
     _titleFocus = FocusNode();
     _descFocus = FocusNode();
     _voiceService = VoiceService();
+    _isFlexible = false;
   }
 
   @override
@@ -209,170 +213,347 @@ class _PostTaskState extends State<PostTask> {
   }
 
   Widget _buildBasicDetailsForm() {
-    return Form(
-      key: _formKeys[0],
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: SingleChildScrollView(
-          child: Column(
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        children: [
+          Row(
             children: [
-              TextFormField(
-                controller: _titleController,
-                focusNode: _titleFocus,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _voiceService.isListening ? Icons.mic : Icons.mic_none,
-                    ),
-                    onPressed: () {
-                      if (_voiceService.isListening) {
-                        _voiceService.stopListening(() => setState(() {}));
-                      } else {
-                        _titleFocus.unfocus();
-                        _voiceService.startListening(
-                          onResult:
-                              (text) => setState(
-                                () => _titleController.text += ' $text',
-                              ),
-                          onListeningStarted: () => setState(() {}),
-                          onListeningStopped: () => setState(() {}),
-                        );
-                      }
-                    },
-                  ),
+              Text(
+                'Task detail'.toUpperCase(),
+                style: GoogleFonts.oswald(
+                  fontSize: 32,
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.w900,
                 ),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
-              SizedBox(height: 12),
-              DropdownButtonFormField(
-                value: _category,
-                decoration: InputDecoration(labelText: 'Category'),
-                items:
-                    _categories
-                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                        .toList(),
-                onChanged: (val) => setState(() => _category = val!),
-              ),
-              SizedBox(height: 12),
-              TextFormField(
-                controller: _descController,
-                focusNode: _descFocus,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _voiceService.isListening ? Icons.mic : Icons.mic_none,
-                    ),
-                    onPressed: () {
-                      if (_voiceService.isListening) {
-                        _voiceService.stopListening(() => setState(() {}));
-                      } else {
-                        _descFocus.unfocus();
-                        _voiceService.startListening(
-                          onResult:
-                              (text) => setState(
-                                () => _descController.text += ' $text',
-                              ),
-                          onListeningStarted: () => setState(() {}),
-                          onListeningStopped: () => setState(() {}),
-                        );
-                      }
-                    },
-                  ),
-                ),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
-              SizedBox(height: 12),
-              TextFormField(
-                controller: _budgetController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: 'Budget (AUD)'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
-              SizedBox(height: 12),
-              ListTile(
-                title: Text(
-                  _deadline != null
-                      ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
-                      : 'Select Deadline',
-                ),
-                trailing: Icon(Icons.calendar_today),
-                onTap: _pickDeadline,
-              ),
-              SwitchListTile(
-                title: Text('Remote Task'),
-                value: _isRemote,
-                onChanged: (val) => setState(() => _isRemote = val),
-              ),
-              if (!_isRemote) ...[
-                GestureDetector(
-                  onTap: () => _openLocationModal(),
-                  child: AbsorbPointer(
-                    child: TextFormField(
-                      controller: _locationController,
-                      decoration: const InputDecoration(
-                        labelText: 'Location',
-                        hintText: 'Select location',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (val) {
-                        if (!_isRemote && (val == null || val.isEmpty)) {
-                          return 'Please select a location';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
-        ),
+          Expanded(
+            child: Card(
+              child: Container(
+                // padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  // border: Border.all(),
+                  color: Colors.white,
+                ),
+                child: Form(
+                  key: _formKeys[0],
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SingleChildScrollView(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            TextFormField(
+                              controller: _titleController,
+                              focusNode: _titleFocus,
+                              decoration: InputDecoration(
+                                labelText: 'Title',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _voiceService.isListening
+                                        ? Icons.mic
+                                        : Icons.mic_none,
+                                  ),
+                                  onPressed: () {
+                                    if (_voiceService.isListening) {
+                                      _voiceService.stopListening(
+                                        () => setState(() {}),
+                                      );
+                                    } else {
+                                      _titleFocus.unfocus();
+                                      _voiceService.startListening(
+                                        onResult:
+                                            (text) => setState(
+                                              () =>
+                                                  _titleController.text +=
+                                                      ' $text',
+                                            ),
+                                        onListeningStarted:
+                                            () => setState(() {}),
+                                        onListeningStopped:
+                                            () => setState(() {}),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                              validator:
+                                  (val) => val!.isEmpty ? 'Required' : null,
+                            ),
+                            SizedBox(height: 12),
+                            DropdownButtonFormField(
+                              value: _category,
+                              decoration: InputDecoration(
+                                labelText: 'Category',
+                              ),
+                              items:
+                                  _categories
+                                      .map(
+                                        (c) => DropdownMenuItem(
+                                          value: c,
+                                          child: Text(c),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged:
+                                  (val) => setState(() => _category = val!),
+                            ),
+                            SizedBox(height: 12),
+                            TextFormField(
+                              controller: _descController,
+                              focusNode: _descFocus,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: 'Description',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _voiceService.isListening
+                                        ? Icons.mic
+                                        : Icons.mic_none,
+                                  ),
+                                  onPressed: () {
+                                    if (_voiceService.isListening) {
+                                      _voiceService.stopListening(
+                                        () => setState(() {}),
+                                      );
+                                    } else {
+                                      _descFocus.unfocus();
+                                      _voiceService.startListening(
+                                        onResult:
+                                            (text) => setState(
+                                              () =>
+                                                  _descController.text +=
+                                                      ' $text',
+                                            ),
+                                        onListeningStarted:
+                                            () => setState(() {}),
+                                        onListeningStopped:
+                                            () => setState(() {}),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                              validator:
+                                  (val) => val!.isEmpty ? 'Required' : null,
+                            ),
+                            SizedBox(height: 12),
+                            TextFormField(
+                              controller: _budgetController,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: 'Budget (AUD)',
+                              ),
+                              validator:
+                                  (val) => val!.isEmpty ? 'Required' : null,
+                            ),
+                            SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              value: _deadlineType,
+                              decoration: InputDecoration(
+                                // labelText: 'Deadline Type',
+                                border: OutlineInputBorder(),
+                                filled: true,
+                                fillColor: Colors.white,
+                              ),
+                              items:
+                                  ['I am not flexible', 'Flexible']
+                                      .map(
+                                        (type) => DropdownMenuItem(
+                                          value: type,
+                                          child: Text(type),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _deadlineType = val;
+                                  });
+                                }
+                              },
+                            ),
+
+                            if (_deadlineType != 'Flexible')
+                              ListTile(
+                                title: Container(
+                                  // padding: EdgeInsets.all(10),
+                                  width: 100,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        Theme.of(context).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      _deadline != null
+                                          ? '${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}'
+                                          : 'Select Deadline',
+                                      // style: TextStyle(
+                                      //   backgroundColor: Theme.of(context).colorScheme.surface,
+                                      // ),
+                                    ),
+                                  ),
+                                ),
+                                trailing: Icon(Icons.calendar_today),
+                                onTap: _pickDeadline,
+                              ),
+                            SwitchListTile(
+                              title: Text(
+                                'Remote Task',
+                                style: GoogleFonts.figtree(
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              value: _isRemote,
+                              onChanged:
+                                  (val) => setState(() => _isRemote = val),
+                            ),
+                            if (!_isRemote) ...[
+                              GestureDetector(
+                                onTap: () => _openLocationModal(),
+                                child: AbsorbPointer(
+                                  child: TextFormField(
+                                    controller: _locationController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Location',
+                                      hintText: 'Select location',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    validator: (val) {
+                                      if (!_isRemote &&
+                                          (val == null || val.isEmpty)) {
+                                        return 'Please select a location';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildImagesUploadForm() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12.0),
       child: Column(
         children: [
-          ElevatedButton.icon(
-            icon: Icon(Icons.photo_library),
-            label: Text('Upload Images'),
-            onPressed: _pickImages,
+          Row(
+            children: [
+              Text(
+                'Upload Image'.toUpperCase(),
+                style: GoogleFonts.oswald(
+                  fontSize: 32,
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 10),
           Expanded(
-            child: ReorderableListView.builder(
-              itemCount: _imagesWithCaptions.length,
-              onReorder: (oldIndex, newIndex) {
-                setState(() {
-                  if (newIndex > oldIndex) newIndex--;
-                  final item = _imagesWithCaptions.removeAt(oldIndex);
-                  _imagesWithCaptions.insert(newIndex, item);
-                });
-              },
-              itemBuilder: (context, index) {
-                final image = _imagesWithCaptions[index];
-                return ListTile(
-                  key: ValueKey(index),
-                  leading: Image.file(
-                    image['file'],
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
+            child: Card(
+              child: Container(
+                // padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  // border: Border.all(),
+                  color: Colors.white,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child:
+                            _imagesWithCaptions.isEmpty
+                                ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.photo_library_outlined,
+                                        size: 80,
+                                        color: Colors.grey,
+                                      ),
+                                      SizedBox(height: 10),
+                                      Text(
+                                        'No Images Uploaded',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                                : ReorderableListView.builder(
+                                  itemCount: _imagesWithCaptions.length,
+                                  onReorder: (oldIndex, newIndex) {
+                                    setState(() {
+                                      if (newIndex > oldIndex) newIndex--;
+                                      final item = _imagesWithCaptions.removeAt(
+                                        oldIndex,
+                                      );
+                                      _imagesWithCaptions.insert(
+                                        newIndex,
+                                        item,
+                                      );
+                                    });
+                                  },
+
+                                  itemBuilder: (context, index) {
+                                    final image = _imagesWithCaptions[index];
+                                    return ListTile(
+                                      key: ValueKey(index),
+                                      leading: Image.file(
+                                        image['file'],
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                      ),
+                                      trailing: IconButton(
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed:
+                                            () => setState(
+                                              () => _imagesWithCaptions
+                                                  .removeAt(index),
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                      ),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.photo_library),
+                        label: Text('Upload Images'),
+                        onPressed: _pickImages,
+                      ),
+                      SizedBox(height: 10),
+                    ],
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed:
-                        () =>
-                            setState(() => _imagesWithCaptions.removeAt(index)),
-                  ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ],
@@ -381,116 +562,156 @@ class _PostTaskState extends State<PostTask> {
   }
 
   Widget _buildPreview() {
-    return ListView(
-      padding: EdgeInsets.all(16),
-      children: [
-        Text(
-          "Review Your Task",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 20),
-
-        _buildPreviewTile(Icons.title, "Title", _titleController.text),
-        _buildPreviewTile(Icons.category, "Category", _category),
-        _buildPreviewTile(
-          Icons.description,
-          "Description",
-          _descController.text,
-        ),
-        _buildPreviewTile(
-          Icons.attach_money,
-          "Budget",
-          "\$${_budgetController.text}",
-        ),
-
-        if (_deadline != null)
-          _buildPreviewTile(
-            Icons.schedule,
-            "Deadline",
-            "${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}",
-          ),
-
-        _buildPreviewTile(
-          Icons.location_on,
-          "Location",
-          _isRemote ? "Remote" : (_selectedAddress ?? "Not selected"),
-        ),
-
-        SizedBox(height: 20),
-
-        if (!_isRemote && _selectedLat != null && _selectedLng != null)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              height: 200,
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: LatLng(_selectedLat!, _selectedLng!),
-                  zoom: 15,
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Text(
+                'Task Preview'.toUpperCase(),
+                style: GoogleFonts.oswald(
+                  fontSize: 32,
+                  color: Theme.of(context).colorScheme.secondary,
+                  fontWeight: FontWeight.w900,
                 ),
-                markers: {
-                  Marker(
-                    markerId: MarkerId('selected-location'),
-                    position: LatLng(_selectedLat!, _selectedLng!),
-                  ),
-                },
-                zoomControlsEnabled: false,
-                liteModeEnabled: true,
+              ),
+            ],
+          ),
+          Expanded(
+            child: Card(
+              child: Container(
+                // padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  // border: Border.all(),
+                  color: Colors.white,
+                ),
+                child: ListView(
+                  padding: EdgeInsets.all(16),
+                  children: [
+                    
+                    _buildPreviewTile(
+                      Icons.title,
+                      "Title",
+                      _titleController.text,
+                    ),
+                    _buildPreviewTile(Icons.category, "Category", _category),
+                    _buildPreviewTile(
+                      Icons.description,
+                      "Description",
+                      _descController.text,
+                    ),
+                    _buildPreviewTile(
+                      Icons.attach_money,
+                      "Budget",
+                      "\$${_budgetController.text}",
+                    ),
+
+                    if (_deadline != null)
+                      _buildPreviewTile(
+                        Icons.schedule,
+                        "Deadline",
+                        "${_formatter.format(_deadline!)} ${_deadlineTime?.format(context) ?? ''}",
+                      ),
+
+                    _buildPreviewTile(
+                      Icons.location_on,
+                      "Location",
+                      _isRemote
+                          ? "Remote"
+                          : (_selectedAddress ?? "Not selected"),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    if (!_isRemote &&
+                        _selectedLat != null &&
+                        _selectedLng != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          height: 200,
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(_selectedLat!, _selectedLng!),
+                              zoom: 15,
+                            ),
+                            markers: {
+                              Marker(
+                                markerId: MarkerId('selected-location'),
+                                position: LatLng(_selectedLat!, _selectedLng!),
+                              ),
+                            },
+                            zoomControlsEnabled: false,
+                            liteModeEnabled: true,
+                          ),
+                        ),
+                      ),
+
+                    SizedBox(height: 20),
+
+                    Text(
+                      "Images",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+
+                    if (_imagesWithCaptions.isEmpty)
+                      Center(
+                        child: Text(
+                          "No images uploaded",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    if (_imagesWithCaptions.isNotEmpty)
+                      SizedBox(
+                        height: 100,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _imagesWithCaptions.length,
+                          separatorBuilder: (_, __) => SizedBox(width: 10),
+                          itemBuilder: (context, index) {
+                            final img = _imagesWithCaptions[index];
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(
+                                img['file'],
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                    SizedBox(height: 30),
+
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: Icon(Icons.send),
+                      label: Text(
+                        'Confirm & Submit',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                      onPressed: _submitTask,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-
-        SizedBox(height: 20),
-
-        Text(
-          "Images",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        SizedBox(height: 8),
-
-        if (_imagesWithCaptions.isEmpty)
-          Center(
-            child: Text(
-              "No images uploaded",
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-        if (_imagesWithCaptions.isNotEmpty)
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _imagesWithCaptions.length,
-              separatorBuilder: (_, __) => SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final img = _imagesWithCaptions[index];
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    img['file'],
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              },
-            ),
-          ),
-
-        SizedBox(height: 30),
-
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(double.infinity, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          icon: Icon(Icons.send),
-          label: Text('Confirm & Submit', style: TextStyle(fontSize: 18)),
-          onPressed: _submitTask,
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -511,7 +732,7 @@ class _PostTaskState extends State<PostTask> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.secondary,
                   ),
                 ),
                 SizedBox(height: 4),
@@ -530,7 +751,7 @@ class _PostTaskState extends State<PostTask> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           LinearProgressIndicator(
@@ -539,6 +760,7 @@ class _PostTaskState extends State<PostTask> {
             backgroundColor: Colors.grey.shade300,
             color: Colors.teal,
           ),
+
           Expanded(child: _buildStepContent(_currentStep)),
           Padding(
             padding: const EdgeInsets.all(12),
