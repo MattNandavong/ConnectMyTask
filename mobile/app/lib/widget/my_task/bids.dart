@@ -80,14 +80,14 @@ Widget _buildBidCard(
                     provider.name.toUpperCase(),
                     style: GoogleFonts.figtree(
                       fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   Text(
                     '\$${bid.price}',
                     style: GoogleFonts.oswald(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w900,
                       color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
