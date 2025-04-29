@@ -691,7 +691,7 @@ class _PostTaskState extends State<PostTask> {
 
                     SizedBox(height: 30),
 
-                    ElevatedButton.icon(
+                    FilledButton.icon(
                       style: ElevatedButton.styleFrom(
                         minimumSize: Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
