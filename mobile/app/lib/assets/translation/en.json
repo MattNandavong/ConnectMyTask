@@ -1,0 +1,20 @@
+{
+    "appTitle": "ConnectMyTask",
+    "welcome": "Welcome!",
+    "postTask": "Post a Task",
+    "browseTasks": "Browse Tasks",
+    
+
+    "error": "Error: ",
+    "noUserFound": "No user found",
+    "editProfile": "Edit Profile",
+    "changePassword": "Change Password",
+    "notificationSettings": "Notification Settings",
+    "languageSetting": "Language Setting",
+    "signOut": "Sign Out",
+    "signOutTitle": "Sign out",
+    "signOutConfirmation": "Are you sure you want to sign out?",
+    "yes": "YES",
+    "no": "No",
+    "noReviews": "No reviews"
+  }
