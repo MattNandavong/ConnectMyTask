@@ -3,6 +3,7 @@
 import 'package:app/model/task.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
+import 'package:app/widget/comment_section.dart';
 import 'package:app/widget/make_offer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -211,8 +212,8 @@ class TaskDetailBody extends StatelessWidget {
                             ],
                           ),
                 ),
-
-                SizedBox(height: 20),
+                SizedBox(height: 20,),
+                
                 Text(
                   'Posted by: ',
                   style: GoogleFonts.figtree(
@@ -327,73 +328,26 @@ class TaskDetailBody extends StatelessWidget {
                               ],
                             ),
                           ),
-                          
-                          // Comments or Questions Section
-                          SizedBox(height: 24),
-                          Text(
-                            'Comments & Questions:',
-                            style: GoogleFonts.figtree(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-
-                          // TODO: Replace this ListView with real comment fetching from backend
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount:
-                                  3, // Just for demo purpose, pretend 3 comments
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  leading: CircleAvatar(
-                                    child: Icon(Icons.person),
-                                  ),
-                                  title: Text('User $index'),
-                                  subtitle: Text(
-                                    'This is a sample question or comment number $index.',
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          SizedBox(height: 20),
-
-                          // Write a Comment Input
-                          TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Ask a question or leave a comment...',
-                              filled: true,
-                              fillColor: Colors.grey.shade100,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              suffixIcon: IconButton(
-                                icon: Icon(Icons.send),
-                                onPressed: () {
-                                  // TODO: Submit the comment to backend
-                                  // Clear the input field after submit
-                                },
-                              ),
-                            ),
-                          ),
+                            // TODO: Submit the comment to backend
+                                
                           SizedBox(height: 100),
                         ],
                       );
                     },
                   ),
                 ],
+                Text(
+                                'Comments',
+                                style: GoogleFonts.figtree(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              CommentSection(taskId: task.id),
+                              SizedBox(height: 20),
+
+                SizedBox(height: 20),
                 SizedBox(height: 100),
               ],
             ),
