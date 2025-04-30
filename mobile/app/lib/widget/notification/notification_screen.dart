@@ -124,7 +124,7 @@ class _NotificationScreenState extends State<NotificationScreen>
                             padding: EdgeInsets.symmetric(horizontal: 20),
                             child: Icon(
                               Icons.delete_forever,
-                              color: Colors.white,
+                              // color: Colors.white,
                             ),
                           ),
                           onDismissed: (_) {
@@ -179,8 +179,8 @@ class _NotificationScreenState extends State<NotificationScreen>
                             child: Card(
                               color:
                                   notifications[index]['read'] == true
-                                      ? Colors.white
-                                      : Color(0xFFF1F8E9),
+                                      ? Theme.of(context).colorScheme.surface
+                                      : Theme.of(context).colorScheme.primaryContainer,
                               elevation: 2,
                               margin: EdgeInsets.symmetric(
                                 horizontal: 12,

@@ -6,7 +6,7 @@ import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/chat_test.dart';
-import 'package:app/widget/comment_section.dart';
+import 'package:app/widget/task_detail/comment_section.dart';
 import 'package:app/widget/make_offer_modal.dart';
 import 'package:app/widget/screen/edit_task_screen.dart';
 import 'package:app/widget/task_detail/Image_section.dart';

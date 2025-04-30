@@ -241,7 +241,7 @@ class _PostTaskState extends State<PostTask> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
                   // border: Border.all(),
-                  color: Colors.white,
+                  // color: Colors.white,
                 ),
                 child: Form(
                   key: _formKeys[0],
@@ -290,6 +290,8 @@ class _PostTaskState extends State<PostTask> {
                             ),
                             SizedBox(height: 12),
                             DropdownButtonFormField(
+                              dropdownColor: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
                               value: _category,
                               decoration: InputDecoration(
                                 labelText: 'Category',
@@ -358,11 +360,13 @@ class _PostTaskState extends State<PostTask> {
                             SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               value: _deadlineType,
+                              dropdownColor: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(10),
                               decoration: InputDecoration(
-                                // labelText: 'Deadline Type',
+                                labelText: 'Deadline',
                                 border: OutlineInputBorder(),
                                 filled: true,
-                                fillColor: Colors.white,
+                                // fillColor: Theme.of(context).colorScheme.surface,
                               ),
                               items:
                                   ['I am not flexible', 'Flexible']
@@ -490,7 +494,7 @@ class _PostTaskState extends State<PostTask> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
                   // border: Border.all(),
-                  color: Colors.white,
+                  // color: Colors.white,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -600,7 +604,7 @@ class _PostTaskState extends State<PostTask> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
                   // border: Border.all(),
-                  color: Colors.white,
+                  // color: Colors.white,
                 ),
                 child: ListView(
                   padding: EdgeInsets.all(16),
@@ -735,7 +739,7 @@ class _PostTaskState extends State<PostTask> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.teal),
+          Icon(icon, color: Theme.of(context).colorScheme.primary),
           SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -765,7 +769,7 @@ class _PostTaskState extends State<PostTask> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      // backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           LinearProgressIndicator(

@@ -22,9 +22,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   late TextEditingController _locationController;
   late TextEditingController _skillsController;
   File? _profileImage;
-  String? _selectedState;
-  String? _selectedCity;
-  String? _selectedSuburb;
   String? _selectedCountry;
   double? _countryLat;
   double? _countryLng;
@@ -45,21 +42,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     }
   }
 
-  final Map<String, Map<String, List<String>>> _locationData = {
-    "New South Wales": {
-      "Sydney": ["Parramatta", "Bondi", "Manly", "Chatswood"],
-      "Newcastle": ["Cessnock", "Maitland", "Lake Macquarie"],
-    },
-    "Victoria": {
-      "Melbourne": ["Carlton", "Fitzroy", "Brunswick"],
-      "Geelong": ["Lara", "Torquay"],
-    },
-    "Queensland": {
-      "Brisbane": ["Fortitude Valley", "South Bank", "Paddington"],
-      "Gold Coast": ["Surfers Paradise", "Broadbeach"],
-    },
-  };
-
   @override
   void initState() {
     super.initState();
@@ -67,7 +49,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       text: "widget.user.location ?? ''",
     );
     _skillsController = TextEditingController(
-      text: widget.user.skills != null ? widget.user.skills.join(', ') : '',
+      text: widget.user.skills.join(', '),
     );
 
     initializeCountryMap();

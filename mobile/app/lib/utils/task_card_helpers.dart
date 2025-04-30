@@ -70,25 +70,42 @@ class TaskCardHelpers {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.location_on, size: 14, color: Colors.teal),
+                    Icon(
+                      Icons.location_on,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     SizedBox(width: 4),
                     ConstrainedBox(
                       constraints: BoxConstraints(maxWidth: 100),
-                      child: Text(task.location!.type == "remote" ? "Remote" : task.location!.address ?? "Unknown Address" ,
-                        
-                        style: GoogleFonts.figtree(fontSize: 12),
+                      child: Text(
+                        task.location!.type == "remote"
+                            ? "Remote"
+                            : task.location!.address ?? "Unknown Address",
+
+                        style: GoogleFonts.figtree(
+                          fontSize: 12,
+                          // color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                       ),
                     ),
                     SizedBox(width: 10),
-                    Icon(Icons.calendar_today, size: 14, color: Colors.black87),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     SizedBox(width: 4),
                     Text(
-                      task.deadline != null? DateFormat.yMMMd().format(task.deadline!) : "Flexible",
+                      task.deadline != null
+                          ? DateFormat.yMMMd().format(task.deadline!)
+                          : "Flexible",
                       style: GoogleFonts.figtree(
                         fontSize: 12,
-                        color: Colors.black87,
+                        // color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -140,12 +157,11 @@ class TaskCardHelpers {
               SizedBox(
                 child: FilledButton(
                   onPressed: () {
-                    showMakeOfferModal(context,task.id);
+                    showMakeOfferModal(context, task.id);
                   },
                   child: Text('Make offer'),
                 ),
               ),
-              
             ],
           ),
       ],

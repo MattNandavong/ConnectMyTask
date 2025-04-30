@@ -53,7 +53,7 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.white,
+      // color: Colors.white,
       child: InkWell(
         onTap: () => Navigator.push(
         context,

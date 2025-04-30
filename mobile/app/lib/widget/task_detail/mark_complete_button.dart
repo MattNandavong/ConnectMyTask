@@ -3,7 +3,6 @@ import 'package:app/utils/task_service.dart';
 import 'package:flutter/material.dart';
 
 class MarkAsCompleteBtn extends StatelessWidget {
-
   final Task task;
   const MarkAsCompleteBtn({super.key, required this.task});
 
@@ -11,7 +10,6 @@ class MarkAsCompleteBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: () {
-        //TODO: Implement simulated payment
         showDialog(
           context: context,
           builder: (context) {
@@ -51,16 +49,24 @@ class MarkAsCompleteBtn extends StatelessWidget {
                 ElevatedButton(
                   child: Text('Submit'),
                   onPressed: () async {
-                    Navigator.pop(context);
+                    Navigator.pop(context); // Close the dialog FIRST
+
+                    await Future.delayed(
+                      Duration(milliseconds: 100),
+                    ); // Optional safety delay
+
                     await TaskService().completeTask(
                       task.id,
                       rating,
                       commentController.text.trim(),
                     );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Task marked as completed!')),
-                    );
-                    Navigator.pop(context); // or refresh screen
+
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Task marked as completed!')),
+                      );
+                      Navigator.pop(context); // Go back or refresh
+                    }
                   },
                 ),
               ],
@@ -69,11 +75,11 @@ class MarkAsCompleteBtn extends StatelessWidget {
         );
       },
       icon: Icon(Icons.done_all),
-      label: Text('Mark as Completed'),
+      label: Text('Complete'),
       style: ElevatedButton.styleFrom(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(vertical: 14),
+        padding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
         textStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
       ),
     );
