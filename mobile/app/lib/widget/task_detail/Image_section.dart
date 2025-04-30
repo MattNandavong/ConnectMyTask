@@ -85,7 +85,7 @@ class ImageSection extends StatelessWidget {
           height: 140,
           padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: Theme.of(context).colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
           child: ListView.separated(

@@ -4,7 +4,7 @@ import 'package:app/model/task.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
-import 'package:app/widget/comment_section.dart';
+import 'package:app/widget/task_detail/comment_section.dart';
 import 'package:app/widget/screen/edit_task_screen.dart';
 import 'package:app/widget/task_detail/Image_section.dart';
 import 'package:app/widget/task_detail/assigned_provider.dart';
@@ -45,7 +45,6 @@ class MyTaskDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return FutureBuilder<Task>(
       future: TaskService().getTask(taskId),
       builder: (context, snapshot) {
@@ -70,7 +69,7 @@ class MyTaskDetails extends StatelessWidget {
                 elevation: 8,
                 title: Text('Task Details'),
                 actions: [
-                  if (isPoster && !isCompleted)
+                  if (isPoster && task.status.toLowerCase() != "in progress")
                     IconButton(
                       icon: Icon(Icons.edit_rounded),
                       tooltip: 'Edit Task',
@@ -84,6 +83,9 @@ class MyTaskDetails extends StatelessWidget {
                         );
                       },
                     ),
+                  //MARK AS COMPLETE BUTTON
+                  if (task.status.toLowerCase() == 'in progress' && isPoster)
+                    MarkAsCompleteBtn(task: task),
                 ],
               ),
 
@@ -105,7 +107,7 @@ class MyTaskDetails extends StatelessWidget {
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                       ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
@@ -128,22 +130,13 @@ class MyTaskDetails extends StatelessWidget {
                               PostedByUser(user: user),
 
                               // ASSIGNED TO PROVIDER SECTION WITH CHAT
-                               SizedBox(height: 20),
+                              SizedBox(height: 20),
                               AssignedProviderSection(
                                 task: task,
                                 currentUserId: currentUserId!,
                               ),
 
-                              //MARK AS COMPLETE BUTTON
-                              if (task.status.toLowerCase() == 'in progress' &&
-                                  isPoster)
-                                Container(
-                                  padding: const EdgeInsets.all(40.0),
-                                  width: double.infinity,
-                                  child: MarkAsCompleteBtn(task: task),
-                                ),
-                                
-                                //COMMENT SECTION
+                              //COMMENT SECTION
                               Text(
                                 'Comments',
                                 style: GoogleFonts.figtree(

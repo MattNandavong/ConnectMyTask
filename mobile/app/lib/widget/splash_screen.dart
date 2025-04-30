@@ -130,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 249, 255, 253),
+      // backgroundColor: const Color.fromARGB(255, 249, 255, 253),
       appBar: _topBar,
       drawer: DrawerMenu(),
       body: Center(
@@ -138,7 +138,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.background,
           boxShadow: [
             BoxShadow(
               blurRadius: 20,
@@ -151,14 +151,14 @@ class _SplashScreenState extends State<SplashScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8),
             child: FittedBox(
               child: GNav(
-                rippleColor: const Color.fromARGB(255, 230, 248, 241),
+                rippleColor: const Color.fromARGB(255, 235, 235, 235),
                 hoverColor: Colors.grey[100]!,
                 gap: 8,
-                activeColor: const Color.fromARGB(255, 6, 123, 51),
+                activeColor: Theme.of(context).colorScheme.onSurface,
                 iconSize: 24,
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 duration: Duration(milliseconds: 400),
-                tabBackgroundColor: Colors.grey[100]!,
+                tabBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
                 color: const Color.fromARGB(255, 96, 101, 97),
                 tabs: _tabs!,
                 selectedIndex: _selectedIndex,

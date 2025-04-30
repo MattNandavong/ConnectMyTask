@@ -1,12 +1,14 @@
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
+import 'package:app/utils/theme_notifier.dart';
 import 'package:app/widget/login/profile_setup_screen.dart';
 import 'package:app/widget/notification/notification_setting_screen.dart';
 import 'package:app/widget/screen/language_setting.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:app/widget/login.dart';
-import 'package:easy_localization/easy_localization.dart'; // <--- add this!
+import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart'; // <--- add this!
 
 class DrawerMenu extends StatelessWidget {
   const DrawerMenu({super.key});
@@ -65,7 +67,8 @@ class DrawerMenu extends StatelessWidget {
                               Icon(Icons.star, color: Colors.amber, size: 16),
                               SizedBox(width: 4),
                               Text(
-                                user.averageRating != null || user.averageRating != 0.0
+                                user.averageRating != null ||
+                                        user.averageRating != 0.0
                                     ? user.averageRating!.toStringAsFixed(1)
                                     : 'No reviews',
                                 style: GoogleFonts.figtree(
@@ -86,12 +89,13 @@ class DrawerMenu extends StatelessWidget {
               _buildDrawerItem(
                 icon: Icons.edit,
                 text: 'editProfile'.tr(),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProfileSetupScreen(user: user),
-                  ),
-                ),
+                onTap:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfileSetupScreen(user: user),
+                      ),
+                    ),
               ),
               _buildDrawerItem(
                 icon: Icons.password_outlined,
@@ -105,15 +109,32 @@ class DrawerMenu extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => NotificationSettingsScreen()),
+                      builder: (context) => NotificationSettingsScreen(),
+                    ),
                   );
                 },
               ),
               const Divider(),
 
-              _buildDrawerItem(icon: Icons.language_outlined, text: "languageSetting".tr(), onTap: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => LanguageSetting()));
-              }),
+              _buildDrawerItem(
+                icon: Icons.language_outlined,
+                text: "languageSetting".tr(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LanguageSetting()),
+                  );
+                },
+              ),
+              Consumer<ThemeNotifier>(
+                builder:
+                    (context, notifier, _) => SwitchListTile(
+                      secondary: Icon(Icons.brightness_6),
+                      title: Text('Dark Mode'),
+                      value: notifier.isDarkMode,
+                      onChanged: (value) => notifier.toggleTheme(),
+                    ),
+              ),
 
               const Divider(),
 
@@ -125,26 +146,31 @@ class DrawerMenu extends StatelessWidget {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('Sign out'),
-                      content: const Text('Are you sure you want to sign out?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () async {
-                            Navigator.of(context).pop();
-                            await AuthService().logout();
-                            Navigator.of(context).pushReplacement(
-                              MaterialPageRoute(builder: (_) => AuthScreen()),
-                            );
-                          },
-                          child: const Text('YES'),
+                    builder:
+                        (_) => AlertDialog(
+                          title: const Text('Sign out'),
+                          content: const Text(
+                            'Are you sure you want to sign out?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.of(context).pop();
+                                await AuthService().logout();
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) => AuthScreen(),
+                                  ),
+                                );
+                              },
+                              child: const Text('YES'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text('No'),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('No'),
-                        ),
-                      ],
-                    ),
                   );
                 },
               ),

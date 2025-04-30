@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +30,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<Map<String, dynamic>> _pendingImages = [];
   final ImagePicker _picker = ImagePicker();
 
+  User? partner;
+
   @override
   void initState() {
     super.initState();
     _loadChatHistory();
     _connectToSocket();
     markMessagesAsRead();
+    _loadChatPartner();
   }
 
   //Real device
@@ -121,6 +125,27 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _loadChatPartner() async {
+    final task = await TaskService().getTask(widget.taskId);
+    final currentUserId = widget.userId;
+
+    String partnerId;
+
+    if (task.user.id == currentUserId) {
+      partnerId = task.assignedProvider?.id ?? '';
+    } else {
+      partnerId = task.user.id;
+    }
+
+    if (partnerId.isEmpty) return;
+
+    final partnerData = await AuthService().getUserProfile(partnerId);
+
+    setState(() {
+      partner = partnerData;
+    });
+  }
+
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
     final now = DateTime.now().toIso8601String();
@@ -168,7 +193,6 @@ class _ChatScreenState extends State<ChatScreen> {
             (currentUserId == task.user?.id)
                 ? task.assignedProvider?.id
                 : task.user?.id;
-
 
         final token = await AuthService().getToken();
         final request = http.MultipartRequest(
@@ -227,37 +251,39 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Color(0xFFF5F7FA),
+        // backgroundColor: Color(0xFFF5F7FA),
         elevation: 1,
-        leading: BackButton(color: Colors.black),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.grey[300],
-              child: Icon(Icons.person),
-            ),
-            SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Chat Partner',
-                  style: GoogleFonts.figtree(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+        leading: BackButton(),
+        title:
+            partner == null
+                ? Text('Loading...')
+                : Row(
+                  children: [
+                    partner!.buildAvatar(radius: 18),
+                    SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          partner!.name,
+                          style: GoogleFonts.figtree(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Online',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  'Online',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
       body: Column(
         children: [
@@ -288,7 +314,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           maxWidth: MediaQuery.of(context).size.width * 0.7,
                         ),
                         decoration: BoxDecoration(
-                          color: isMe ? Color(0xFF007AFF) : Colors.white,
+                          color: isMe ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.inverseSurface,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -422,7 +448,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.image),
+                      icon: Icon(Icons.image, color: Theme.of(context).colorScheme.secondary,),
                       onPressed: _selectImages,
                     ),
                     Expanded(
@@ -430,8 +456,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         controller: _controller,
                         decoration: InputDecoration(
                           hintText: 'Type your message...',
-                          filled: true,
-                          fillColor: Colors.white,
+                          // filled: true,
+                          // fillColor: Theme.of(context).colorScheme.inverseSurface,
                           contentPadding: EdgeInsets.symmetric(horizontal: 12),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
@@ -442,9 +468,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     SizedBox(width: 8),
                     CircleAvatar(
-                      backgroundColor: Color(0xFF007AFF),
+                      backgroundColor: Theme.of(context).colorScheme.secondary,
                       child: IconButton(
-                        icon: Icon(Icons.send, color: Colors.white),
+                        icon: Icon(Icons.send, color: Theme.of(context).colorScheme.onInverseSurface),
                         onPressed: _sendMessage,
                       ),
                     ),

@@ -19,7 +19,7 @@ class ProfileScreen extends StatelessWidget {
         Uri.tryParse(url)?.hasAbsolutePath == true;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      // backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
           Column(
@@ -96,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
@@ -106,17 +106,17 @@ class ProfileScreen extends StatelessWidget {
                       builder: (context) => ProfileSetupScreen(user: user)),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Theme.of(context).colorScheme.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                // padding: EdgeInsets.symmetric(
-                //   horizontal: 24,
-                //   vertical: 8,
-                // ),
-              ),
+              // style: ElevatedButton.styleFrom(
+              //   backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
+              //   foregroundColor: Theme.of(context).colorScheme.primary,
+              //   shape: RoundedRectangleBorder(
+              //     borderRadius: BorderRadius.circular(20),
+              //   ),
+              //   // padding: EdgeInsets.symmetric(
+              //   //   horizontal: 24,
+              //   //   vertical: 8,
+              //   // ),
+              // ),
               child: Text("Edit Profile"),
             ),
           ),
@@ -143,14 +143,15 @@ class ProfileScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.1),
+                        ).colorScheme.primary.withOpacity(0.2),
                       ),
                       child: Center(
                         child: Text(
-                          skill,
+                          skill.toUpperCase(),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.figtree(
                             color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600
                           ),
                         ),
                       ),
@@ -159,7 +160,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
           ],
-          _buildInfoTile(
+          _buildInfoTile(context,
             user.isVerified ? Icons.verified_user : Icons.person_outline,
             'Verification Status',
             user.isVerified ? 'Verified' : 'Unverified',
@@ -195,7 +196,7 @@ class ProfileScreen extends StatelessWidget {
                       margin: const EdgeInsets.only(right: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(blurRadius: 3, color: Colors.black12),
@@ -261,14 +262,14 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value) {
+  Widget _buildInfoTile( context,IconData icon, String title, String value) {
     return Card(
-      color: Colors.white,
+      // color: Theme.of(context).colorScheme.onInverseSurface,
       margin: const EdgeInsets.symmetric(vertical: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 2,
       child: ListTile(
-        leading: Icon(icon, color: const Color(0xFF457EFF)),
+        leading: Icon(icon, color: Theme.of(context).colorScheme.secondary),
         title: Text(title),
         subtitle: Text(value),
       ),
