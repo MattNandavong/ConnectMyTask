@@ -18,6 +18,7 @@ class Task {
   final List<String> images;
   final int? reviewRating;
   final String? reviewComment;
+  final DateTime createdAt;
 
   Task({
     required this.id,
@@ -34,6 +35,7 @@ class Task {
     required this.images,
     this.reviewRating,
     this.reviewComment,
+    required this.createdAt,
   });
 
   static Future<Task> fromJsonAsync(Map<String, dynamic> json) async {
@@ -76,6 +78,7 @@ class Task {
       images: List<String>.from(json['images'] ?? []),
       reviewRating: rating,
       reviewComment: comment,
+      createdAt: DateTime.parse(json['createdAt'])
     );
   }
 
@@ -96,7 +99,9 @@ class Task {
       'review': {
         'rating': reviewRating,
         'comment': reviewComment,
-      }
+      },
+      'createdAt': createdAt,
+
     };
   }
 }
