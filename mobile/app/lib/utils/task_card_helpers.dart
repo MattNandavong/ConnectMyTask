@@ -154,13 +154,14 @@ class TaskCardHelpers {
                   ),
                 ],
               ),
+              
               SizedBox(
-                child: FilledButton(
+                child: task.status.toLowerCase() != 'completed'? FilledButton(
                   onPressed: () {
                     showMakeOfferModal(context, task.id);
                   },
                   child: Text('Make offer'),
-                ),
+                ): OutlinedButton(onPressed: (){}, child: Text('Comppleted')),
               ),
             ],
           ),
