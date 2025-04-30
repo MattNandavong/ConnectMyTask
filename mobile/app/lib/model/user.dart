@@ -7,23 +7,29 @@ class User {
   final String email;
   final String? role;
   final String? profilePhoto;
-  final Map<String, dynamic>? location; 
+  final Map<String, dynamic>? location;
   final List<String> skills;
   final bool isVerified;
-  final double? averageRating;
+  final double averageRating;
   final int totalReviews;
+  final int completedTasks;
+  final int recommendations;
+  final String? rank;
 
   User({
     required this.id,
     required this.name,
     required this.email,
-    required this.role,
+    this.role,
     this.profilePhoto,
     this.location,
     this.skills = const [],
     this.isVerified = false,
-    this.averageRating,
+    this.averageRating = 0.0,
     this.totalReviews = 0,
+    this.completedTasks = 0,
+    this.recommendations = 0,
+    this.rank,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -31,15 +37,16 @@ class User {
       id: json['_id'] ?? json['id'],
       name: json['name'],
       email: json['email'],
-      role: json['role'] ?? '',
+      role: json['role'],
       profilePhoto: json['profilePhoto'],
       location: json['location'] != null ? Map<String, dynamic>.from(json['location']) : null,
       skills: List<String>.from(json['skills'] ?? []),
       isVerified: json['isVerified'] ?? false,
-      averageRating: json['averageRating'] != null
-          ? (json['averageRating'] as num).toDouble()
-          : null,
+      averageRating: (json['averageRating'] ?? 0).toDouble(),
       totalReviews: json['totalReviews'] ?? 0,
+      completedTasks: json['completedTasks'] ?? 0,
+      recommendations: json['recommendations'] ?? 0,
+      rank: json['rank'],
     );
   }
 
@@ -55,6 +62,9 @@ class User {
       'isVerified': isVerified,
       'averageRating': averageRating,
       'totalReviews': totalReviews,
+      'completedTasks': completedTasks,
+      'recommendations': recommendations,
+      'rank': rank,
     };
   }
 

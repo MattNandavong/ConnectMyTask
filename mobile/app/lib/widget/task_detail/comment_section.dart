@@ -173,6 +173,12 @@ class _CommentSectionState extends State<CommentSection> {
                       icon: Icon(Icons.reply_all_rounded),
                       onPressed: () {
                         setState(() {
+                          if (_openedReplies.contains(comment['_id'])) {
+                            _openedReplies.remove(comment['_id']);
+                          } else {
+                            _openedReplies.add(comment['_id']);
+                          }
+                          
                           _replyingToCommentId =
                               _replyingToCommentId == comment['_id']
                                   ? null

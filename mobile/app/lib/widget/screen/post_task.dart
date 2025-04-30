@@ -360,13 +360,13 @@ class _PostTaskState extends State<PostTask> {
                             SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               value: _deadlineType,
-                              dropdownColor: Theme.of(context).colorScheme.surface,
+                              // dropdownColor: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(10),
                               decoration: InputDecoration(
                                 labelText: 'Deadline',
                                 border: OutlineInputBorder(),
                                 filled: true,
-                                // fillColor: Theme.of(context).colorScheme.surface,
+                                fillColor: Theme.of(context).colorScheme.surface,
                               ),
                               items:
                                   ['I am not flexible', 'Flexible']
@@ -394,7 +394,7 @@ class _PostTaskState extends State<PostTask> {
                                   height: 50,
                                   decoration: BoxDecoration(
                                     color:
-                                        Theme.of(context).colorScheme.surface,
+                                        Theme.of(context).colorScheme.inverseSurface,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
                                       color:
@@ -413,7 +413,7 @@ class _PostTaskState extends State<PostTask> {
                                         color:
                                           _deadlineError
                                               ? Theme.of(context).colorScheme.error
-                                              : Colors.transparent, 
+                                              : Theme.of(context).colorScheme.onInverseSurface, 
                                       ),
                                     ),
                                   ),

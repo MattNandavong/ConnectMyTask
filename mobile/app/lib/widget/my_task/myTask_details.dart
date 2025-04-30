@@ -109,7 +109,7 @@ class MyTaskDetails extends StatelessWidget {
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Theme.of(context).colorScheme.background,
                       ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),

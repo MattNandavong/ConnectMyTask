@@ -35,7 +35,7 @@ class LocationSection extends StatelessWidget {
           child: location!.type == 'remote'
               ? Row(
                   children: [
-                    Icon(Icons.cloud_outlined, color: Colors.teal),
+                    Icon(Icons.computer_rounded, color: Colors.teal),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
