@@ -45,7 +45,7 @@ class TaskDetailBody extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          color: Theme.of(context).colorScheme.surface,
+          color: Theme.of(context).colorScheme.background,
         ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

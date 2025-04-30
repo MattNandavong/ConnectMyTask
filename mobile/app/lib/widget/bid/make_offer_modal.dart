@@ -20,9 +20,11 @@ void showMakeOfferModal(BuildContext context, String taskId) {
           top: 16,
           bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         ),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        decoration: BoxDecoration(
+          // color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: SingleChildScrollView(
-          
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -31,6 +33,7 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                 style: GoogleFonts.oswald(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.secondary
                 ),
               ),
               SizedBox(height: 10),
@@ -54,14 +57,14 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                     padding: EdgeInsets.all(5),
 
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      // color: Colors.white,
                       border: Border.all(
                         color: Theme.of(context).colorScheme.primary,
                       ),
-                      borderRadius: BorderRadius.all(Radius.circular(12))
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
                     child: DropdownButton<String>(
-                      dropdownColor: Colors.white,
+                      // dropdownColor: Colors.white,
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                       value: _estimatedTimeUnit,
                       onChanged: (value) {
@@ -99,7 +102,7 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                 ),
               ),
               SizedBox(height: 20),
-              ElevatedButton(
+              FilledButton(
                 onPressed: () async {
                   final price = double.tryParse(_priceController.text);
                   final estimatedNumber =
@@ -185,6 +188,7 @@ void showMakeOfferModal(BuildContext context, String taskId) {
                   ),
                 ),
               ),
+              SizedBox(height: 50,)
             ],
           ),
         ),

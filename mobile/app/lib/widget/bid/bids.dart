@@ -17,7 +17,9 @@ void showBidsModal({
     context: context,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      
     ),
+    backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
     isScrollControlled: true,
 
     builder: (context) {
@@ -58,7 +60,7 @@ Widget _buildBidCard(
       final provider = snapshot.data!;
       return Card(
         margin: EdgeInsets.symmetric(vertical: 8),
-        color: Colors.white,
+        // color: Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
