@@ -53,7 +53,7 @@ class ProviderTaskDetail extends StatelessWidget {
             return Scaffold(
               backgroundColor: Theme.of(context).colorScheme.surface,
               appBar: AppBar(
-                surfaceTintColor: Colors.white,
+                // surfaceTintColor: Colors.white,
                 elevation: 8,
                 title: Text('Task Details'),
                 actions: [
@@ -92,7 +92,7 @@ class ProviderTaskDetail extends StatelessWidget {
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.background,
                       ),
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
