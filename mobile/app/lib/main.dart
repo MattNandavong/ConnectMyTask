@@ -192,6 +192,8 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
+        
+
         scaffoldBackgroundColor: kDarkColorScheme.background,
       ),
       theme: ThemeData().copyWith(
