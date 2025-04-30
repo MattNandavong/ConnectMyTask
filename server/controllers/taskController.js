@@ -10,6 +10,8 @@ const {
 } = require("../utils/mail");
 //chat model
 const Chat = require("../models/Message.js")
+const { calculateProviderRank } = require('../services/rankingService');
+
 
 // Create a new task
 const createTask = async (req, res) => {
@@ -280,10 +282,23 @@ const completeTask = async (req, res) => {
 
     // Update the provider's average rating and total reviews
     provider.totalReviews += 1;
-    provider.averageRating = (
+    provider.averageRating = Number (
       (provider.averageRating * (provider.totalReviews - 1) + rating) /
       provider.totalReviews
     ).toFixed(1); // Recalculate average rating
+
+    // Increment completed tasks
+    provider.completedTasks = (provider.completedTasks || 0) + 1;
+
+    // Ensure recommendations field exists
+    provider.recommendations = provider.recommendations || 0;
+
+    // Calculate and assign rank
+    provider.rank = calculateProviderRank({
+      averageRating: provider.averageRating,
+      completedTasks: provider.completedTasks,
+      recommendations: provider.recommendations,
+    });
 
     await provider.save(); // Save updated provider info
 
