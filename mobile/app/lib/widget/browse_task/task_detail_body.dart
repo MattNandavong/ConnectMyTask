@@ -1,10 +1,6 @@
-// lib/widget/task_details/task_detail_body.dart
-
 import 'package:app/model/task.dart';
 import 'package:app/model/user.dart';
-import 'package:app/utils/auth_service.dart';
 import 'package:app/widget/task_detail/comment_section.dart';
-import 'package:app/widget/make_offer_modal.dart';
 import 'package:app/widget/task_detail/Image_section.dart';
 import 'package:app/widget/task_detail/assigned_provider.dart';
 import 'package:app/widget/task_detail/basic_info.dart';
@@ -12,7 +8,6 @@ import 'package:app/widget/task_detail/map_section.dart';
 import 'package:app/widget/task_detail/posted_by.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
 class TaskDetailBody extends StatelessWidget {
@@ -55,8 +50,7 @@ class TaskDetailBody extends StatelessWidget {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
 
-          child: Container(
-            child: Column(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 BasicInfo(task: task, formatter: formatter),
@@ -89,7 +83,7 @@ class TaskDetailBody extends StatelessWidget {
                 SizedBox(height: 100),
               ],
             ),
-          ),
+          
         ),
       ),
     );

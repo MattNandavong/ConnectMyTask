@@ -1,5 +1,5 @@
 import 'package:app/model/task.dart';
-import 'package:app/widget/make_offer_modal.dart';
+import 'package:app/widget/bid/make_offer_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';

@@ -1,8 +1,7 @@
-import 'package:app/model/ChatPreview.dart';
+import 'package:app/model/chat_preview.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/chat_service.dart';
-// import 'package:app/utils/socket_service.dart';
-import 'package:app/widget/chat_screen.dart';
+import 'package:app/widget/screen/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
@@ -45,21 +44,21 @@ class _MessageScreenState extends State<MessageScreen> {
 
   void _connectToSocket(List<String> taskIds) {
     socket = IO.io(
-      '$baseUrl',
+      baseUrl,
       IO.OptionBuilder().setTransports(['websocket']).build(),
     );
 
     socket.onConnect((_) {
-      print('📡 Socket connected');
+      // print('📡 Socket connected');
 
       // Join all rooms
       for (final taskId in taskIds) {
         socket.emit('joinTask', {'taskId': taskId});
-        print('🏠 Joined task room: $taskId');
+        // print('🏠 Joined task room: $taskId');
       }
 
       socket.on('receiveMessage', (data) {
-        print('📥 Received new message related to a task room');
+        // print('📥 Received new message related to a task room');
         _loadUserAndChats(); // Reload message screen
       });
     });
@@ -80,7 +79,7 @@ class _MessageScreenState extends State<MessageScreen> {
       _isLoading = false;
     });
 
-    print('✅ Chat summaries reloaded: ${_chatSummaries.length} chats');
+    // print('Chat summaries reloaded: ${_chatSummaries.length} chats');
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -100,14 +99,10 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     if (_currentUserId == null || _isLoading) {
-      return Scaffold(
-        // backgroundColor: Color(0xFFF7F7F7),
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      // backgroundColor: Color(0xFFF7F7F7),
       body:
           _chatSummaries.isEmpty
               ? Center(child: Text('No chats yet.'))

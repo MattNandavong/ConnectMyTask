@@ -6,7 +6,7 @@ import 'package:app/widget/notification/notification_setting_screen.dart';
 import 'package:app/widget/screen/language_setting.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:app/widget/login.dart';
+import 'package:app/widget/screen/login.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart'; // <--- add this!
 

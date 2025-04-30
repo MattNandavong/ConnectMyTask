@@ -5,7 +5,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
-import 'package:app/widget/splash_screen.dart';
+import 'package:app/widget/screen/splash_screen.dart';
 import 'package:country_picker/country_picker.dart';
 
 class ProfileSetupScreen extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'package:app/model/task.dart';
-import 'package:app/widget/my_task/bids.dart';
-import 'package:app/widget/my_task/myTask_details.dart';
+import 'package:app/widget/bid/bids.dart';
+import 'package:app/widget/my_task/mytask_details.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

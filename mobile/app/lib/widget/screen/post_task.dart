@@ -124,13 +124,13 @@ class _PostTaskState extends State<PostTask> {
   Future<void> _pickImages() async {
     final picker = ImagePicker();
     final files = await picker.pickMultiImage(imageQuality: 75);
-    if (files != null) {
+    
       setState(() {
         _imagesWithCaptions.addAll(
           files.map((e) => {'file': File(e.path), 'caption': ''}),
         );
       });
-    }
+    
   }
 
   Future<void> _submitTask() async {

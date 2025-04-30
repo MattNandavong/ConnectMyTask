@@ -26,7 +26,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.task.title);
     _descController = TextEditingController(text: widget.task.description);
-    _budgetController = TextEditingController(text: widget.task.budget.toString());
+    _budgetController = TextEditingController(
+      text: widget.task.budget.toString(),
+    );
     _categoryController = TextEditingController(text: widget.task.category);
     _deadline = widget.task.deadline;
   }
@@ -57,17 +59,9 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
   void _confirmEdit() {
     if (!_formKey.currentState!.validate()) return;
 
-    // You would usually send the updated data to your backend here
-    print('🛠️ Edited Task Details:');
-    print('Title: ${_titleController.text}');
-    print('Description: ${_descController.text}');
-    print('Budget: ${_budgetController.text}');
-    print('Deadline: ${_deadline?.toIso8601String()}');
-    print('Category: ${_categoryController.text}');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Task Updated Successfully')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Task Updated Successfully')));
 
     Navigator.pop(context); // Go back after editing
   }
@@ -93,27 +87,35 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(labelText: 'Title'),
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                validator:
+                    (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
               ),
               SizedBox(height: 12),
               TextFormField(
                 controller: _descController,
                 decoration: InputDecoration(labelText: 'Description'),
                 maxLines: 3,
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                validator:
+                    (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
               ),
               SizedBox(height: 12),
               TextFormField(
                 controller: _budgetController,
                 decoration: InputDecoration(labelText: 'Budget (AUD)'),
                 keyboardType: TextInputType.number,
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                validator:
+                    (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
               ),
               SizedBox(height: 12),
               TextFormField(
                 controller: _categoryController,
                 decoration: InputDecoration(labelText: 'Category'),
-                validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                validator:
+                    (value) =>
+                        value == null || value.isEmpty ? 'Required' : null,
               ),
               SizedBox(height: 12),
               ListTile(
@@ -130,7 +132,10 @@ class _EditTaskScreenState extends State<EditTaskScreen> {
               FilledButton.icon(
                 onPressed: _confirmEdit,
                 icon: Icon(Icons.check),
-                label: Text('Confirm Edit', style: GoogleFonts.oswald(fontSize: 18)),
+                label: Text(
+                  'Confirm Edit',
+                  style: GoogleFonts.oswald(fontSize: 18),
+                ),
                 style: FilledButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),
                   backgroundColor: Colors.teal,

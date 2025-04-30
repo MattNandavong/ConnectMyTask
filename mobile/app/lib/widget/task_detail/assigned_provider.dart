@@ -3,7 +3,7 @@ import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:app/widget/chat_screen.dart'; // needed for chat navigation
+import 'package:app/widget/screen/chat_screen.dart'; // needed for chat navigation
 
 class AssignedProviderSection extends StatelessWidget {
   

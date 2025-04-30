@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:app/utils/auth_service.dart';
-import 'package:app/widget/chat_screen.dart';
-import 'package:app/widget/my_task/myTask_details.dart';
+import 'package:app/widget/screen/chat_screen.dart';
+import 'package:app/widget/my_task/mytask_details.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

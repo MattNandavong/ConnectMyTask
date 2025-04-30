@@ -3,9 +3,7 @@ import 'package:app/widget/login/profile_setup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
-import 'package:app/widget/splash_screen.dart';
-import 'package:country_picker/country_picker.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:app/widget/screen/splash_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -24,7 +22,6 @@ class _AuthScreenState extends State<AuthScreen> {
   // final _fcmToken = getFcmToken();
   String _userType = 'user';
   bool _isLogin = true;
-
 
   Future<void> submit() async {
     print('submit click');
@@ -52,11 +49,6 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
           role: _userType,
-          // location: {
-          //   'country': _selectedCountry ?? '',
-          //   'lat': _countryLat?.toString() ?? '',
-          //   'lng': _countryLng?.toString() ?? '',
-          // },
           fcmToken: token,
         );
         print('✅ login user: ${user.id}');
@@ -76,7 +68,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      // backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 100, 20, 100),
         child: Column(
@@ -126,7 +118,6 @@ class _AuthScreenState extends State<AuthScreen> {
                   if (!_isLogin)
                     Column(
                       children: [
-                        
                         SizedBox(height: 20),
 
                         Wrap(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:app/model/Location.dart'; // your Location model
+import 'package:app/model/location.dart'; // your Location model
 
 class LocationSection extends StatelessWidget {
   final Location? location;
