@@ -1,18 +1,13 @@
 import 'dart:convert';
+import 'package:app/widget/screen/browsetask_screen.dart';
 
-import 'package:app/utils/auth_service.dart';
-import 'package:app/utils/firebase_service.dart';
-import 'package:app/widget/browsetask_screen.dart';
-import 'package:app/widget/chat_screen.dart';
 import 'package:app/widget/drawer_menu.dart';
-import 'package:app/widget/login.dart';
-import 'package:app/widget/messages.dart';
-import 'package:app/widget/mytask_screen.dart';
+import 'package:app/widget/screen/login.dart';
+import 'package:app/widget/screen/messages.dart';
+import 'package:app/widget/screen/mytask_screen.dart';
 import 'package:app/widget/notification/notification_screen.dart';
-import 'package:app/widget/post_task.dart';
-import 'package:app/widget/task_detail_screen.dart';
+import 'package:app/widget/screen/post_task.dart';
 import 'package:app/widget/top_bar.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';

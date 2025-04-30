@@ -1,5 +1,5 @@
 import 'package:app/model/task.dart';
-import 'package:app/widget/chat_screen.dart';
+import 'package:app/widget/screen/chat_screen.dart';
 import 'package:flutter/material.dart';
 
 class ChatToPosterBtn extends StatelessWidget {

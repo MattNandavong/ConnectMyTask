@@ -1,4 +1,4 @@
-import 'package:app/model/Location.dart';
+import 'package:app/model/location.dart';
 import 'package:app/model/bid.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';

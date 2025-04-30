@@ -1,4 +1,4 @@
-import 'package:app/model/Review.dart';
+import 'package:app/model/review.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/review_service.dart';
 import 'package:app/widget/login/profile_setup_screen.dart';

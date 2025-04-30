@@ -1,10 +1,7 @@
 import 'dart:convert';
-
 import 'package:app/model/task.dart';
-import 'package:app/model/user.dart';
-import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
-import 'package:app/widget/mytask_card.dart';
+import 'package:app/widget/my_task/mytask_card.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

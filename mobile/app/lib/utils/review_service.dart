@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:app/model/Review.dart';
+import 'package:app/model/review.dart';
 import 'package:http/http.dart' as http;
 
 Future<List<Review>> getProviderReviews(String providerId) async {

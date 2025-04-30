@@ -105,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _selectImages() async {
     final pickedFiles = await _picker.pickMultiImage(imageQuality: 75);
 
-    if (pickedFiles == null) return;
+   
 
     final tempDir = await getTemporaryDirectory();
 
@@ -148,7 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _sendMessage() async {
     final text = _controller.text.trim();
-    final now = DateTime.now().toIso8601String();
+    // final now = DateTime.now().toIso8601String();
     final task = await TaskService().getTask(widget.taskId);
 
     if (text.isNotEmpty) {
@@ -157,9 +157,9 @@ class _ChatScreenState extends State<ChatScreen> {
         // Correct receiver logic based on who is sending
         final currentUserId = widget.userId;
         final receiverId =
-            (currentUserId == task.user?.id)
+            (currentUserId == task.user.id)
                 ? task.assignedProvider?.id
-                : task.user?.id;
+                : task.user.id;
 
         final token = await AuthService().getToken();
         final response = await http.post(
@@ -190,9 +190,9 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         final currentUserId = widget.userId;
         final receiverId =
-            (currentUserId == task.user?.id)
+            (currentUserId == task.user.id)
                 ? task.assignedProvider?.id
-                : task.user?.id;
+                : task.user.id;
 
         final token = await AuthService().getToken();
         final request = http.MultipartRequest(
