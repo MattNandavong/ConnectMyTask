@@ -101,13 +101,13 @@ class _MessageScreenState extends State<MessageScreen> {
   Widget build(BuildContext context) {
     if (_currentUserId == null || _isLoading) {
       return Scaffold(
-        backgroundColor: Color(0xFFF7F7F7),
+        // backgroundColor: Color(0xFFF7F7F7),
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
+      // backgroundColor: Color(0xFFF7F7F7),
       body:
           _chatSummaries.isEmpty
               ? Center(child: Text('No chats yet.'))
@@ -118,18 +118,8 @@ class _MessageScreenState extends State<MessageScreen> {
                   final chat = _chatSummaries[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Material(
-                      elevation: 1,
-                      borderRadius: BorderRadius.circular(16),
-                      color: Colors.white,
+                    child: Card(
                       child: ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
                         leading: CircleAvatar(
                           backgroundColor:
                               Theme.of(context).colorScheme.secondary,
@@ -138,7 +128,7 @@ class _MessageScreenState extends State<MessageScreen> {
                                 ? chat.partnerName[0]
                                 : '?',
                             style: TextStyle(
-                              color: Colors.white,
+                              // color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -180,7 +170,7 @@ class _MessageScreenState extends State<MessageScreen> {
                                 child: Text(
                                   '${chat.unreadCount}',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    // color: Colors.white,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -201,7 +191,6 @@ class _MessageScreenState extends State<MessageScreen> {
                             ),
                           ).then((_) async {
                             await _loadUserAndChats();
-                          
                           });
                         },
                       ),

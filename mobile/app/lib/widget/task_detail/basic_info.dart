@@ -15,8 +15,8 @@ class BasicInfo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          task.title,
-          style: GoogleFonts.figtree(fontSize: 22, fontWeight: FontWeight.bold),
+          task.title.toUpperCase(),
+          style: GoogleFonts.figtree(fontSize: 22, fontWeight: FontWeight.w800),
         ),
         SizedBox(height: 12),
         Text(task.description, style: GoogleFonts.figtree(fontSize: 15)),

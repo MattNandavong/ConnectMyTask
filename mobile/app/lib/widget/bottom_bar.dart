@@ -98,7 +98,7 @@ class _BottomBarState extends State<BottomBar> {
       body: screens[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          // color: Colors.white,
           boxShadow: [
             BoxShadow(blurRadius: 20, color: Colors.black.withOpacity(.1)),
           ],
@@ -107,14 +107,14 @@ class _BottomBarState extends State<BottomBar> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8),
             child: GNav(
-              rippleColor: Color.fromARGB(255, 230, 248, 241)!,
+              rippleColor: Color.fromARGB(255, 107, 245, 192),
               hoverColor: Colors.grey[100]!,
               gap: 8,
               activeColor: Color.fromARGB(255, 6, 123, 51),
               iconSize: 24,
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               duration: Duration(milliseconds: 400),
-              tabBackgroundColor: Colors.grey[100]!,
+              tabBackgroundColor: Theme.of(context).colorScheme.primaryContainer,
               color: Color.fromARGB(255, 96, 101, 97),
               tabs: tabs,
               selectedIndex: _selectedIndex,

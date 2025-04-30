@@ -87,7 +87,7 @@ class _CommentSectionState extends State<CommentSection> {
                   decoration: InputDecoration(hintText: 'Write a comment...'),
                 ),
               ),
-              IconButton(icon: Icon(Icons.send), onPressed: _addComment),
+              IconButton(icon: Icon(Icons.send, color: Theme.of(context).colorScheme.primary,), onPressed: _addComment),
             ],
           ),
         ],
@@ -100,7 +100,7 @@ class _CommentSectionState extends State<CommentSection> {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            // color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             // border: Border.all(),
           ),
@@ -134,14 +134,13 @@ class _CommentSectionState extends State<CommentSection> {
                           user.id != currentUser!.id
                               ? Text(
                                 user.name,
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                                style: TextStyle(fontWeight: FontWeight.bold, color:Theme.of(context).colorScheme.secondary,),
                               )
                               : Text(
                                 'You',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color:
-                                      Theme.of(context).colorScheme.secondary,
+                                  color:Theme.of(context).colorScheme.secondary,
                                 ),
                               ),
                     ),
@@ -155,7 +154,7 @@ class _CommentSectionState extends State<CommentSection> {
                 // SizedBox(height: 4),
                 Text(
                   comment['text'],
-                  style: TextStyle(color: Colors.grey[800]),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
                 // SizedBox(height: 8),
                 Row(
@@ -271,6 +270,7 @@ class _CommentSectionState extends State<CommentSection> {
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
+                              color: Theme.of(context).colorScheme.secondary,
                             ),
                           ),
                         ),
@@ -284,7 +284,7 @@ class _CommentSectionState extends State<CommentSection> {
                           ),
                       ],
                     ),
-                    Text(reply['text']),
+                    Text(reply['text'], style: TextStyle(color: Theme.of(context).colorScheme.onSurface),),
                   ],
                 ),
               ),
@@ -305,7 +305,7 @@ class _CommentSectionState extends State<CommentSection> {
               controller: _replyController,
               decoration: InputDecoration(
                 hintText: 'Write a reply...',
-                fillColor: Colors.white,
+                // fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -316,10 +316,10 @@ class _CommentSectionState extends State<CommentSection> {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: Theme.of(context).colorScheme.onSurface,
+              color: Theme.of(context).colorScheme.primaryContainer,
             ),
             child: IconButton(
-              icon: Icon(Icons.send, color: Colors.white),
+              icon: Icon(Icons.send, color: Theme.of(context).colorScheme.onSurface),
               onPressed: () => _submitReply(commentId),
             ),
           ),
