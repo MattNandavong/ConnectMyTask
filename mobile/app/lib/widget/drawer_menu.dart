@@ -67,10 +67,7 @@ class DrawerMenu extends StatelessWidget {
                               Icon(Icons.star, color: Colors.amber, size: 16),
                               SizedBox(width: 4),
                               Text(
-                                user.averageRating != null ||
-                                        user.averageRating != 0.0
-                                    ? user.averageRating!.toStringAsFixed(1)
-                                    : 'No reviews',
+                                        user.averageRating.toString(),
                                 style: GoogleFonts.figtree(
                                   color: Colors.white,
                                   fontSize: 12,
