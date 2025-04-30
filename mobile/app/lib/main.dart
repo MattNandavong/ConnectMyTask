@@ -1,7 +1,7 @@
 import 'package:app/utils/firebase_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:app/widget/splash_screen.dart';
+import 'package:app/widget/screen/splash_screen.dart';
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -216,34 +216,23 @@ class MyApp extends StatelessWidget {
           labelStyle: GoogleFonts.figtree(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: const Color.fromARGB(255, 65, 110, 100),
+            color: kLightColorScheme.onSurface,
           ),
-          // // filled: true,
-          // // // fillColor: Colors.white,
-          // // activeIndicatorBorder: BorderSide(
-          // //   width: 3,
-          // //   color: kColorScheme.primary,
-          // // ),
-          // // outlineBorder: BorderSide(width: 2, color: kColorScheme.primary),
+
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(width: 0, color: Colors.transparent),
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
-
-          // focusedBorder: OutlineInputBorder(
-          //   // borderSide: BorderSide(width: 2, color: kColorScheme.primary),
-          //   borderRadius: BorderRadius.all(Radius.circular(10)),
-          // ),
-          fillColor: Colors.grey[100],
+          fillColor: kLightColorScheme.inverseSurface,
           filled: true,
-          focusColor: Colors.grey[100],
+          focusColor: kLightColorScheme.inverseSurface,
           isCollapsed: false,
           floatingLabelStyle: GoogleFonts.figtree(
             fontSize: 20,
             color: kLightColorScheme.secondary,
             fontWeight: FontWeight.w600,
           ),
-          // label: GoogleFonts.figtree(fontSize: 20, color: Colors.red),
+
         ),
         dropdownMenuTheme: DropdownMenuThemeData(
           inputDecorationTheme: InputDecorationTheme(
@@ -252,7 +241,7 @@ class MyApp extends StatelessWidget {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(
                 8,
-              ), // Optional: rounded corners
+              ), // rounded corners
               borderSide: BorderSide(
                 color: Colors.grey, // Border color
               ),

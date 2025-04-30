@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:app/model/Location.dart';
 import 'package:flutter/material.dart';
 
 class User {

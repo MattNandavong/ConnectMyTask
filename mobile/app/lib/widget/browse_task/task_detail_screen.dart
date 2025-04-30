@@ -1,22 +1,17 @@
 import 'dart:convert';
-
 import 'package:app/model/task.dart';
-import 'package:app/model/user.dart';
-import 'package:app/utils/auth_service.dart';
-import 'package:app/widget/make_offer_modal.dart';
-import 'package:app/widget/my_task/myTask_details.dart';
-import 'package:app/widget/task_detail_body.dart';
+import 'package:app/widget/bid/make_offer_modal.dart';
+import 'package:app/widget/browse_task/task_detail_body.dart';
 import 'package:flutter/material.dart';
 import 'package:app/utils/task_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TaskDetailScreen extends StatelessWidget {
   final String taskId;
 
-  TaskDetailScreen({required this.taskId});
+  TaskDetailScreen({super.key, required this.taskId});
 
   final formatter = DateFormat.yMMMMd();
 
@@ -28,98 +23,29 @@ class TaskDetailScreen extends StatelessWidget {
     return user['_id'] ?? user['id'];
   }
 
-  void _showImageGallery(
-    BuildContext context,
-    List<String> images,
-    int initialIndex,
-  ) {
-    PageController pageController = PageController(initialPage: initialIndex);
-
-    showDialog(
-      context: context,
-      builder:
-          (_) => Dialog(
-            backgroundColor: Colors.black,
-            insetPadding: EdgeInsets.zero,
-            child: Stack(
-              children: [
-                PageView.builder(
-                  controller: pageController,
-                  itemCount: images.length,
-                  itemBuilder: (context, index) {
-                    return InteractiveViewer(
-                      child: Image.network(
-                        images[index],
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return Center(child: CircularProgressIndicator());
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              color: Colors.white,
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-                Positioned(
-                  top: 30,
-                  right: 20,
-                  child: IconButton(
-                    icon: Icon(Icons.close, color: Colors.white, size: 30),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Task>(
       future: TaskService().getTask(taskId),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
+        }
         final task = snapshot.data!;
         final user = task.user;
 
         return FutureBuilder<String?>(
           future: _getCurrentUserId(),
           builder: (context, userSnapshot) {
-            if (!userSnapshot.hasData)
+            if (!userSnapshot.hasData) {
               return Center(child: CircularProgressIndicator());
+            }
             final currentUserId = userSnapshot.data;
             final isPoster = currentUserId == task.user.id;
             final isCompleted = task.status.toLowerCase() == 'completed';
             return Scaffold(
               backgroundColor: Theme.of(context).colorScheme.surface,
-              appBar: AppBar(
-                title: Text('Task Details'),
-                actions: [
-                  if (isPoster && !isCompleted)
-                    IconButton(
-                      icon: Icon(Icons.edit_rounded),
-                      tooltip: 'Edit Task',
-                      onPressed: () {
-                        // Navigate to Edit Task screen (you'll implement it)
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (_) => EditTaskScreen(taskId: task.id),
-                        //   ),
-                        // );
-                      },
-                    ),
-                ],
-              ),
+              appBar: AppBar(title: Text('Task Details')),
 
               body: Stack(
                 children: [
@@ -134,6 +60,7 @@ class TaskDetailScreen extends StatelessWidget {
                         horizontal: 20,
                         vertical: 16,
                       ),
+                      // ignore: deprecated_member_use
                       color: _getStatusColor(task.status).withOpacity(0.1),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

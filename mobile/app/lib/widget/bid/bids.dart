@@ -3,7 +3,7 @@ import 'package:app/model/bid.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
-import 'package:app/widget/profile_screen.dart';
+import 'package:app/widget/screen/profile_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:timeago/timeago.dart' as timeago;
 

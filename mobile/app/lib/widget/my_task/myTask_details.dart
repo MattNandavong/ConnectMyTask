@@ -20,7 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MyTaskDetails extends StatelessWidget {
   final String taskId;
-  MyTaskDetails({required this.taskId});
+  MyTaskDetails({super.key, required this.taskId});
 
   final formatter = DateFormat.yMMMMd();
 
@@ -48,19 +48,21 @@ class MyTaskDetails extends StatelessWidget {
     return FutureBuilder<Task>(
       future: TaskService().getTask(taskId),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
+        }
         final task = snapshot.data!;
         final user = task.user;
 
         return FutureBuilder<String?>(
           future: _getCurrentUserId(),
           builder: (context, userSnapshot) {
-            if (!userSnapshot.hasData)
+            if (!userSnapshot.hasData) {
               return Center(child: CircularProgressIndicator());
+            }
             final currentUserId = userSnapshot.data;
             final isPoster = currentUserId == task.user.id;
-            final isCompleted = task.status.toLowerCase() == 'completed';
+            // final isCompleted = task.status.toLowerCase() == 'completed';
 
             return Scaffold(
               backgroundColor: Theme.of(context).colorScheme.surface,
@@ -112,44 +114,42 @@ class MyTaskDetails extends StatelessWidget {
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
 
-                        child: Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //BASIC INFO SECTION
-                              BasicInfo(task: task, formatter: formatter),
-                              // IMAGES SECTION
-                              ImageSection(images: task.images),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //BASIC INFO SECTION
+                            BasicInfo(task: task, formatter: formatter),
+                            // IMAGES SECTION
+                            ImageSection(images: task.images),
 
-                              // LOCATION DETAILS SECTION
-                              SizedBox(height: 20),
-                              LocationSection(location: task.location),
+                            // LOCATION DETAILS SECTION
+                            SizedBox(height: 20),
+                            LocationSection(location: task.location),
 
-                              //POSTED BY USER SECTION
-                              SizedBox(height: 20),
-                              PostedByUser(user: user),
+                            //POSTED BY USER SECTION
+                            SizedBox(height: 20),
+                            PostedByUser(user: user),
 
-                              // ASSIGNED TO PROVIDER SECTION WITH CHAT
-                              SizedBox(height: 20),
-                              AssignedProviderSection(
-                                task: task,
-                                currentUserId: currentUserId!,
+                            // ASSIGNED TO PROVIDER SECTION WITH CHAT
+                            SizedBox(height: 20),
+                            AssignedProviderSection(
+                              task: task,
+                              currentUserId: currentUserId!,
+                            ),
+
+                            //COMMENT SECTION
+                            Text(
+                              'Comments',
+                              style: GoogleFonts.figtree(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-
-                              //COMMENT SECTION
-                              Text(
-                                'Comments',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              CommentSection(taskId: task.id),
-                              SizedBox(height: 20),
-                              SizedBox(height: 100),
-                            ],
-                          ),
+                            ),
+                            SizedBox(height: 8),
+                            CommentSection(taskId: task.id),
+                            SizedBox(height: 20),
+                            SizedBox(height: 100),
+                          ],
                         ),
                       ),
                     ),

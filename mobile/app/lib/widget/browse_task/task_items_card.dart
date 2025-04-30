@@ -1,19 +1,22 @@
 import 'dart:convert';
-
 import 'package:app/model/task.dart';
-import 'package:app/utils/auth_helper.dart';
 import 'package:app/widget/my_task/provider_task_detail.dart';
-import 'package:app/widget/my_task/myTask_details.dart';
-import 'package:app/widget/task_detail_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:app/utils/task_card_helpers.dart';
+import 'package:app/widget/browse_task/task_detail_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app/utils/task_card_helpers.dart';
 
-class MyTaskCard extends StatelessWidget {
-  const MyTaskCard({super.key, required this.task});
+class TaskCard extends StatelessWidget {
+  const TaskCard({
+    super.key,
+    required this.context,
+    required this.task,
+
+  });
 
   final Task task;
+  final context;
+
   void navigateToTaskDetailByRole(BuildContext context, String taskId) async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user');
@@ -33,7 +36,7 @@ class MyTaskCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => MyTaskDetails(taskId: taskId),
+            builder: (context) => TaskDetailScreen(taskId: taskId),
           ),
         );
       }
@@ -49,21 +52,21 @@ class MyTaskCard extends StatelessWidget {
     return Card(
       // color: Colors.white,
       child: InkWell(
-        onTap: () => navigateToTaskDetailByRole(context, task.id),
+        onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TaskDetailScreen(taskId: task.id),
+        ),
+      ),
 
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [TaskCardHelpers.getStatusText(task.status, 12)],
-              ),
-              
-                  TaskCardHelpers.getTaskDetail(
-                    context, task, true
-                  ),
-                
+              TaskCardHelpers.getStatusText(task.status),
+
+              TaskCardHelpers.getTaskDetail(context, task, false),
             ],
           ),
         ),

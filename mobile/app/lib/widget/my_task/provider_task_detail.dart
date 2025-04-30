@@ -1,32 +1,23 @@
 import 'dart:convert';
-import 'package:app/model/bid.dart';
 import 'package:app/model/task.dart';
-import 'package:app/model/user.dart';
-import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/task_service.dart';
-import 'package:app/widget/chat_screen.dart';
-import 'package:app/widget/chat_test.dart';
 import 'package:app/widget/task_detail/comment_section.dart';
-import 'package:app/widget/make_offer_modal.dart';
 import 'package:app/widget/screen/edit_task_screen.dart';
 import 'package:app/widget/task_detail/Image_section.dart';
-import 'package:app/widget/task_detail/assigned_provider.dart';
 import 'package:app/widget/task_detail/basic_info.dart';
 import 'package:app/widget/task_detail/chat_to_poster_btn.dart';
 import 'package:app/widget/task_detail/map_section.dart';
-import 'package:app/widget/task_detail/mark_complete_button.dart';
 import 'package:app/widget/task_detail/posted_by.dart';
 import 'package:app/widget/task_detail/status_header.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timeago/timeago.dart' as timeago;
 
 class ProviderTaskDetail extends StatelessWidget {
   final String taskId;
 
-  ProviderTaskDetail({required this.taskId});
+  ProviderTaskDetail({super.key, required this.taskId});
 
   final formatter = DateFormat.yMMMMd();
 
@@ -43,16 +34,18 @@ class ProviderTaskDetail extends StatelessWidget {
     return FutureBuilder<Task>(
       future: TaskService().getTask(taskId),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
+        }
         final task = snapshot.data!;
         final user = task.user;
 
         return FutureBuilder<String?>(
           future: _getCurrentUserId(),
           builder: (context, userSnapshot) {
-            if (!userSnapshot.hasData)
+            if (!userSnapshot.hasData) {
               return Center(child: CircularProgressIndicator());
+            }
             final currentUserId = userSnapshot.data;
             final isPoster = currentUserId == task.user.id;
             final isCompleted = task.status.toLowerCase() == 'completed';
@@ -104,66 +97,59 @@ class ProviderTaskDetail extends StatelessWidget {
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
 
-                        child: Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //BASIC INFO SECTION
-                              BasicInfo(task: task, formatter: formatter),
-                              // IMAGES SECTION
-                              ImageSection(images: task.images),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //BASIC INFO SECTION
+                            BasicInfo(task: task, formatter: formatter),
+                            // IMAGES SECTION
+                            ImageSection(images: task.images),
 
-                              // LOCATION DETAILS SECTION
-                              SizedBox(height: 20),
-                              LocationSection(location: task.location),
+                            // LOCATION DETAILS SECTION
+                            SizedBox(height: 20),
+                            LocationSection(location: task.location),
 
-                              //POSTED BY USER SECTION
-                              SizedBox(height: 20),
-                              PostedByUser(user: user),
+                            //POSTED BY USER SECTION
+                            SizedBox(height: 20),
+                            PostedByUser(user: user),
 
-                              // ASSIGNED TO PROVIDER SECTION WITH CHAT
-                              //  SizedBox(height: 20),
-                              // AssignedProviderSection(
-                              //   task: task,
-                              //   currentUserId: currentUserId!,
-                              // ),
+                            // ASSIGNED TO PROVIDER SECTION WITH CHAT
+                            //  SizedBox(height: 20),
+                            // AssignedProviderSection(
+                            //   task: task,
+                            //   currentUserId: currentUserId!,
+                            // ),
 
-                              //MARK AS COMPLETE BUTTON
-                              // Container(
-                              //   padding: const EdgeInsets.all(40.0),
-                              //   width: double.infinity,
-                              //   child: MarkAsCompleteBtn(task: task),
-                              // ),
-                              
-
-                              //COMMENT SECTION
-                              SizedBox(height: 20),
-                              Text(
-                                'Comments',
-                                style: GoogleFonts.figtree(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            //COMMENT SECTION
+                            SizedBox(height: 20),
+                            Text(
+                              'Comments',
+                              style: GoogleFonts.figtree(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                              SizedBox(height: 8),
-                              CommentSection(taskId: task.id),
-                              SizedBox(height: 20),
-                              SizedBox(height: 100),
-                            ],
-                          ),
+                            ),
+                            SizedBox(height: 8),
+                            CommentSection(taskId: task.id),
+                            SizedBox(height: 20),
+                            SizedBox(height: 100),
+                          ],
                         ),
                       ),
                     ),
                   ),
                   Positioned(
-                                bottom: 16,
-                                left: 16,
-                                right: 16,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: ChatToPosterBtn(task: task, currentUserId: currentUserId!)
-                                ),
-                              ),
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ChatToPosterBtn(
+                        task: task,
+                        currentUserId: currentUserId!,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );

@@ -6,11 +6,11 @@ class NotificationSwitchCard extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   const NotificationSwitchCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

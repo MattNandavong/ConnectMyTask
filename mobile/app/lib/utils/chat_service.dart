@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:app/model/ChatPreview.dart'; // Define ChatMessage and ChatPreview models accordingly
+import 'package:app/model/chat_preview.dart'; // Define ChatMessage and ChatPreview models accordingly
 import 'package:app/utils/auth_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';

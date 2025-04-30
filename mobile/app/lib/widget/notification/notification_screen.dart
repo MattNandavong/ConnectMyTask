@@ -1,11 +1,13 @@
 import 'dart:convert';
-import 'package:app/widget/chat_screen.dart';
-import 'package:app/widget/task_detail_screen.dart';
+import 'package:app/widget/screen/chat_screen.dart';
+import 'package:app/widget/browse_task/task_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class NotificationScreen extends StatefulWidget {
+  const NotificationScreen({super.key});
+
   @override
   _NotificationScreenState createState() => _NotificationScreenState();
 }
@@ -102,18 +104,14 @@ class _NotificationScreenState extends State<NotificationScreen>
                         children: [
                           TextButton(
                             // icon: Icon(Icons.clear_all),
-                            child: Text("clear All"),
                             onPressed: clearAllNotifications,
+                            // icon: Icon(Icons.clear_all),
+                            child: Text("clear All"),
                           ),
                         ],
                       ),
                       ...notifications.asMap().entries.map((entry) {
-                        final n = entry.value;
                         final index = entry.key;
-                        final isRead = n['read'] == true;
-                        final timestamp = DateTime.tryParse(
-                          n['timestamp'] ?? '',
-                        );
 
                         return Dismissible(
                           key: ValueKey(index),
@@ -180,7 +178,9 @@ class _NotificationScreenState extends State<NotificationScreen>
                               color:
                                   notifications[index]['read'] == true
                                       ? Theme.of(context).colorScheme.surface
-                                      : Theme.of(context).colorScheme.primaryContainer,
+                                      : Theme.of(
+                                        context,
+                                      ).colorScheme.primaryContainer,
                               elevation: 2,
                               margin: EdgeInsets.symmetric(
                                 horizontal: 12,

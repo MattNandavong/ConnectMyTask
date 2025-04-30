@@ -1,8 +1,7 @@
 import 'package:app/model/task.dart';
-import 'package:app/widget/task_items_card.dart';
+import 'package:app/widget/browse_task/task_items_card.dart';
 import 'package:flutter/material.dart';
 import 'package:app/utils/task_service.dart';
-import 'package:app/widget/map_screen.dart';
 
 class BrowseTask extends StatefulWidget {
   const BrowseTask({super.key});
