@@ -30,7 +30,7 @@ const UserSchema = new mongoose.Schema(
       enum: ['Bronze', 'Silver', 'Gold', 'Platinum'],
       default: 'Bronze',
     },
-    fcmToken: { type: String },// for FCM push notification
+    fcmToken: { type: String },// for FCM push notification 
   },
   { timestamps: true }
 );
