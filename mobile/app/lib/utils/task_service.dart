@@ -135,12 +135,21 @@ class TaskService {
     }
   }
 
-  Future<void> completeTask(String id, double rating, String comment) async {
+  Future<void> completeTask(
+    String id,
+    double rating,
+    String comment,
+    bool recommend,
+  ) async {
     final token = await _getToken();
     final response = await http.put(
       Uri.parse('$baseUrl/$id/completeTask'),
       headers: {'Content-Type': 'application/json', 'Authorization': token},
-      body: jsonEncode({'rating': rating, 'comment': comment}),
+      body: jsonEncode({
+        'rating': rating,
+        'comment': comment,
+        'recommend': recommend,
+      }),
     );
 
     if (response.statusCode != 200) {
@@ -221,19 +230,15 @@ class TaskService {
   }
 
   Future<void> postReply(String taskId, String commentId, String text) async {
-  final token = await _getToken();
-  final response = await http.post(
-    Uri.parse('$baseUrl/$taskId/comment/$commentId/reply'),
-    headers: {
-      'Authorization': token,
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({'text': text}),
-  );
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/$taskId/comment/$commentId/reply'),
+      headers: {'Authorization': token, 'Content-Type': 'application/json'},
+      body: jsonEncode({'text': text}),
+    );
 
-  if (response.statusCode != 201) {
-    throw Exception('Failed to post reply');
+    if (response.statusCode != 201) {
+      throw Exception('Failed to post reply');
+    }
   }
-}
-
 }

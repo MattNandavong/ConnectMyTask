@@ -33,22 +33,34 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['_id'] ?? json['id'],
-      name: json['name'],
-      email: json['email'],
-      role: json['role'],
-      profilePhoto: json['profilePhoto'],
-      location: json['location'] != null ? Map<String, dynamic>.from(json['location']) : null,
-      skills: List<String>.from(json['skills'] ?? []),
-      isVerified: json['isVerified'] ?? false,
-      averageRating: (json['averageRating'] ?? 0).toDouble(),
-      totalReviews: json['totalReviews'] ?? 0,
-      completedTasks: json['completedTasks'] ?? 0,
-      recommendations: json['recommendations'] ?? 0,
-      rank: json['rank'],
-    );
+  double parseDouble(dynamic value) {
+    if (value is int) return value.toDouble();
+    if (value is double) return value;
+    return 0.0; // Fallback if null or invalid
   }
+
+  int parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return 0;
+  }
+
+  return User(
+    id: json['_id'] ?? json['id'],
+    name: json['name'],
+    email: json['email'],
+    role: json['role'],
+    profilePhoto: json['profilePhoto'],
+    location: json['location'] != null ? Map<String, dynamic>.from(json['location']) : null,
+    skills: List<String>.from(json['skills'] ?? []),
+    isVerified: json['isVerified'] ?? false,
+    averageRating: parseDouble(json['averageRating']),
+    totalReviews: parseInt(json['totalReviews']),
+    completedTasks: parseInt(json['completedTasks']),
+    recommendations: parseInt(json['recommendations']),
+    rank: json['rank'],
+  );
+}
 
   Map<String, dynamic> toJson() {
     return {
