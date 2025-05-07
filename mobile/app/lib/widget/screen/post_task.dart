@@ -360,7 +360,7 @@ class _PostTaskState extends State<PostTask> {
                             SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               value: _deadlineType,
-                              // dropdownColor: Theme.of(context).colorScheme.surface,
+                              dropdownColor: Theme.of(context).colorScheme.background,
                               borderRadius: BorderRadius.circular(10),
                               decoration: InputDecoration(
                                 labelText: 'Deadline',

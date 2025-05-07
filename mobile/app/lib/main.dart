@@ -159,6 +159,7 @@ class MyApp extends StatelessWidget {
             fontSize: 14,
           ),
         ),
+        
 
         inputDecorationTheme: InputDecorationTheme(
           labelStyle: GoogleFonts.figtree(
@@ -180,6 +181,7 @@ class MyApp extends StatelessWidget {
         ),
 
         dropdownMenuTheme: DropdownMenuThemeData(
+          textStyle: TextStyle(color: kDarkColorScheme.primary),
           inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: kDarkColorScheme.surface,
@@ -196,7 +198,9 @@ class MyApp extends StatelessWidget {
               borderSide: BorderSide(color: Colors.tealAccent, width: 2),
             ),
           ),
+          
         ),
+        
 
         scaffoldBackgroundColor: kDarkColorScheme.background,
         snackBarTheme: SnackBarThemeData(
@@ -247,6 +251,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         dropdownMenuTheme: DropdownMenuThemeData(
+          textStyle: TextStyle(color: kLightColorScheme.primary),
           inputDecorationTheme: InputDecorationTheme(
             filled: true, // Fill background
             fillColor: Colors.white, // White background
