@@ -39,6 +39,18 @@ class Task {
   });
 
   static Future<Task> fromJsonAsync(Map<String, dynamic> json) async {
+    double _parseDouble(dynamic value) {
+    if (value is int) return value.toDouble();
+    if (value is double) return value;
+    return 0.0;
+  }
+
+  int? _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return null;
+  }
+
     final userField = json['user']['_id'];
     final providerField = json['assignedProvider'];
 
@@ -60,14 +72,14 @@ class Task {
     }
 
     final reviewData = json['review'];
-    final int? rating = reviewData != null ? reviewData['rating'] as int? : null;
+    final int? rating = _parseInt(reviewData != null ? reviewData['rating'] : null);
     final String? comment = reviewData != null ? reviewData['comment'] as String? : null;
 
     return Task(
       id: json['_id'],
       title: json['title'],
       description: json['description'],
-      budget: (json['budget'] as num).toDouble(),
+      budget: _parseDouble(json['budget']),
       deadline: json['deadline'] != null ? DateTime.parse(json['deadline']) : null,
       status: json['status'],
       category: json['category'],

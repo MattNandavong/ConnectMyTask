@@ -33,12 +33,6 @@ router.post(
 
     const { name, email, password, role, skills, fcmToken } = req.body;
 
-    // const location = {
-    //   country: req.body["location.country"],
-    //   lat: parseFloat(req.body["location.lat"]),
-    //   lng: parseFloat(req.body["location.lng"]),
-    // };
-
 
     try {
       let user = await User.findOne({ email });
@@ -52,7 +46,6 @@ router.post(
         password,
         role,
         profilePhoto,
-
         skills: role === "provider" && skills ? skills.split(",") : [],
         fcmToken, // save FCM token
       });
@@ -166,8 +159,6 @@ router.put(
     }
   }
 );
-
-
 
 // @route   POST /api/auth/login
 // @desc    Login user and return token
