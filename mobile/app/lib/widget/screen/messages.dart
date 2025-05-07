@@ -1,4 +1,5 @@
 import 'package:app/model/chat_preview.dart';
+import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
 import 'package:app/utils/chat_service.dart';
 import 'package:app/widget/screen/chat_screen.dart';
@@ -111,85 +112,84 @@ class _MessageScreenState extends State<MessageScreen> {
                 itemCount: _chatSummaries.length,
                 itemBuilder: (context, index) {
                   final chat = _chatSummaries[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.secondary,
-                          child: Text(
-                            chat.partnerName.isNotEmpty
-                                ? chat.partnerName[0]
-                                : '?',
-                            style: TextStyle(
-                              // color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          chat.taskTitle,
-                          style: GoogleFonts.figtree(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          chat.lastMessage!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.figtree(),
-                        ),
-                        trailing: Column(
-                          children: [
-                            Text(
-                              _formatTimestamp(chat.lastTimestamp),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Theme.of(context).colorScheme.secondary,
-                                fontWeight: FontWeight.w500,
+
+                  return FutureBuilder<User>(
+                    future: AuthService().getUserProfile(chat.partnerId!),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return ListTile(title: Text("Loading..."));
+                      }
+                      final partner = snapshot.data!;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Card(
+                          child: ListTile(
+                            leading: partner.buildAvatar(),
+                            title: Text(
+                              partner.name,
+                              style: GoogleFonts.figtree(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            if (chat.unreadCount! > 0) ...[
-                              SizedBox(height: 4),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${chat.unreadCount}',
+                            subtitle: Text(
+                              chat.lastMessage!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.figtree(),
+                            ),
+                            trailing: Column(
+                              children: [
+                                Text(
+                                  _formatTimestamp(chat.lastTimestamp),
                                   style: TextStyle(
-                                    // color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color:
+                                        Theme.of(context).colorScheme.secondary,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => ChatScreen(
-                                    taskId: chat.taskId,
-                                    userId: _currentUserId!,
+                                if (chat.unreadCount! > 0) ...[
+                                  SizedBox(height: 4),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '${chat.unreadCount}',
+                                      style: TextStyle(
+                                        // color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
+                                ],
+                              ],
                             ),
-                          ).then((_) async {
-                            await _loadUserAndChats();
-                          });
-                        },
-                      ),
-                    ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ChatScreen(
+                                        taskId: chat.taskId,
+                                        userId: _currentUserId!,
+                                      ),
+                                ),
+                              ).then((_) async {
+                                await _loadUserAndChats();
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
