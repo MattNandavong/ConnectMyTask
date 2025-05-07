@@ -1,5 +1,7 @@
+import 'package:app/model/task.dart';
 import 'package:app/model/user.dart';
 import 'package:app/utils/auth_service.dart';
+import 'package:app/utils/task_service.dart';
 import 'package:app/widget/screen/profile_screen.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +23,13 @@ class TopBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _TopBarState extends State<TopBar> {
   User? user;
+  List<Task>? tasks;
 
   @override
   void initState() {
     super.initState();
     _loadUser();
+    _loadTasks();
   }
 
   Future<void> _loadUser() async {
@@ -36,6 +40,14 @@ class _TopBarState extends State<TopBar> {
       user = profile;
     });
   }
+   Future<void> _loadTasks() async {
+    final taskList = await TaskService().getAllTasks();
+    if (!mounted) return;
+    setState(() {
+      tasks = taskList;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +85,10 @@ class _TopBarState extends State<TopBar> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => MapScreen()),
+                        MaterialPageRoute(builder: (_) => MapScreen(tasks: tasks!,)),
                       );
                     },
-                    icon: Icon(FluentIcons.search_12_regular, size: 20),
+                    icon: Icon(FluentIcons.map_20_regular, size: 20),
                     padding: EdgeInsets.all(10),
                   )
                   : const SizedBox(height: 49, width: 48),

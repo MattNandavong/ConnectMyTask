@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   String getTabName(int index) {
     if (role == 'user') {
-      return ['Post Task', 'Browse Task', 'My Task', 'Messages', 'Notification'][index];
+      return ['Post Task', 'My Task', 'Messages', 'Notification'][index];
     } else {
       return ['Browse Task', 'My Task', 'Messages', 'Notification'][index];
     }

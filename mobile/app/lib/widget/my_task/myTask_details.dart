@@ -18,11 +18,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class MyTaskDetails extends StatelessWidget {
+class MyTaskDetails extends StatefulWidget {
   final String taskId;
   MyTaskDetails({super.key, required this.taskId});
 
+  @override
+  State<MyTaskDetails> createState() => _MyTaskDetailsState();
+}
+
+class _MyTaskDetailsState extends State<MyTaskDetails> {
   final formatter = DateFormat.yMMMMd();
+  
 
   Future<String?> _getCurrentUserId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,7 +52,7 @@ class MyTaskDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Task>(
-      future: TaskService().getTask(taskId),
+      future: TaskService().getTask(widget.taskId),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Center(child: CircularProgressIndicator());
