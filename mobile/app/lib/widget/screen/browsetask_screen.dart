@@ -103,13 +103,13 @@ class _BrowseTaskState extends State<BrowseTask> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.all(0),
-                        
+
                         // labelText: 'Search tasks...',
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(100),
                           borderSide: BorderSide(
                             width: 1,
-                            color:  Colors.transparent,
+                            color: Colors.transparent,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
@@ -149,7 +149,7 @@ class _BrowseTaskState extends State<BrowseTask> {
                     ),
                   ),
                   const SizedBox(width: 10),
-        
+
                   // Filter button
                   Expanded(
                     flex: 2,
@@ -193,7 +193,7 @@ class _BrowseTaskState extends State<BrowseTask> {
                 ],
               ),
             ),
-        
+
             // FutureBuilder<List<Task>>(
             //   future: _tasks,
             //   builder: (context, snapshot) {
@@ -219,16 +219,30 @@ class _BrowseTaskState extends State<BrowseTask> {
             //   },
             // ),
             Expanded(
-              child:
-                  _filteredTasks.isEmpty
-                      ? Center(child: Text('No tasks found'))
-                      : ListView.builder(
-                        itemCount: _filteredTasks.length,
-                        itemBuilder: (context, index) {
-                          final task = _filteredTasks[index];
-                          return TaskCard(context: context, task: task);
-                        },
-                      ),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  final tasks = await TaskService().getAllTasks();
+                  setState(() {
+                    _allTasks = tasks;
+                    _applyFilters();
+                  });
+                },
+                child:
+                    _filteredTasks.isEmpty
+                        ? ListView(
+                          children: const [
+                            SizedBox(height: 200),
+                            Center(child: Text('No tasks found')),
+                          ],
+                        )
+                        : ListView.builder(
+                          itemCount: _filteredTasks.length,
+                          itemBuilder: (context, index) {
+                            final task = _filteredTasks[index];
+                            return TaskCard(context: context, task: task);
+                          },
+                        ),
+              ),
             ),
           ],
         ),
