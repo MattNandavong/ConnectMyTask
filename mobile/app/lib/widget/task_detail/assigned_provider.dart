@@ -100,6 +100,7 @@ class AssignedProviderSection extends StatelessWidget {
                           ),
                         ),
                         SizedBox(height: 12),
+                        if(task.status.toLowerCase() != 'completed')
                         ElevatedButton.icon(
                           icon: Icon(Icons.chat_bubble_outline),
                           label: Text("Open Chat"),

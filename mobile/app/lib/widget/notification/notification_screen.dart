@@ -35,6 +35,7 @@ class _NotificationScreenState extends State<NotificationScreen>
       loadNotifications(); // Refresh notifications on resume
     }
   }
+  
 
   Future<void> loadNotifications() async {
     final prefs = await SharedPreferences.getInstance();
@@ -108,13 +109,25 @@ class _NotificationScreenState extends State<NotificationScreen>
                             // icon: Icon(Icons.clear_all),
                             child: Text("clear All"),
                           ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                for (var n in notifications) {
+                                  n['read'] = true;
+                                }
+                              });
+                              _saveNotifications();
+                            },
+                            child: Text("Mark all as read"),
+                          ),
                         ],
                       ),
                       ...notifications.asMap().entries.map((entry) {
                         final index = entry.key;
 
                         return Dismissible(
-                          key: ValueKey(index),
+                          key: ValueKey(notifications[index]['timestamp']),
+
                           direction: DismissDirection.endToStart,
                           background: Container(
                             color: Colors.redAccent,

@@ -19,7 +19,7 @@ class ProfileSetupScreen extends StatefulWidget {
 
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _locationController;
+  late TextEditingController _nameController;
   late TextEditingController _skillsController;
   File? _profileImage;
   String? _selectedCountry;
@@ -35,7 +35,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           _countryLat = locations.first.latitude;
           _countryLng = locations.first.longitude;
         });
-        print('✅ Country Lat: $_countryLat, Lng: $_countryLng');
       }
     } catch (e) {
       print('Failed to get coordinates: $e');
@@ -45,18 +44,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   @override
   void initState() {
     super.initState();
-    _locationController = TextEditingController(
-      text: "widget.user.location ?? ''",
-    );
+    _nameController = TextEditingController(text: widget.user.name);
     _skillsController = TextEditingController(
       text: widget.user.skills.join(', '),
     );
 
     initializeCountryMap();
 
-    // 🔥 After initializing the map, pre-fill selected country and flag
-    if (widget.user.location != null &&
-        widget.user.location!['country'] != null) {
+    if (widget.user.location != null && widget.user.location!['country'] != null) {
       _selectedCountry = widget.user.location!['country'];
       _selectedCountryFlag = countryNameToFlag[_selectedCountry!] ?? '🌍';
       _countryLat = double.tryParse(
@@ -70,7 +65,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   void dispose() {
-    _locationController.dispose();
+    _nameController.dispose();
     _skillsController.dispose();
     super.dispose();
   }
@@ -84,49 +79,43 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      final location =
-          (_selectedCountry != null &&
-                  _countryLat != null &&
-                  _countryLng != null)
-              ? {
-                'country': _selectedCountry!,
-                'lat': _countryLat.toString(),
-                'lng': _countryLng.toString(),
-              }
-              : null;
+      final location = (_selectedCountry != null && _countryLat != null && _countryLng != null)
+          ? {
+              'country': _selectedCountry!,
+              'lat': _countryLat.toString(),
+              'lng': _countryLng.toString(),
+            }
+          : null;
 
       if (location != null) {
         await AuthService().updateUserProfile(
           userId: widget.user.id,
-          name: widget.user.name,
+          name: _nameController.text.trim(),
           location: location,
-          skills:
-              widget.user.role == "provider"
-                  ? _skillsController.text
-                      .split(',')
-                      .map((e) => e.trim())
-                      .toList()
-                  : [],
+          skills: widget.user.role == "provider"
+              ? _skillsController.text.split(',').map((e) => e.trim()).toList()
+              : [],
           profilePhoto: _profileImage,
         );
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Location is null!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location is null!')),
+        );
+        return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Profile updated successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profile updated successfully!')),
+      );
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => SplashScreen()),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error updating profile: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating profile: $e')),
+      );
     }
   }
 
@@ -148,6 +137,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   backgroundImage: FileImage(_profileImage!),
                   radius: 50,
                 )
+              else if (widget.user.profilePhoto != null)
+                CircleAvatar(
+                  backgroundImage: NetworkImage(widget.user.profilePhoto!),
+                  radius: 50,
+                )
               else
                 CircleAvatar(
                   radius: 50,
@@ -161,27 +155,19 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 label: Text("Upload Profile Photo"),
               ),
               SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.user.name,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      widget.user.email,
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(labelText: "Full Name"),
+                validator: (val) => val == null || val.isEmpty ? 'Name is required' : null,
               ),
-              Divider(thickness: 1),
+              SizedBox(height: 10),
+              TextFormField(
+                initialValue: widget.user.email,
+                decoration: InputDecoration(labelText: "Email"),
+                readOnly: true,
+              ),
+              SizedBox(height: 20),
+              Text('Based Country'),
               OutlinedButton(
                 onPressed: () {
                   showCountryPicker(
@@ -192,9 +178,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         _selectedCountry = country.name;
                         _selectedCountryFlag = country.flagEmoji;
                       });
-                      getCoordinatesFromCountry(
-                        country.name.trim(),
-                      ); // <-- Correct!
+                      getCoordinatesFromCountry(country.name.trim());
                     },
                   );
                 },
@@ -208,20 +192,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                   ),
                 ),
               ),
-
               if (isProvider) ...[
                 SizedBox(height: 20),
                 TextFormField(
                   controller: _skillsController,
-                  decoration: InputDecoration(
-                    labelText: "Skills (comma-separated)",
-                  ),
-                  validator: (val) {
-                    if (val == null || val.isEmpty) {
-                      return 'Please enter at least one skill';
-                    }
-                    return null;
-                  },
+                  decoration: InputDecoration(labelText: "Skills (comma-separated)"),
+                  validator: (val) => val == null || val.isEmpty ? 'Please enter at least one skill' : null,
                 ),
               ],
               SizedBox(height: 30),

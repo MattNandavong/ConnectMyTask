@@ -14,7 +14,8 @@ class DrawerMenu extends StatelessWidget {
   const DrawerMenu({super.key});
 
   Future<User> _fetchUserData() async {
-    final user = await AuthService().getCurrentUser();
+    final userData = await AuthService().getCurrentUser();
+    final  user = await AuthService().getUserProfile(userData!.id);
     return user!;
   }
 
@@ -62,19 +63,20 @@ class DrawerMenu extends StatelessWidget {
                             ),
                           ),
                           SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(Icons.star, color: Colors.amber, size: 16),
-                              SizedBox(width: 4),
-                              Text(
-                                        user.averageRating.toString(),
-                                style: GoogleFonts.figtree(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
+                          // Row(
+                          //   children: [
+                          //     Icon(Icons.star, color: Colors.amber, size: 16),
+                          //     SizedBox(width: 4),
+                          //     Text(
+                          //               user.averageRating.toString(),
+                          //       style: GoogleFonts.figtree(
+                          //         color: Colors.white,
+                          //         fontSize: 12,
+                          //       ),
+                          //     ),
+                          //   ],
+                          // ),
+                          Text('${user.role}', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),)
                         ],
                       ),
                     ),
