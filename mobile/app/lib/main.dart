@@ -44,7 +44,12 @@ var kLightColorScheme = ColorScheme(
   shadow: Colors.black26, // Light shadow
 
   inversePrimary: const Color.fromARGB(255, 0, 200, 83), // Bright green
-  inverseSurface: const Color.fromARGB(255, 239, 239, 239), // Dark surface for inverse
+  inverseSurface: const Color.fromARGB(
+    255,
+    239,
+    239,
+    239,
+  ), // Dark surface for inverse
   onInverseSurface: Colors.white,
 
   scrim: Colors.black38, // Scrim over background when drawer or modal opens
@@ -133,6 +138,7 @@ class MyApp extends StatelessWidget {
       supportedLocales: context.supportedLocales,
       themeMode: themeNotifier.themeMode,
       darkTheme: ThemeData().copyWith(
+        primaryTextTheme: GoogleFonts.figtreeTextTheme(),
         colorScheme: kDarkColorScheme,
         useMaterial3: true,
 
@@ -192,12 +198,17 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
-        
-
         scaffoldBackgroundColor: kDarkColorScheme.background,
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: kDarkColorScheme.tertiary,
+          elevation: 8,
+          actionTextColor: kDarkColorScheme.secondary,
+          contentTextStyle: TextStyle(color: kDarkColorScheme.onTertiary),
+        ),
       ),
       theme: ThemeData().copyWith(
         colorScheme: kLightColorScheme,
+        primaryTextTheme: GoogleFonts.figtreeTextTheme(),
         appBarTheme: AppBarTheme(
           backgroundColor: kLightColorScheme.surface,
           foregroundColor: kLightColorScheme.onSurface,
@@ -234,16 +245,13 @@ class MyApp extends StatelessWidget {
             color: kLightColorScheme.secondary,
             fontWeight: FontWeight.w600,
           ),
-
         ),
         dropdownMenuTheme: DropdownMenuThemeData(
           inputDecorationTheme: InputDecorationTheme(
             filled: true, // Fill background
             fillColor: Colors.white, // White background
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                8,
-              ), // rounded corners
+              borderRadius: BorderRadius.circular(8), // rounded corners
               borderSide: BorderSide(
                 color: Colors.grey, // Border color
               ),
@@ -261,7 +269,13 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        scaffoldBackgroundColor: const Color(0xFFF7F7F7),
+        scaffoldBackgroundColor: kLightColorScheme.background,
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: kLightColorScheme.tertiary,
+          elevation: 8,
+          actionTextColor: kLightColorScheme.secondary,
+          contentTextStyle: TextStyle(color: kLightColorScheme.onTertiary),
+        ),
       ),
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
